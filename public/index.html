@@ -147,46 +147,202 @@
       border-color: var(--accent);
     }
 
-    /* ─── State Pill Bar ─────────────────────────────────────────── */
-    #state-bar {
-      display: flex;
-      gap: 6px;
-      padding: 8px 14px;
+    /* ─── State Selector Dropdown ───────────────────────────────────── */
+    #state-selector-wrap {
+      position: relative;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      overflow-x: auto;
       flex-shrink: 0;
-      -webkit-overflow-scrolling: touch;
+      z-index: 100;
+    }
+    .state-selector-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      overflow-x: auto;
       scrollbar-width: none;
     }
+    .state-selector-row::-webkit-scrollbar { display: none; }
 
-    #state-bar::-webkit-scrollbar { display: none; }
-
-    .state-pill {
+    #state-trigger {
       font-family: var(--font-head);
       font-weight: 700;
       font-size: 13px;
       letter-spacing: 1px;
       padding: 5px 12px;
       border-radius: 4px;
+      border: 1px solid var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    #state-trigger:hover, #state-trigger.open {
+      background: var(--accent);
+      color: #000;
+    }
+    #state-count-badge {
+      background: var(--surface);
+      color: var(--accent);
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 18px;
+      text-align: center;
+    }
+    #state-trigger.open #state-count-badge,
+    #state-trigger:hover #state-count-badge {
+      background: rgba(0,0,0,0.2);
+      color: #000;
+    }
+    .active-chips {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .chip {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 3px 7px 3px 9px;
+      border-radius: 3px;
+      background: var(--accent);
+      color: #000;
+      white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.12s;
+    }
+    .chip:hover { opacity: 0.75; }
+    .chip-x { font-size: 10px; opacity: 0.7; font-weight: 900; }
+
+    .dropdown-panel {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      max-height: 340px;
+      overflow-y: auto;
+      z-index: 200;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .dropdown-panel.hidden { display: none; }
+
+    .dropdown-header {
+      padding: 10px 14px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 1;
+    }
+    #dd-search {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      padding: 7px 10px;
+      outline: none;
+    }
+    #dd-search:focus { border-color: var(--accent); }
+    #dd-search::placeholder { color: var(--muted); }
+
+    .dd-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .dd-actions button {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 3px;
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--muted);
       cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .dd-actions button:hover { border-color: var(--accent); color: var(--accent); }
+
+    .region-group { padding: 8px 14px 4px; }
+    .region-label {
+      font-family: var(--font-head);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .state-check-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      gap: 8px;
+      transition: opacity 0.1s;
+    }
+    .state-check-row:last-child { border-bottom: none; }
+    .state-check-row:hover { opacity: 0.85; }
+    .scr-left { display: flex; align-items: center; gap: 10px; }
+    .scr-code {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      color: var(--text);
+      width: 40px;
+    }
+    .scr-label { font-size: 13px; color: var(--muted); }
+    .scr-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .scr-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
+      transition: all 0.12s;
     }
-
-    .state-pill:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .state-pill.active {
+    .scr-box.checked {
       background: var(--accent);
       border-color: var(--accent);
+    }
+    .scr-box.checked::after {
+      content: '✓';
+      font-size: 11px;
       color: #000;
+      font-weight: 900;
     }
 
     /* ─── Status bar ────────────────────────────────────────────── */
@@ -756,37 +912,30 @@
     </div>
   </header>
 
-  <!-- State Pill Bar -->
-  <div id="state-bar">
-    <button class="state-pill" onclick="selectState('ny',this)">NY</button>
-    <button class="state-pill" onclick="selectState('nc',this)">NC</button>
-    <button class="state-pill" onclick="selectState('pa',this)">PA</button>
-    <button class="state-pill" onclick="selectState('ga',this)">GA</button>
-    <button class="state-pill" onclick="selectState('fl',this)">FL</button>
-    <button class="state-pill" onclick="selectState('az',this)">AZ</button>
-    <button class="state-pill" onclick="selectState('nv',this)">NV</button>
-    <button class="state-pill" onclick="selectState('ak',this)">AK</button>
-    <button class="state-pill" onclick="selectState('wi',this)">WI</button>
-    <button class="state-pill" onclick="selectState('ut',this)">UT</button>
-    <button class="state-pill" onclick="selectState('la',this)">LA</button>
-    <button class="state-pill" onclick="selectState('id',this)">ID</button>
-    <button class="state-pill" onclick="selectState('nj',this)">NJ</button>
-    <button class="state-pill" onclick="selectState('va',this)">VA</button>
-    <button class="state-pill" onclick="selectState('ne',this)">NE</button>
-    <button class="state-pill" onclick="selectState('ks',this)">KS</button>
-    <button class="state-pill" onclick="selectState('vt',this)">VT</button>
-    <button class="state-pill" onclick="selectState('nh',this)">NH</button>
-    <button class="state-pill" onclick="selectState('md',this)">MD</button>
-    <button class="state-pill" onclick="selectState('al',this)">AL</button>
-    <button class="state-pill" onclick="selectState('nm',this)">NM</button>
-    <button class="state-pill" onclick="selectState('mi',this)">MI</button>
-    <button class="state-pill" onclick="selectState('sf',this)">SF Bay</button>
+  <!-- State Selector Dropdown -->
+  <div id="state-selector-wrap">
+    <div class="state-selector-row">
+      <button id="state-trigger" onclick="toggleDropdown()">
+        🗺 States <span id="state-count-badge">0</span>
+      </button>
+      <div id="active-chips" class="active-chips"></div>
+    </div>
+    <div id="dropdown-panel" class="dropdown-panel hidden">
+      <div class="dropdown-header">
+        <input id="dd-search" type="text" placeholder="🔍  Search states…" oninput="filterDropdown()" autocomplete="off">
+        <div class="dd-actions">
+          <button onclick="selectAll()">Select All</button>
+          <button onclick="clearAll()">Clear All</button>
+        </div>
+      </div>
+      <div id="dd-regions"></div>
+    </div>
   </div>
 
   <!-- Status bar -->
   <div id="status-bar">
     <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">SELECT A STATE TO LOAD CAMERAS</span>
+    <span id="status-text">SELECT STATES TO LOAD CAMERAS</span>
   </div>
 
   <!-- Content -->
@@ -1046,7 +1195,7 @@ const ALL_KEYS = ['ny','nc','pa','ga','fl','az','nv','ak','wi','ut','la','id','n
 
 let cameras = [];
 let filteredCameras = [];
-let currentState = '';
+let selectedStates = new Set();
 let currentCameraIndex = -1;
 let autoRefreshEnabled = true;
 let refreshTimer = null;
@@ -1056,7 +1205,12 @@ let gridView = true;
 
 // ─── Init ───────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  buildDropdown();
   loadSettings();
+  // close dropdown when clicking outside
+  document.addEventListener('click', e => {
+    if (ddOpen && !document.getElementById('state-selector-wrap').contains(e.target)) closeDropdown();
+  });
 });
 
 function loadSettings() {
@@ -1083,12 +1237,112 @@ function saveKeys() {
   showView('list');
 }
 
-// ─── State Selection ────────────────────────────────────────────────
-function selectState(state, btn) {
-  document.querySelectorAll('.state-pill').forEach(p => p.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  currentState = state;
-  loadCameras(state);
+// ─── State Selector Dropdown ────────────────────────────────────────
+const REGIONS = [
+  { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
+  { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
+  { label: 'Midwest',   keys: ['wi','mi','ne','ks'] },
+  { label: 'West',      keys: ['az','nv','ak','ut','id','nm'] },
+  { label: 'Special',   keys: ['sf'] },
+];
+
+const STATE_ABBR = {
+  ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
+  nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
+  wi:'WI', mi:'MI', ne:'NE', ks:'KS',
+  az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
+  sf:'SF Bay',
+};
+
+let ddOpen = false;
+
+function buildDropdown() {
+  const container = document.getElementById('dd-regions');
+  container.innerHTML = REGIONS.map(r => `
+    <div class="region-group">
+      <div class="region-label">${r.label}</div>
+      ${r.keys.map(k => `
+        <div class="state-check-row" onclick="toggleStateCheck('${k}')" id="row-${k}">
+          <div class="scr-left">
+            <span class="scr-code">${STATE_ABBR[k]}</span>
+            <span class="scr-label">${STATE_CONFIGS[k].label}</span>
+          </div>
+          <div class="scr-box" id="box-${k}"></div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function toggleDropdown() {
+  ddOpen = !ddOpen;
+  const panel = document.getElementById('dropdown-panel');
+  const trigger = document.getElementById('state-trigger');
+  panel.classList.toggle('hidden', !ddOpen);
+  trigger.classList.toggle('open', ddOpen);
+  if (ddOpen) {
+    document.getElementById('dd-search').value = '';
+    filterDropdown();
+    document.getElementById('dd-search').focus();
+  }
+}
+
+function closeDropdown() {
+  ddOpen = false;
+  document.getElementById('dropdown-panel').classList.add('hidden');
+  document.getElementById('state-trigger').classList.remove('open');
+}
+
+function toggleStateCheck(key) {
+  if (selectedStates.has(key)) {
+    selectedStates.delete(key);
+  } else {
+    selectedStates.add(key);
+  }
+  document.getElementById('box-' + key)?.classList.toggle('checked', selectedStates.has(key));
+  renderChips();
+  loadSelectedStates();
+}
+
+function selectAll() {
+  ALL_KEYS.forEach(k => {
+    selectedStates.add(k);
+    document.getElementById('box-' + k)?.classList.add('checked');
+  });
+  renderChips();
+  loadSelectedStates();
+}
+
+function clearAll() {
+  selectedStates.clear();
+  ALL_KEYS.forEach(k => document.getElementById('box-' + k)?.classList.remove('checked'));
+  renderChips();
+  cameras = [];
+  filteredCameras = [];
+  renderGrid([]);
+  setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
+  updateLiveBadge(0);
+}
+
+function renderChips() {
+  const wrap = document.getElementById('active-chips');
+  const badge = document.getElementById('state-count-badge');
+  badge.textContent = selectedStates.size;
+  wrap.innerHTML = [...selectedStates].map(k =>
+    `<span class="chip" onclick="event.stopPropagation();toggleStateCheck('${k}')">${STATE_ABBR[k]}<span class="chip-x">✕</span></span>`
+  ).join('');
+}
+
+function filterDropdown() {
+  const q = document.getElementById('dd-search').value.toLowerCase();
+  document.querySelectorAll('.state-check-row').forEach(row => {
+    const key = row.id.replace('row-', '');
+    const label = STATE_CONFIGS[key]?.label.toLowerCase() || '';
+    const code = STATE_ABBR[key]?.toLowerCase() || '';
+    row.style.display = (!q || label.includes(q) || code.includes(q)) ? '' : 'none';
+  });
+  document.querySelectorAll('.region-group').forEach(rg => {
+    const anyVisible = [...rg.querySelectorAll('.state-check-row')].some(r => r.style.display !== 'none');
+    rg.style.display = anyVisible ? '' : 'none';
+  });
 }
 
 // ─── View Routing ───────────────────────────────────────────────────
@@ -1099,37 +1353,69 @@ function showView(name) {
 }
 
 // ─── Camera Loading ─────────────────────────────────────────────────
-async function loadCameras(state) {
-  const apiKey = localStorage.getItem(`apikey_${state}`);
-  if (!apiKey) {
-    setStatus('loading', false);
-    showEmptyState('🔑', 'API Key Required',
-      `Open Settings and add your free ${STATE_CONFIGS[state].label} 511 API key.`);
+async function loadSelectedStates() {
+  const states = [...selectedStates];
+  if (states.length === 0) {
+    showEmptyState('🗺', 'No States Selected', 'Tap "🗺 States" to choose which states to load.');
+    setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
     updateLiveBadge(0);
     return;
   }
 
-  setStatus('loading', true, `LOADING ${STATE_CONFIGS[state].label.toUpperCase()} CAMERAS…`);
+  // Check at least one state has a key
+  const statesWithKeys = states.filter(s => localStorage.getItem(`apikey_${s}`));
+  const statesNoKey = states.filter(s => !localStorage.getItem(`apikey_${s}`));
+
+  if (statesWithKeys.length === 0) {
+    showEmptyState('🔑', 'API Key Required',
+      `Open Settings and add your free 511 API key for: ${states.map(s => STATE_CONFIGS[s].label).join(', ')}.`);
+    setStatus('ok', false, 'NO API KEYS CONFIGURED');
+    updateLiveBadge(0);
+    return;
+  }
+
+  const label = statesWithKeys.length === 1
+    ? STATE_CONFIGS[statesWithKeys[0]].label.toUpperCase()
+    : `${statesWithKeys.length} STATES`;
+
+  setStatus('loading', true, `LOADING ${label}…`);
   showEmptyState('', '', '', true);
   showView('list');
 
-  try {
-    const res = await fetch(`${STATE_CONFIGS[state].endpoint}?key=${encodeURIComponent(apiKey)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    cameras = normalizeCameras(state, data);
-    filteredCameras = cameras;
-    renderGrid(filteredCameras);
-    setStatus('ok', false, `${cameras.length} CAMERAS · ${STATE_CONFIGS[state].label.toUpperCase()}`);
-    updateLiveBadge(cameras.length);
-  } catch (err) {
-    console.error(err);
-    setStatus('error', false, `LOAD FAILED: ${err.message.toUpperCase()}`);
-    showEmptyState('⚠️', 'Load Failed',
-      `Check your API key in Settings or try again. (${err.message})`);
-    updateLiveBadge(0);
-  }
+  const results = await Promise.allSettled(
+    statesWithKeys.map(async state => {
+      const apiKey = localStorage.getItem(`apikey_${state}`);
+      const endpoint = STATE_CONFIGS[state].endpoint;
+      const keyParam = STATE_CONFIGS[state].keyParam || 'key';
+      const res = await fetch(`${endpoint}?${keyParam}=${encodeURIComponent(apiKey)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return normalizeCameras(state, data);
+    })
+  );
+
+  let allCams = [];
+  let errors = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') allCams = allCams.concat(r.value);
+    else errors.push(statesWithKeys[i]);
+  });
+
+  cameras = allCams;
+  filteredCameras = cameras;
+  const filterQ = document.getElementById('search-input').value;
+  if (filterQ) filterCameras(); else renderGrid(filteredCameras);
+
+  const statusParts = [];
+  if (allCams.length) statusParts.push(`${allCams.length} CAMERAS`);
+  if (errors.length) statusParts.push(`${errors.length} FAILED`);
+  if (statesNoKey.length) statusParts.push(`${statesNoKey.length} NO KEY`);
+  setStatus(errors.length ? 'error' : 'ok', false, statusParts.join(' · ') || 'NO CAMERAS');
+  updateLiveBadge(allCams.length);
 }
+
+// legacy alias kept for any inline callers
+function loadCameras(state) { loadSelectedStates(); }
 
 // ─── Normalize 511 camera data ──────────────────────────────────────
 function normalizeCameras(state, data) {
