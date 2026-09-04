@@ -151,7 +151,9 @@ roadcams-glasses/
 ## Future Additions (Planned)
 
 - [ ] Map view (Leaflet.js) showing camera pins by GPS coordinates
-- [ ] More states (TX, FL, CO, WA, OR — all have 511 APIs)
+- [x] Florida (FL) — fl511.com/api/v2/get/cameras ✓
+- [ ] More states (TX, CO, WA, OR — standard 511 APIs)
+- [ ] Ohio (OH) — OHGO API (publicapi.ohgo.com) — different format, needs custom adapter
 - [ ] Favorites / pinned cameras (localStorage)
 - [ ] Meta Neural Band gesture support (swipe left/right to navigate cameras)
 - [ ] Voice query integration (Meta AI → "show me I-95 cameras")
