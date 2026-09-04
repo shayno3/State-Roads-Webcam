@@ -345,6 +345,54 @@
       font-weight: 900;
     }
 
+    /* ─── FL County Filter Bar ─────────────────────────────────────── */
+    #fl-filter-bar {
+      display: flex;
+      gap: 6px;
+      padding: 5px 14px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      align-items: center;
+    }
+    #fl-filter-bar::-webkit-scrollbar { display: none; }
+    #fl-filter-bar.hidden { display: none; }
+
+    .fl-bar-label {
+      font-family: var(--font-head);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+      padding-right: 4px;
+    }
+    .county-chip {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 3px 9px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.12s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .county-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .county-chip.active { background: var(--accent); border-color: var(--accent); color: #000; }
+    .county-chip .cc-count { font-size: 9px; opacity: 0.65; }
+
     /* ─── Status bar ────────────────────────────────────────────── */
     #status-bar {
       padding: 5px 14px;
@@ -932,6 +980,9 @@
     </div>
   </div>
 
+  <!-- FL County/Highway Filter Bar (shown when FL cameras are loaded) -->
+  <div id="fl-filter-bar" class="hidden"></div>
+
   <!-- Status bar -->
   <div id="status-bar">
     <div class="status-dot" id="status-dot"></div>
@@ -1196,6 +1247,7 @@ const ALL_KEYS = ['ny','nc','pa','ga','fl','az','nv','ak','wi','ut','la','id','n
 let cameras = [];
 let filteredCameras = [];
 let selectedStates = new Set();
+let selectedCounty = null;
 let currentCameraIndex = -1;
 let autoRefreshEnabled = true;
 let refreshTimer = null;
@@ -1317,6 +1369,8 @@ function clearAll() {
   renderChips();
   cameras = [];
   filteredCameras = [];
+  selectedCounty = null;
+  buildFlFilterBar();
   renderGrid([]);
   setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
   updateLiveBadge(0);
@@ -1414,6 +1468,8 @@ async function loadSelectedStates() {
   });
 
   cameras = allCams;
+  selectedCounty = null;          // reset county filter on each fresh load
+  buildFlFilterBar();
   filteredCameras = cameras;
   const filterQ = document.getElementById('search-input').value;
   if (filterQ) filterCameras(); else renderGrid(filteredCameras);
@@ -1461,6 +1517,7 @@ function normalizeCameras(state, data) {
         lat:      a.LATITUDE  || 0,
         lon:      a.LONGITUDE || 0,
         imageUrl: a.IMAGE || '',
+        county:   a.COUNTY || '',
         status:   'active',
         source:   state,
       };
@@ -1633,10 +1690,45 @@ function navigateCamera(dir) {
 // ─── Search / Filter ────────────────────────────────────────────────
 function filterCameras() {
   const q = document.getElementById('search-input').value.toLowerCase();
-  filteredCameras = cameras.filter(c =>
-    c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q)
-  );
+  filteredCameras = cameras.filter(c => {
+    const textOk   = !q || c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q);
+    const countyOk = !selectedCounty || c.county === selectedCounty;
+    return textOk && countyOk;
+  });
   renderGrid(filteredCameras);
+}
+
+// ─── FL County Filter Bar ────────────────────────────────────────────
+function buildFlFilterBar() {
+  const bar  = document.getElementById('fl-filter-bar');
+  const flCams = cameras.filter(c => c.source === 'fl');
+
+  if (!flCams.length) { bar.classList.add('hidden'); return; }
+
+  // Count cameras per county, sort alphabetically
+  const counts = {};
+  flCams.forEach(c => { counts[c.county] = (counts[c.county] || 0) + 1; });
+  const counties = Object.keys(counts).filter(Boolean).sort();
+
+  bar.classList.remove('hidden');
+  bar.innerHTML =
+    '<span class="fl-bar-label">FL</span>' +
+    `<button class="county-chip${!selectedCounty ? ' active' : ''}" onclick="selectCounty(null)">
+       All <span class="cc-count">${flCams.length}</span>
+     </button>` +
+    counties.map(c =>
+      `<button class="county-chip${selectedCounty === c ? ' active' : ''}" onclick="selectCounty('${c.replace(/'/g,"\'")}')">
+         ${c} <span class="cc-count">${counts[c]}</span>
+       </button>`
+    ).join('');
+}
+
+function selectCounty(county) {
+  selectedCounty = county;
+  // Re-render chips with updated active state
+  document.querySelectorAll('.county-chip').forEach(btn => btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  filterCameras();
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
