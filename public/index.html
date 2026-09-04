@@ -291,7 +291,6 @@
       transform: scale(1.01);
     }
 
-    /* Thumbnail wrapper with scan-line CCTV effect */
     .camera-thumb-wrap {
       position: relative;
       width: 100%;
@@ -333,7 +332,6 @@
       font-size: 22px;
     }
 
-    /* Camera ID corner tag */
     .cam-id-tag {
       position: absolute;
       bottom: 5px;
@@ -348,7 +346,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* Online/offline pulse dot */
     .cam-status-dot {
       position: absolute;
       top: 6px;
@@ -457,7 +454,6 @@
       overflow: hidden;
     }
 
-    /* Scan-lines on detail image too */
     .detail-image-wrap::after {
       content: '';
       position: absolute;
@@ -766,11 +762,25 @@
     <button class="state-pill" onclick="selectState('nc',this)">NC</button>
     <button class="state-pill" onclick="selectState('pa',this)">PA</button>
     <button class="state-pill" onclick="selectState('ga',this)">GA</button>
+    <button class="state-pill" onclick="selectState('fl',this)">FL</button>
     <button class="state-pill" onclick="selectState('az',this)">AZ</button>
     <button class="state-pill" onclick="selectState('nv',this)">NV</button>
     <button class="state-pill" onclick="selectState('ak',this)">AK</button>
+    <button class="state-pill" onclick="selectState('wi',this)">WI</button>
+    <button class="state-pill" onclick="selectState('ut',this)">UT</button>
+    <button class="state-pill" onclick="selectState('la',this)">LA</button>
+    <button class="state-pill" onclick="selectState('id',this)">ID</button>
+    <button class="state-pill" onclick="selectState('nj',this)">NJ</button>
+    <button class="state-pill" onclick="selectState('va',this)">VA</button>
+    <button class="state-pill" onclick="selectState('ne',this)">NE</button>
+    <button class="state-pill" onclick="selectState('ks',this)">KS</button>
+    <button class="state-pill" onclick="selectState('vt',this)">VT</button>
+    <button class="state-pill" onclick="selectState('nh',this)">NH</button>
+    <button class="state-pill" onclick="selectState('md',this)">MD</button>
+    <button class="state-pill" onclick="selectState('al',this)">AL</button>
+    <button class="state-pill" onclick="selectState('nm',this)">NM</button>
+    <button class="state-pill" onclick="selectState('mi',this)">MI</button>
     <button class="state-pill" onclick="selectState('sf',this)">SF Bay</button>
-    <button class="state-pill" onclick="selectState('fl',this)">FL</button>
   </div>
 
   <!-- Status bar -->
@@ -858,15 +868,19 @@
           </div>
           <div class="settings-row">
             <label>NC</label>
-            <input type="text" id="key-nc" placeholder="NC511 developer key" />
+            <input type="text" id="key-nc" placeholder="DriveNC developer key" />
           </div>
           <div class="settings-row">
             <label>PA</label>
-            <input type="text" id="key-pa" placeholder="PennDOT key" />
+            <input type="text" id="key-pa" placeholder="511PA developer key" />
           </div>
           <div class="settings-row">
             <label>GA</label>
             <input type="text" id="key-ga" placeholder="511GA developer key" />
+          </div>
+          <div class="settings-row">
+            <label>FL</label>
+            <input type="text" id="key-fl" placeholder="FL511 developer key" />
           </div>
           <div class="settings-row">
             <label>AZ</label>
@@ -874,32 +888,98 @@
           </div>
           <div class="settings-row">
             <label>NV</label>
-            <input type="text" id="key-nv" placeholder="NVRoads key" />
+            <input type="text" id="key-nv" placeholder="NVRoads developer key" />
           </div>
           <div class="settings-row">
             <label>AK</label>
-            <input type="text" id="key-ak" placeholder="511 Alaska key" />
+            <input type="text" id="key-ak" placeholder="511 Alaska developer key" />
+          </div>
+          <div class="settings-row">
+            <label>WI</label>
+            <input type="text" id="key-wi" placeholder="511WI developer key" />
+          </div>
+          <div class="settings-row">
+            <label>UT</label>
+            <input type="text" id="key-ut" placeholder="UDOT Traffic developer key" />
+          </div>
+          <div class="settings-row">
+            <label>LA</label>
+            <input type="text" id="key-la" placeholder="511LA developer key" />
+          </div>
+          <div class="settings-row">
+            <label>ID</label>
+            <input type="text" id="key-id" placeholder="511 Idaho developer key" />
+          </div>
+          <div class="settings-row">
+            <label>NJ</label>
+            <input type="text" id="key-nj" placeholder="511NJ developer key" />
+          </div>
+          <div class="settings-row">
+            <label>VA</label>
+            <input type="text" id="key-va" placeholder="511 Virginia developer key" />
+          </div>
+          <div class="settings-row">
+            <label>NE</label>
+            <input type="text" id="key-ne" placeholder="511 Nebraska developer key" />
+          </div>
+          <div class="settings-row">
+            <label>KS</label>
+            <input type="text" id="key-ks" placeholder="KanDrive developer key" />
+          </div>
+          <div class="settings-row">
+            <label>VT</label>
+            <input type="text" id="key-vt" placeholder="511VT developer key" />
+          </div>
+          <div class="settings-row">
+            <label>NH</label>
+            <input type="text" id="key-nh" placeholder="511NH developer key" />
+          </div>
+          <div class="settings-row">
+            <label>MD</label>
+            <input type="text" id="key-md" placeholder="MD511 developer key" />
+          </div>
+          <div class="settings-row">
+            <label>AL</label>
+            <input type="text" id="key-al" placeholder="AL511 developer key" />
+          </div>
+          <div class="settings-row">
+            <label>NM</label>
+            <input type="text" id="key-nm" placeholder="NMRoads developer key" />
+          </div>
+          <div class="settings-row">
+            <label>MI</label>
+            <input type="text" id="key-mi" placeholder="MI511 developer key" />
           </div>
           <div class="settings-row">
             <label>SF</label>
-            <input type="text" id="key-sf" placeholder="511 SF Bay key" />
-            </label>
-            <label>
-              <span>FL</span>
-              <input type="text" id="key-fl" placeholder="FL511 developer key" />
+            <input type="text" id="key-sf" placeholder="511 SF Bay api_key" />
           </div>
         </div>
         <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
         <div class="settings-note">
-          All keys are free. Register at:<br>
-          NY → <a href="#">511ny.org/developers</a> &nbsp;·&nbsp;
-          NC → <a href="#">nc511.org/developers</a><br>
-          PA → <a href="#">511pa.com/developers</a> &nbsp;·&nbsp;
-          GA → <a href="#">511ga.org/developers</a><br>
-          AZ → <a href="#">az511.com/developers</a> &nbsp;·&nbsp;
-          NV → <a href="#">nvroads.com/developers</a><br>
-          AK → <a href="#">511.alaska.gov/developers</a> &nbsp;·&nbsp;
-          SF → <a href="#">511.org/open-data</a>
+          All keys are free. Register at each state's developer portal:<br><br>
+          NY → <a href="https://511ny.org/developers" target="_blank">511ny.org/developers</a> &nbsp;·&nbsp;
+          NC → <a href="https://www.drivenc.gov/developers" target="_blank">drivenc.gov/developers</a><br>
+          PA → <a href="https://www.511pa.com/developers" target="_blank">511pa.com/developers</a> &nbsp;·&nbsp;
+          GA → <a href="https://511ga.org/developers" target="_blank">511ga.org/developers</a><br>
+          FL → <a href="https://fl511.com/developers/doc" target="_blank">fl511.com/developers</a> &nbsp;·&nbsp;
+          AZ → <a href="https://www.az511.com/developers" target="_blank">az511.com/developers</a><br>
+          NV → <a href="https://www.nvroads.com/developers" target="_blank">nvroads.com/developers</a> &nbsp;·&nbsp;
+          AK → <a href="https://511.alaska.gov/developers" target="_blank">511.alaska.gov</a><br>
+          WI → <a href="https://511wi.gov/developers" target="_blank">511wi.gov/developers</a> &nbsp;·&nbsp;
+          UT → <a href="https://www.udottraffic.utah.gov/developers" target="_blank">udottraffic.utah.gov</a><br>
+          LA → <a href="https://511la.org/developers" target="_blank">511la.org/developers</a> &nbsp;·&nbsp;
+          ID → <a href="https://511.idaho.gov/developers" target="_blank">511.idaho.gov</a><br>
+          NJ → <a href="https://www.511nj.org/developers" target="_blank">511nj.org/developers</a> &nbsp;·&nbsp;
+          VA → <a href="https://511.vdot.virginia.gov/developers" target="_blank">511.vdot.virginia.gov</a><br>
+          NE → <a href="https://511.nebraska.gov/developers" target="_blank">511.nebraska.gov</a> &nbsp;·&nbsp;
+          KS → <a href="https://www.kandrive.gov/developers" target="_blank">kandrive.gov/developers</a><br>
+          VT → <a href="https://www.511vt.org/developers" target="_blank">511vt.org/developers</a> &nbsp;·&nbsp;
+          NH → <a href="https://www.511nh.com/developers" target="_blank">511nh.com/developers</a><br>
+          MD → <a href="https://md511.org/developers" target="_blank">md511.org/developers</a> &nbsp;·&nbsp;
+          AL → <a href="https://www.al511.com/developers" target="_blank">al511.com/developers</a><br>
+          NM → <a href="https://nmroads.com/developers" target="_blank">nmroads.com/developers</a> &nbsp;·&nbsp;
+          MI → <a href="https://www.mi511.org/developers" target="_blank">mi511.org/developers</a>
         </div>
       </div>
 
@@ -922,9 +1002,9 @@
         <div class="settings-title">About</div>
         <div class="settings-note">
           StateRoad.fyi — Meta Ray-Ban Display web app.<br>
-          Live traffic cameras from 8 state DOT 511 APIs.<br>
+          Live traffic cameras from 23 state DOT 511 APIs.<br>
           Optimized for glasses display via Meta Wearables Toolkit.<br><br>
-          Version 1.1.0 · stateroad.fyi
+          Version 1.2.0 · stateroad.fyi
         </div>
       </div>
     </div>
@@ -941,14 +1021,28 @@ const STATE_CONFIGS = {
   nc: { label: 'N. Carolina',   endpoint: '/api/cameras/nc', keyParam: 'key' },
   pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
   ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key' },
+  fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key' },
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
   sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key' },
-  fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key' },
+  wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key' },
+  ut: { label: 'Utah',          endpoint: '/api/cameras/ut', keyParam: 'key' },
+  la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
+  id: { label: 'Idaho',         endpoint: '/api/cameras/id', keyParam: 'key' },
+  nj: { label: 'New Jersey',    endpoint: '/api/cameras/nj', keyParam: 'key' },
+  va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key' },
+  ne: { label: 'Nebraska',      endpoint: '/api/cameras/ne', keyParam: 'key' },
+  ks: { label: 'Kansas',        endpoint: '/api/cameras/ks', keyParam: 'key' },
+  vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', keyParam: 'key' },
+  nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', keyParam: 'key' },
+  md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key' },
+  al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
+  nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
+  mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
 };
 
-const ALL_KEYS = ['ny', 'nc', 'pa', 'ga', 'az', 'nv', 'ak', 'sf', 'fl'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','sf'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -968,7 +1062,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function loadSettings() {
   ALL_KEYS.forEach(k => {
     const saved = localStorage.getItem(`apikey_${k}`);
-    if (saved) document.getElementById(`key-${k}`).value = saved;
+    const el = document.getElementById(`key-${k}`);
+    if (saved && el) el.value = saved;
   });
   const rate = localStorage.getItem('refresh_rate');
   if (rate) document.getElementById('refresh-rate').value = rate;
@@ -976,7 +1071,9 @@ function loadSettings() {
 
 function saveKeys() {
   ALL_KEYS.forEach(k => {
-    const val = document.getElementById(`key-${k}`).value.trim();
+    const el = document.getElementById(`key-${k}`);
+    if (!el) return;
+    const val = el.value.trim();
     if (val) localStorage.setItem(`apikey_${k}`, val);
     else localStorage.removeItem(`apikey_${k}`);
   });
@@ -988,10 +1085,8 @@ function saveKeys() {
 
 // ─── State Selection ────────────────────────────────────────────────
 function selectState(state, btn) {
-  // Update active pill
   document.querySelectorAll('.state-pill').forEach(p => p.classList.remove('active'));
   if (btn) btn.classList.add('active');
-
   currentState = state;
   loadCameras(state);
 }

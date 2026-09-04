@@ -24,6 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ─── 511 State Camera Endpoints ─────────────────────────────────────
 
 const STATE_ENDPOINTS = {
+  // ── v1.0 / v1.1 states ──────────────────────────────────────────
   ny: 'https://511ny.org/api/v2/get/cameras',
   ga: 'https://511ga.org/api/v2/get/cameras',
   az: 'https://www.az511.com/api/v2/get/cameras',
@@ -33,6 +34,21 @@ const STATE_ENDPOINTS = {
   pa: 'https://www.511pa.com/api/v2/get/cameras',
   nc: 'https://www.drivenc.gov/api/v2/get/cameras',
   fl: 'https://fl511.com/api/v2/get/cameras',
+  // ── v1.2.0 additions (ibi511 platform, free registration) ────────
+  wi: 'https://511wi.gov/api/v2/get/cameras',
+  ut: 'https://www.udottraffic.utah.gov/api/v2/get/cameras',
+  la: 'https://511la.org/api/v2/get/cameras',
+  id: 'https://511.idaho.gov/api/v2/get/cameras',
+  nj: 'https://www.511nj.org/api/v2/get/cameras',
+  va: 'https://511.vdot.virginia.gov/api/v2/get/cameras',
+  ne: 'https://511.nebraska.gov/api/v2/get/cameras',
+  ks: 'https://www.kandrive.gov/api/v2/get/cameras',
+  vt: 'https://www.511vt.org/api/v2/get/cameras',
+  nh: 'https://www.511nh.com/api/v2/get/cameras',
+  md: 'https://md511.org/api/v2/get/cameras',
+  al: 'https://www.al511.com/api/v2/get/cameras',
+  nm: 'https://nmroads.com/api/v2/get/cameras',
+  mi: 'https://www.mi511.org/api/v2/get/cameras',
 };
 
 // GET /api/cameras/:state?key=APIKEY
@@ -120,7 +136,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.0.0',
+    version: '1.2.0',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });
