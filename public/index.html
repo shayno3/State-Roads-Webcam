@@ -852,7 +852,7 @@
 
       <div class="detail-controls">
         <button class="ctrl-btn" onclick="toggleAutoRefresh()">⟳ <span id="auto-label">Auto: ON</span></button>
-        <button class="ctrl-btn primary" onclick="manualRefresh()">Refresh Now</button>
+        <button class="ctrl-btn primary" onclick="openOnGlasses()">🕶 Glasses</button>
         <button class="ctrl-btn" onclick="copyLocation()">📋 Copy</button>
       </div>
     </div>
@@ -1354,6 +1354,15 @@ function toggleView() {
   const grid = document.getElementById('camera-grid');
   grid.style.gridTemplateColumns = gridView ? '1fr 1fr' : '1fr';
   document.getElementById('view-toggle-btn').textContent = gridView ? '⊞' : '☰';
+}
+
+function openOnGlasses() {
+  if (currentCameraIndex < 0) return;
+  const cam = filteredCameras[currentCameraIndex];
+  if (!cam.imageUrl) { showToast("No feed URL"); return; }
+  const encoded = encodeURIComponent(cam.imageUrl);
+  const title = encodeURIComponent(cam.road + " - " + cam.location);
+  window.open("/view?url=" + encoded + "&title=" + title, "_blank");
 }
 
 function copyLocation() {
