@@ -3,31 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Road Cams</title>
+  <title>StateRoad.fyi — Live Road Cameras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* ─── Reset & Base ─────────────────────────────────────────── */
+    /* ─── Reset & Base ────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0a0a0f;
-      --surface:   #12121a;
-      --surface2:  #1c1c28;
-      --border:    #2a2a3e;
-      --accent:    #4f8ef7;
-      --accent2:   #7c5cfc;
-      --text:      #e8e8f0;
-      --text-muted:#7878a0;
-      --green:     #2ecc8a;
-      --red:       #e85555;
-      --radius:    10px;
-      --font:      -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+      --bg:        #0A0C12;
+      --surface:   #141720;
+      --surface2:  #1C2030;
+      --border:    #252A3A;
+      --text:      #DDE1EC;
+      --muted:     #5C6278;
+      --accent:    #F5C318;
+      --accent-dim:rgba(245,195,24,0.10);
+      --live:      #3CB878;
+      --live-dim:  rgba(60,184,120,0.12);
+      --offline:   #E04545;
+      --font-ui:   'Inter', system-ui, sans-serif;
+      --font-head: 'Barlow Condensed', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
 
     html, body {
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: var(--font);
+      font-family: var(--font-ui);
       font-size: 14px;
       overflow: hidden;
     }
@@ -46,7 +51,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 16px;
+      padding: 10px 14px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
@@ -56,45 +61,64 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: -0.3px;
-      color: var(--text);
-      text-decoration: none;
+      gap: 9px;
       cursor: pointer;
       flex-shrink: 0;
+      text-decoration: none;
     }
 
-    .logo-icon {
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 8px;
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--accent);
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
+      flex-shrink: 0;
     }
 
-    /* State selector */
-    #state-select {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+    .logo-mark svg { display: block; }
+
+    .logo-text {
+      line-height: 1;
+    }
+
+    .logo-name {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.5px;
       color: var(--text);
-      font-size: 13px;
-      padding: 6px 10px;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237878a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
-      cursor: pointer;
+      text-transform: uppercase;
     }
 
-    #state-select:focus { outline: none; border-color: var(--accent); }
+    .logo-tld {
+      color: var(--accent);
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--live-dim);
+      border: 1px solid rgba(60,184,120,0.25);
+      border-radius: 20px;
+      padding: 2px 7px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--live);
+      letter-spacing: 0.5px;
+    }
+
+    .live-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--live);
+      animation: pulse 2s infinite;
+    }
 
     .header-btns {
       display: flex;
@@ -106,30 +130,73 @@
       width: 34px;
       height: 34px;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 7px;
       background: var(--surface2);
-      color: var(--text-muted);
+      color: var(--muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 15px;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
 
     .icon-btn:hover, .icon-btn.active {
       background: var(--accent);
-      color: #fff;
+      color: #000;
       border-color: var(--accent);
+    }
+
+    /* ─── State Pill Bar ─────────────────────────────────────────── */
+    #state-bar {
+      display: flex;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    #state-bar::-webkit-scrollbar { display: none; }
+
+    .state-pill {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .state-pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .state-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
     }
 
     /* ─── Status bar ────────────────────────────────────────────── */
     #status-bar {
-      padding: 6px 16px;
-      background: var(--surface);
+      padding: 5px 14px;
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -140,16 +207,17 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--green);
+      background: var(--live);
       animation: pulse 2s infinite;
+      flex-shrink: 0;
     }
 
     .status-dot.loading { background: var(--accent); }
-    .status-dot.error { background: var(--red); animation: none; }
+    .status-dot.error   { background: var(--offline); animation: none; }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+      50%       { opacity: 0.35; }
     }
 
     /* ─── Main Content ──────────────────────────────────────────── */
@@ -172,16 +240,46 @@
     /* ─── Camera List View ──────────────────────────────────────── */
     #list-view { padding: 10px; }
 
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    #search-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      padding: 7px 12px;
+    }
+
+    #search-input::placeholder { color: var(--muted); }
+    #search-input:focus { outline: none; border-color: var(--accent); }
+
+    .count-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      padding: 0 2px;
+      letter-spacing: 0.3px;
+    }
+
     .camera-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
+    /* ─── Camera Card ────────────────────────────────────────────── */
     .camera-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
       transition: border-color 0.15s, transform 0.1s;
@@ -193,36 +291,91 @@
       transform: scale(1.01);
     }
 
-    .camera-thumb {
+    /* Thumbnail wrapper with scan-line CCTV effect */
+    .camera-thumb-wrap {
+      position: relative;
       width: 100%;
       aspect-ratio: 16/9;
       background: var(--surface2);
+      overflow: hidden;
+    }
+
+    .camera-thumb-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.18) 3px,
+        rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .camera-thumb {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
+      filter: contrast(1.05);
     }
 
     .camera-thumb-placeholder {
       width: 100%;
-      aspect-ratio: 16/9;
-      background: var(--surface2);
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-muted);
+      color: var(--muted);
       font-size: 22px;
     }
 
+    /* Camera ID corner tag */
+    .cam-id-tag {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: rgba(255,255,255,0.55);
+      background: rgba(0,0,0,0.5);
+      padding: 1px 4px;
+      border-radius: 2px;
+      z-index: 3;
+      letter-spacing: 0.3px;
+    }
+
+    /* Online/offline pulse dot */
+    .cam-status-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--live);
+      border: 1.5px solid rgba(0,0,0,0.6);
+      z-index: 3;
+    }
+
+    .cam-status-dot.offline { background: var(--offline); }
+    .cam-status-dot.online  { animation: pulse 2s infinite; }
+
     .camera-info {
-      padding: 7px 8px;
+      padding: 6px 8px 7px;
     }
 
     .camera-road {
-      font-size: 11px;
+      font-family: var(--font-head);
       font-weight: 700;
+      font-size: 12px;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
+      letter-spacing: 0.8px;
+      margin-bottom: 1px;
     }
 
     .camera-location {
@@ -231,47 +384,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .camera-status-badge {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      border: 1.5px solid var(--bg);
-    }
-
-    .camera-status-badge.offline { background: var(--red); }
-
-    /* Search bar */
-    .search-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    #search-input {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-size: 13px;
-      padding: 8px 12px;
-    }
-
-    #search-input::placeholder { color: var(--text-muted); }
-    #search-input:focus { outline: none; border-color: var(--accent); }
-
-    /* Count badge */
-    .count-badge {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      padding: 0 2px;
     }
 
     /* ─── Camera Detail View ────────────────────────────────────── */
@@ -288,7 +400,7 @@
       align-items: center;
       gap: 10px;
       padding: 10px 14px;
-      background: rgba(10,10,15,0.9);
+      background: rgba(10,12,18,0.95);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
@@ -297,7 +409,7 @@
     .back-btn {
       width: 30px;
       height: 30px;
-      border-radius: 8px;
+      border-radius: 6px;
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
@@ -308,23 +420,31 @@
       font-size: 14px;
     }
 
-    .detail-title { flex: 1; }
+    .detail-title { flex: 1; min-width: 0; }
+
     .detail-road {
-      font-size: 11px;
+      font-family: var(--font-head);
       font-weight: 700;
+      font-size: 13px;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
+
     .detail-location {
       font-size: 13px;
       font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .refresh-info {
+      font-family: var(--font-mono);
       font-size: 10px;
-      color: var(--text-muted);
+      color: var(--muted);
       text-align: right;
+      flex-shrink: 0;
     }
 
     .detail-image-wrap {
@@ -335,6 +455,23 @@
       align-items: center;
       justify-content: center;
       min-height: 200px;
+      overflow: hidden;
+    }
+
+    /* Scan-lines on detail image too */
+    .detail-image-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.12) 3px,
+        rgba(0,0,0,0.12) 4px
+      );
+      pointer-events: none;
+      z-index: 2;
     }
 
     #detail-img {
@@ -347,13 +484,13 @@
     .img-overlay {
       position: absolute;
       inset: 0;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.75);
       font-size: 13px;
-      color: var(--text-muted);
-      display: none;
+      color: var(--muted);
+      z-index: 10;
     }
 
     .img-overlay.visible { display: flex; }
@@ -362,13 +499,15 @@
       position: absolute;
       bottom: 10px;
       right: 10px;
-      background: rgba(10,10,15,0.85);
+      background: rgba(10,12,18,0.85);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 4px 10px;
-      font-size: 10px;
-      color: var(--text-muted);
+      padding: 3px 9px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
       backdrop-filter: blur(4px);
+      z-index: 5;
     }
 
     .detail-meta {
@@ -381,15 +520,14 @@
       flex-shrink: 0;
     }
 
-    .meta-item {
-      text-align: center;
-    }
+    .meta-item { text-align: center; }
 
     .meta-label {
-      font-size: 9px;
+      font-family: var(--font-mono);
+      font-size: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      color: var(--muted);
       margin-bottom: 3px;
     }
 
@@ -410,10 +548,11 @@
     .ctrl-btn {
       flex: 1;
       padding: 9px;
-      border-radius: var(--radius);
+      border-radius: 6px;
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--text);
+      font-family: var(--font-ui);
       font-size: 12px;
       cursor: pointer;
       text-align: center;
@@ -423,12 +562,12 @@
     .ctrl-btn.primary {
       background: var(--accent);
       border-color: var(--accent);
+      color: #000;
       font-weight: 600;
     }
 
     .ctrl-btn:hover { opacity: 0.85; }
 
-    /* Nav arrows for previous/next camera */
     .detail-nav {
       position: absolute;
       top: 50%;
@@ -436,7 +575,7 @@
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(10,10,15,0.8);
+      background: rgba(10,12,18,0.82);
       border: 1px solid var(--border);
       color: var(--text);
       cursor: pointer;
@@ -462,24 +601,25 @@
     }
 
     .settings-title {
-      font-size: 11px;
+      font-family: var(--font-mono);
+      font-size: 9px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
+      letter-spacing: 1px;
+      color: var(--muted);
       margin-bottom: 8px;
     }
 
     .settings-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 8px;
       overflow: hidden;
     }
 
     .settings-row {
       display: flex;
       align-items: center;
-      padding: 11px 14px;
+      padding: 10px 14px;
       gap: 10px;
       border-bottom: 1px solid var(--border);
     }
@@ -487,37 +627,41 @@
     .settings-row:last-child { border-bottom: none; }
 
     .settings-row label {
-      font-size: 12px;
-      color: var(--text-muted);
-      width: 48px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--muted);
+      width: 42px;
       flex-shrink: 0;
-      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .settings-row input {
       flex: 1;
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--text);
-      font-size: 12px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-family: var(--font-mono);
+      font-size: 11px;
       padding: 5px 8px;
     }
 
     .settings-row input:focus { outline: none; border-color: var(--accent); }
-
-    .settings-row input::placeholder { color: var(--text-muted); }
+    .settings-row input::placeholder { color: var(--muted); }
 
     .save-btn {
       width: 100%;
       padding: 11px;
       background: var(--accent);
       border: none;
-      border-radius: var(--radius);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
+      border-radius: 7px;
+      color: #000;
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       cursor: pointer;
       margin-top: 6px;
     }
@@ -526,19 +670,16 @@
 
     .settings-note {
       font-size: 11px;
-      color: var(--text-muted);
+      color: var(--muted);
       line-height: 1.5;
       margin-top: 8px;
       padding: 10px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 7px;
     }
 
-    .settings-note a {
-      color: var(--accent);
-      text-decoration: none;
-    }
+    .settings-note a { color: var(--accent); text-decoration: none; }
 
     /* ─── Empty / Loading States ────────────────────────────────── */
     .empty-state {
@@ -549,17 +690,17 @@
       padding: 40px 20px;
       text-align: center;
       gap: 10px;
-      color: var(--text-muted);
+      color: var(--muted);
     }
 
     .empty-icon { font-size: 36px; }
-    .empty-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .empty-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
     .empty-sub { font-size: 12px; line-height: 1.5; }
 
     .spinner {
-      width: 28px;
-      height: 28px;
-      border: 3px solid var(--border);
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--border);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
@@ -576,8 +717,9 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 8px 16px;
-      font-size: 12px;
+      padding: 7px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
       color: var(--text);
       z-index: 1000;
       transition: transform 0.25s;
@@ -588,9 +730,9 @@
     #toast.show { transform: translateX(-50%) translateY(0); }
 
     /* ─── Scrollbar ─────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -599,29 +741,42 @@
   <!-- Header -->
   <header>
     <div class="logo" onclick="showView('list')">
-      <div class="logo-icon">🚗</div>
-      Road Cams
+      <div class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 14 L9 4 L16 14" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 4 L9 14" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-name">StateRoad<span class="logo-tld">.fyi</span></div>
+      </div>
     </div>
-    <select id="state-select" onchange="onStateChange()">
-      <option value="">— Select State —</option>
-      <option value="ny">New York</option>
-      <option value="ga">Georgia</option>
-      <option value="az">Arizona</option>
-      <option value="ak">Alaska</option>
-      <option value="nv">Nevada</option>
-      <option value="sf">SF Bay Area (CA)</option>
-      <option value="pa">Pennsylvania</option>
-    </select>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span id="live-count">LIVE</span>
+    </div>
     <div class="header-btns">
       <button class="icon-btn" id="view-toggle-btn" onclick="toggleView()" title="Toggle view">⊞</button>
       <button class="icon-btn" onclick="showView('settings')" title="Settings">⚙</button>
     </div>
   </header>
 
+  <!-- State Pill Bar -->
+  <div id="state-bar">
+    <button class="state-pill" onclick="selectState('ny',this)">NY</button>
+    <button class="state-pill" onclick="selectState('nc',this)">NC</button>
+    <button class="state-pill" onclick="selectState('pa',this)">PA</button>
+    <button class="state-pill" onclick="selectState('ga',this)">GA</button>
+    <button class="state-pill" onclick="selectState('az',this)">AZ</button>
+    <button class="state-pill" onclick="selectState('nv',this)">NV</button>
+    <button class="state-pill" onclick="selectState('ak',this)">AK</button>
+    <button class="state-pill" onclick="selectState('sf',this)">SF Bay</button>
+  </div>
+
   <!-- Status bar -->
   <div id="status-bar">
     <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">Select a state to load cameras</span>
+    <span id="status-text">SELECT A STATE TO LOAD CAMERAS</span>
   </div>
 
   <!-- Content -->
@@ -637,9 +792,9 @@
         <div class="camera-grid" id="camera-grid">
           <div style="grid-column:1/-1;">
             <div class="empty-state">
-              <div class="empty-icon">🗺️</div>
-              <div class="empty-title">No state selected</div>
-              <div class="empty-sub">Choose a state above to browse live road cameras.</div>
+              <div class="empty-icon">🛣️</div>
+              <div class="empty-title">No State Selected</div>
+              <div class="empty-sub">Tap a state above to browse live road cameras.</div>
             </div>
           </div>
         </div>
@@ -695,11 +850,19 @@
     <!-- ── SETTINGS VIEW ── -->
     <div id="settings-view" class="view">
       <div class="settings-section">
-        <div class="settings-title">API Keys (free — register at each state's 511 portal)</div>
+        <div class="settings-title">API Keys — free at each state's 511 portal</div>
         <div class="settings-card">
           <div class="settings-row">
             <label>NY</label>
             <input type="text" id="key-ny" placeholder="511NY developer key" />
+          </div>
+          <div class="settings-row">
+            <label>NC</label>
+            <input type="text" id="key-nc" placeholder="NC511 developer key" />
+          </div>
+          <div class="settings-row">
+            <label>PA</label>
+            <input type="text" id="key-pa" placeholder="PennDOT key" />
           </div>
           <div class="settings-row">
             <label>GA</label>
@@ -710,30 +873,28 @@
             <input type="text" id="key-az" placeholder="AZ511 developer key" />
           </div>
           <div class="settings-row">
-            <label>AK</label>
-            <input type="text" id="key-ak" placeholder="511 Alaska key" />
-          </div>
-          <div class="settings-row">
             <label>NV</label>
             <input type="text" id="key-nv" placeholder="NVRoads key" />
+          </div>
+          <div class="settings-row">
+            <label>AK</label>
+            <input type="text" id="key-ak" placeholder="511 Alaska key" />
           </div>
           <div class="settings-row">
             <label>SF</label>
             <input type="text" id="key-sf" placeholder="511 SF Bay key" />
           </div>
-          <div class="settings-row">
-            <label>PA</label>
-            <input type="text" id="key-pa" placeholder="PennDOT key" />
-          </div>
         </div>
         <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
         <div class="settings-note">
-          All keys are free. Get them at:<br>
+          All keys are free. Register at:<br>
           NY → <a href="#">511ny.org/developers</a> &nbsp;·&nbsp;
+          NC → <a href="#">nc511.org/developers</a><br>
+          PA → <a href="#">511pa.com/developers</a> &nbsp;·&nbsp;
           GA → <a href="#">511ga.org/developers</a><br>
           AZ → <a href="#">az511.com/developers</a> &nbsp;·&nbsp;
-          AK → <a href="#">511.alaska.gov/developers</a><br>
-          NV → <a href="#">nvroads.com/developers</a> &nbsp;·&nbsp;
+          NV → <a href="#">nvroads.com/developers</a><br>
+          AK → <a href="#">511.alaska.gov/developers</a> &nbsp;·&nbsp;
           SF → <a href="#">511.org/open-data</a>
         </div>
       </div>
@@ -743,7 +904,7 @@
         <div class="settings-card">
           <div class="settings-row">
             <label>Every</label>
-            <select id="refresh-rate" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:5px 8px;">
+            <select id="refresh-rate" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;padding:5px 8px;">
               <option value="10">10 seconds</option>
               <option value="30" selected>30 seconds</option>
               <option value="60">1 minute</option>
@@ -756,10 +917,10 @@
       <div class="settings-section">
         <div class="settings-title">About</div>
         <div class="settings-note">
-          Road Cams — Meta Ray-Ban Display web app.<br>
-          Uses free 511 state DOT traffic camera APIs.<br>
+          StateRoad.fyi — Meta Ray-Ban Display web app.<br>
+          Live traffic cameras from 8 state DOT 511 APIs.<br>
           Optimized for glasses display via Meta Wearables Toolkit.<br><br>
-          Version 1.0.0 · Built for Meta Ray-Ban Display
+          Version 1.1.0 · stateroad.fyi
         </div>
       </div>
     </div>
@@ -770,54 +931,23 @@
 <div id="toast"></div>
 
 <script>
-// ─── State ─────────────────────────────────────────────────────────
+// ─── State Configs ──────────────────────────────────────────────────
 const STATE_CONFIGS = {
-  ny: {
-    label: 'New York',
-    endpoint: '/api/cameras/ny',
-    apiUrl: 'https://511ny.org/api/v2/get/cameras',
-    keyParam: 'key',
-  },
-  ga: {
-    label: 'Georgia',
-    endpoint: '/api/cameras/ga',
-    apiUrl: 'https://511ga.org/api/v2/get/cameras',
-    keyParam: 'key',
-  },
-  az: {
-    label: 'Arizona',
-    endpoint: '/api/cameras/az',
-    apiUrl: 'https://www.az511.com/api/v2/get/cameras',
-    keyParam: 'key',
-  },
-  ak: {
-    label: 'Alaska',
-    endpoint: '/api/cameras/ak',
-    apiUrl: 'https://511.alaska.gov/api/v2/get/cameras',
-    keyParam: 'key',
-  },
-  nv: {
-    label: 'Nevada',
-    endpoint: '/api/cameras/nv',
-    apiUrl: 'https://www.nvroads.com/api/v2/get/cameras',
-    keyParam: 'key',
-  },
-  sf: {
-    label: 'SF Bay Area',
-    endpoint: '/api/cameras/sf',
-    apiUrl: 'https://api.511.org/traffic/cameras',
-    keyParam: 'api_key',
-  },
-  pa: {
-    label: 'Pennsylvania',
-    endpoint: '/api/cameras/pa',
-    apiUrl: 'https://www.511pa.com/api/v2/get/cameras',
-    keyParam: 'key',
-  },
+  ny: { label: 'New York',      endpoint: '/api/cameras/ny', keyParam: 'key' },
+  nc: { label: 'N. Carolina',   endpoint: '/api/cameras/nc', keyParam: 'key' },
+  pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
+  ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key' },
+  az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
+  nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
+  ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
+  sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key' },
 };
+
+const ALL_KEYS = ['ny', 'nc', 'pa', 'ga', 'az', 'nv', 'ak', 'sf'];
 
 let cameras = [];
 let filteredCameras = [];
+let currentState = '';
 let currentCameraIndex = -1;
 let autoRefreshEnabled = true;
 let refreshTimer = null;
@@ -831,8 +961,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadSettings() {
-  const keys = ['ny', 'ga', 'az', 'ak', 'nv', 'sf', 'pa'];
-  keys.forEach(k => {
+  ALL_KEYS.forEach(k => {
     const saved = localStorage.getItem(`apikey_${k}`);
     if (saved) document.getElementById(`key-${k}`).value = saved;
   });
@@ -841,8 +970,7 @@ function loadSettings() {
 }
 
 function saveKeys() {
-  const keys = ['ny', 'ga', 'az', 'ak', 'nv', 'sf', 'pa'];
-  keys.forEach(k => {
+  ALL_KEYS.forEach(k => {
     const val = document.getElementById(`key-${k}`).value.trim();
     if (val) localStorage.setItem(`apikey_${k}`, val);
     else localStorage.removeItem(`apikey_${k}`);
@@ -853,6 +981,16 @@ function saveKeys() {
   showView('list');
 }
 
+// ─── State Selection ────────────────────────────────────────────────
+function selectState(state, btn) {
+  // Update active pill
+  document.querySelectorAll('.state-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  currentState = state;
+  loadCameras(state);
+}
+
 // ─── View Routing ───────────────────────────────────────────────────
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -860,21 +998,20 @@ function showView(name) {
   if (name !== 'detail') clearDetailTimers();
 }
 
-// ─── State / Camera Loading ─────────────────────────────────────────
-async function onStateChange() {
-  const state = document.getElementById('state-select').value;
-  if (!state) return;
-
+// ─── Camera Loading ─────────────────────────────────────────────────
+async function loadCameras(state) {
   const apiKey = localStorage.getItem(`apikey_${state}`);
   if (!apiKey) {
     setStatus('loading', false);
     showEmptyState('🔑', 'API Key Required',
-      `Go to Settings and add your free ${STATE_CONFIGS[state].label} 511 API key.`);
+      `Open Settings and add your free ${STATE_CONFIGS[state].label} 511 API key.`);
+    updateLiveBadge(0);
     return;
   }
 
-  setStatus('loading', true, `Loading ${STATE_CONFIGS[state].label} cameras…`);
+  setStatus('loading', true, `LOADING ${STATE_CONFIGS[state].label.toUpperCase()} CAMERAS…`);
   showEmptyState('', '', '', true);
+  showView('list');
 
   try {
     const res = await fetch(`${STATE_CONFIGS[state].endpoint}?key=${encodeURIComponent(apiKey)}`);
@@ -883,21 +1020,21 @@ async function onStateChange() {
     cameras = normalizeCameras(state, data);
     filteredCameras = cameras;
     renderGrid(filteredCameras);
-    setStatus('ok', false, `${cameras.length} cameras loaded · ${STATE_CONFIGS[state].label}`);
+    setStatus('ok', false, `${cameras.length} CAMERAS · ${STATE_CONFIGS[state].label.toUpperCase()}`);
+    updateLiveBadge(cameras.length);
   } catch (err) {
     console.error(err);
-    setStatus('error', false, `Failed to load: ${err.message}`);
+    setStatus('error', false, `LOAD FAILED: ${err.message.toUpperCase()}`);
     showEmptyState('⚠️', 'Load Failed',
       `Check your API key in Settings or try again. (${err.message})`);
+    updateLiveBadge(0);
   }
 }
 
-// ─── Normalize camera data from different 511 APIs ──────────────────
+// ─── Normalize 511 camera data ──────────────────────────────────────
 function normalizeCameras(state, data) {
-  // Standard 511 format (NY, GA, AZ, AK, NV, PA)
   if (Array.isArray(data)) {
     return data.map((cam, i) => {
-      // Each cam may have Views array with URL(s)
       const view = (cam.Views || cam.views || [])[0] || {};
       const imgUrl = view.Url || view.url || view.VideoUrl || cam.VideoUrl || cam.url || '';
       return {
@@ -914,7 +1051,7 @@ function normalizeCameras(state, data) {
     });
   }
 
-  // SF Bay 511 format (slightly different)
+  // SF Bay 511 format
   if (data && data.CCTV) {
     return data.CCTV.map((cam, i) => ({
       id: cam['@id'] || i,
@@ -947,14 +1084,18 @@ function renderGrid(cams) {
 
   grid.innerHTML = cams.map((cam, idx) => {
     const online = cam.status !== 'offline' && cam.status !== 'inactive';
+    const camId = String(cam.id).slice(-4).toUpperCase().padStart(4, '0');
     return `
       <div class="camera-card" onclick="openCamera(${idx})">
-        ${cam.imageUrl
-          ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
-             /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
-          : `<div class="camera-thumb-placeholder">📷</div>`}
-        <div class="camera-status-badge ${online ? '' : 'offline'}"></div>
+        <div class="camera-thumb-wrap">
+          ${cam.imageUrl
+            ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+               /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
+            : `<div class="camera-thumb-placeholder">📷</div>`}
+          <div class="cam-id-tag">CAM-${camId}</div>
+          <div class="cam-status-dot ${online ? 'online' : 'offline'}"></div>
+        </div>
         <div class="camera-info">
           <div class="camera-road">${cam.road}</div>
           <div class="camera-location">${cam.location}</div>
@@ -965,7 +1106,6 @@ function renderGrid(cams) {
 
 function proxyImage(url) {
   if (!url) return '';
-  // Route images through proxy to handle CORS
   return `/api/image?url=${encodeURIComponent(url)}&t=${Date.now()}`;
 }
 
@@ -1002,7 +1142,7 @@ function updateDetailImage(cam) {
   overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
 
   const src = `/api/image?url=${encodeURIComponent(cam.imageUrl)}&t=${Date.now()}`;
-  img.onload = () => { overlay.classList.remove('visible'); updateMetaTime(); };
+  img.onload  = () => { overlay.classList.remove('visible'); updateMetaTime(); };
   img.onerror = () => {
     overlay.classList.add('visible');
     overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-sub">Feed unavailable</div></div>';
@@ -1011,9 +1151,8 @@ function updateDetailImage(cam) {
 }
 
 function updateMetaTime() {
-  const now = new Date();
   document.getElementById('meta-time').textContent =
-    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 // ─── Auto Refresh ───────────────────────────────────────────────────
@@ -1033,8 +1172,7 @@ function startAutoRefresh() {
     if (autoRefreshEnabled) {
       refreshCountdown--;
       if (refreshCountdown <= 0) {
-        const savedRate = parseInt(localStorage.getItem('refresh_rate') || '30');
-        refreshCountdown = savedRate;
+        refreshCountdown = parseInt(localStorage.getItem('refresh_rate') || '30');
       }
     }
     updateRefreshBadge();
@@ -1042,19 +1180,15 @@ function startAutoRefresh() {
 }
 
 function clearDetailTimers() {
-  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  if (refreshTimer)   { clearInterval(refreshTimer);   refreshTimer   = null; }
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
 }
 
 function updateRefreshBadge() {
   const badge = document.getElementById('refresh-badge');
-  if (autoRefreshEnabled) {
-    badge.textContent = `⟳ ${refreshCountdown}s`;
-  } else {
-    badge.textContent = '⏸ Paused';
-  }
+  badge.textContent = autoRefreshEnabled ? `⟳ ${refreshCountdown}s` : '⏸ Paused';
   const info = document.getElementById('refresh-info');
-  info.textContent = autoRefreshEnabled ? `Refreshes in ${refreshCountdown}s` : 'Paused';
+  info.textContent = autoRefreshEnabled ? `${refreshCountdown}s` : 'Paused';
 }
 
 function toggleAutoRefresh() {
@@ -1065,8 +1199,7 @@ function toggleAutoRefresh() {
 
 function manualRefresh() {
   if (currentCameraIndex >= 0) {
-    const rate = parseInt(localStorage.getItem('refresh_rate') || '30');
-    refreshCountdown = rate;
+    refreshCountdown = parseInt(localStorage.getItem('refresh_rate') || '30');
     updateDetailImage(filteredCameras[currentCameraIndex]);
     showToast('Refreshed');
   }
@@ -1078,8 +1211,7 @@ function navigateCamera(dir) {
   if (next < 0 || next >= filteredCameras.length) return;
   currentCameraIndex = next;
   loadDetail(filteredCameras[currentCameraIndex]);
-  const rate = parseInt(localStorage.getItem('refresh_rate') || '30');
-  refreshCountdown = rate;
+  refreshCountdown = parseInt(localStorage.getItem('refresh_rate') || '30');
 }
 
 // ─── Search / Filter ────────────────────────────────────────────────
@@ -1092,10 +1224,16 @@ function filterCameras() {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
-function setStatus(type, spinner, text) {
+function setStatus(type, _spinner, text) {
   const dot = document.getElementById('status-dot');
-  dot.className = 'status-dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
+  dot.className = 'status-dot' +
+    (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
   if (text) document.getElementById('status-text').textContent = text;
+}
+
+function updateLiveBadge(count) {
+  document.getElementById('live-count').textContent =
+    count > 0 ? `${count} LIVE` : 'LIVE';
 }
 
 function showEmptyState(icon, title, sub, loading = false) {

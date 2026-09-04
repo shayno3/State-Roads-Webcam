@@ -1,10 +1,11 @@
 # Tech Stack Reference Log
 ## Road Cams — Meta Ray-Ban Display Web App
 
-**Project:** roadcams-glasses
-**Version:** 1.0.0
-**Build Date:** 2026-09-04
-**Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses
+**Project:** roadcams-glasses  
+**Version:** 1.1.0  
+**Build Date:** 2026-09-04  
+**Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
+**Live URL:** https://stateroad.fyi
 
 ---
 
@@ -15,11 +16,17 @@
 | Language | HTML5 / CSS3 / ES2022 JavaScript | — | Single-file, no build step |
 | Framework | None (vanilla JS) | — | Keeps bundle tiny for glasses display |
 | UI paradigm | Dark-theme, mobile-first SPA | — | Optimized for Meta Ray-Ban Display small screen |
-| Fonts | System font stack (`-apple-system`, `SF Pro`, `Segoe UI`) | — | No external font loading |
-| Icons | Unicode/emoji | — | No icon library dependency |
+| Display font | Barlow Condensed (700, 800) | — | Highway-signage aesthetic, Google Fonts |
+| UI font | Inter (400, 500, 600) | — | Clean legibility, Google Fonts |
+| Mono font | JetBrains Mono (400, 500) | — | Status bar / IDs / timestamps, Google Fonts |
+| Icons | Unicode/emoji + inline SVG | — | No icon library dependency |
+| Accent color | #F5C318 (amber/road marking) | — | Highway centerline yellow |
 | State management | Plain JS variables + localStorage | — | Per-device API key storage |
 | Routing | Show/hide view divs | — | No router library |
+| State selector | Horizontal scrollable pill buttons | v1.1.0 | Replaced dropdown |
 | Image loading | `<img>` tags via proxy endpoint | — | Cache-busting via `?t=timestamp` |
+| Camera cards | CCTV scan-line CSS effect | v1.1.0 | `::after` repeating-linear-gradient |
+| Branding | stateroad.fyi | v1.1.0 | Road icon logo-mark, amber accent |
 | Meta SDK path | Web App (HTML/CSS/JS) | May 2026 | Via Meta Wearables Toolkit |
 
 ---
@@ -41,12 +48,13 @@
 | State | API Base URL | Auth | Format | Approx Cameras |
 |-------|-------------|------|--------|----------------|
 | New York | https://511ny.org/api/v2/get/cameras | `?key=` | JSON | ~1,200 |
+| N. Carolina | https://www.nc511.org/api/v2/get/cameras | `?key=` | JSON | ~300 |
+| Pennsylvania | https://www.511pa.com/api/v2/get/cameras | `?key=` | JSON | ~500 |
 | Georgia | https://511ga.org/api/v2/get/cameras | `?key=` | JSON | ~400 |
 | Arizona | https://www.az511.com/api/v2/get/cameras | `?key=` | JSON | ~300 |
-| Alaska | https://511.alaska.gov/api/v2/get/cameras | `?key=` | JSON | ~150 |
 | Nevada | https://www.nvroads.com/api/v2/get/cameras | `?key=` | JSON | ~250 |
+| Alaska | https://511.alaska.gov/api/v2/get/cameras | `?key=` | JSON | ~150 |
 | SF Bay (CA) | https://api.511.org/traffic/cameras | `?api_key=` | JSON | ~200 |
-| Pennsylvania | https://www.511pa.com/api/v2/get/cameras | `?key=` | JSON | ~500 |
 
 **API Standard:** All states follow the national 511 traveler information API standard. Camera objects include: `Id`, `Roadway`, `Direction`, `Location`, `Latitude`, `Longitude`, `Views[].Url`.
 
@@ -59,6 +67,17 @@
 | Meta Ray-Ban Display glasses | Primary target — runs via Meta Wearables Toolkit Web App SDK |
 | iOS / Android phone | Full support (companion device) |
 | Desktop browser | Full support (development + pre-trip planning) |
+
+---
+
+## Hosting & Domain
+
+| Layer | Service | Notes |
+|-------|---------|-------|
+| Hosting | Railway | Auto-deploy from GitHub main branch |
+| Domain | stateroad.fyi | Registered on Cloudflare |
+| DNS | Cloudflare → Railway | One-click Railway/Cloudflare integration |
+| SSL | Automatic (Railway) | HTTPS required for Meta Wearables Toolkit |
 
 ---
 
@@ -104,6 +123,26 @@ roadcams-glasses/
 | VPS | `PORT=3000 node server.js` + nginx | Cost of VPS |
 
 > Meta Wearables Toolkit requires **HTTPS** for production apps on the glasses.
+
+---
+
+## Changelog
+
+### v1.1.0 — 2026-09-04
+- Added North Carolina (NC) state: `https://www.nc511.org/api/v2/get/cameras`
+- New UI: Barlow Condensed + Inter + JetBrains Mono typography
+- New color system: amber (#F5C318) accent, dark navy bg (#0A0C12)
+- State selector replaced with horizontal scrollable pill buttons
+- CCTV scan-line CSS effect on all camera cards
+- Camera ID corner tags (CAM-XXXX) + animated status pulse dots
+- Branding updated to stateroad.fyi with road-icon SVG logo-mark
+- Live camera count badge in header
+- Status bar uses monospaced font for terminal aesthetic
+
+### v1.0.0 — 2026-09-04
+- Initial release: NY, GA, AZ, AK, NV, SF Bay, PA
+- Express proxy server for CORS + image re-serving
+- Vanilla JS SPA, dark theme, mobile-first
 
 ---
 
