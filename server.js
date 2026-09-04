@@ -32,6 +32,7 @@ const STATE_ENDPOINTS = {
   sf: 'https://api.511.org/traffic/cameras',
   pa: 'https://www.511pa.com/api/v2/get/cameras',
   nc: 'https://www.drivenc.gov/api/v2/get/cameras',
+  fl: 'https://fl511.com/api/v2/get/cameras',
 };
 
 // GET /api/cameras/:state?key=APIKEY

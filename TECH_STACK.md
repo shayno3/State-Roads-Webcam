@@ -49,6 +49,7 @@
 |-------|-------------|------|--------|----------------|
 | New York | https://511ny.org/api/v2/get/cameras | `?key=` | JSON | ~1,200 |
 | N. Carolina | https://www.drivenc.gov/api/v2/get/cameras | `?key=` | JSON | ~300 |
+| Florida | https://fl511.com/api/v2/get/cameras | `?key=` | JSON | ~600 |
 | Pennsylvania | https://www.511pa.com/api/v2/get/cameras | `?key=` | JSON | ~500 |
 | Georgia | https://511ga.org/api/v2/get/cameras | `?key=` | JSON | ~400 |
 | Arizona | https://www.az511.com/api/v2/get/cameras | `?key=` | JSON | ~300 |
@@ -130,6 +131,7 @@ roadcams-glasses/
 
 ### v1.1.0 — 2026-09-04
 - Added North Carolina (NC) state: `https://www.drivenc.gov/api/v2/get/cameras`
+- Added Florida (FL) state: `https://fl511.com/api/v2/get/cameras`
 - New UI: Barlow Condensed + Inter + JetBrains Mono typography
 - New color system: amber (#F5C318) accent, dark navy bg (#0A0C12)
 - State selector replaced with horizontal scrollable pill buttons

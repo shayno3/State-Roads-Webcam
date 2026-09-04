@@ -770,6 +770,7 @@
     <button class="state-pill" onclick="selectState('nv',this)">NV</button>
     <button class="state-pill" onclick="selectState('ak',this)">AK</button>
     <button class="state-pill" onclick="selectState('sf',this)">SF Bay</button>
+    <button class="state-pill" onclick="selectState('fl',this)">FL</button>
   </div>
 
   <!-- Status bar -->
@@ -882,6 +883,10 @@
           <div class="settings-row">
             <label>SF</label>
             <input type="text" id="key-sf" placeholder="511 SF Bay key" />
+            </label>
+            <label>
+              <span>FL</span>
+              <input type="text" id="key-fl" placeholder="FL511 developer key" />
           </div>
         </div>
         <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
@@ -940,9 +945,10 @@ const STATE_CONFIGS = {
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
   sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key' },
+  fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key' },
 };
 
-const ALL_KEYS = ['ny', 'nc', 'pa', 'ga', 'az', 'nv', 'ak', 'sf'];
+const ALL_KEYS = ['ny', 'nc', 'pa', 'ga', 'az', 'nv', 'ak', 'sf', 'fl'];
 
 let cameras = [];
 let filteredCameras = [];
