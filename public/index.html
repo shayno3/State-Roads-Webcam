@@ -1675,10 +1675,15 @@ function toggleView() {
 function openOnGlasses() {
   if (currentCameraIndex < 0) return;
   const cam = filteredCameras[currentCameraIndex];
-  if (!cam.imageUrl) { showToast("No feed URL"); return; }
+  if (!cam.imageUrl && cam.source !== 'fl') { showToast("No feed URL"); return; }
   const encoded = encodeURIComponent(cam.imageUrl);
-  const title = encodeURIComponent(cam.road + " - " + cam.location);
-  window.open("/view?url=" + encoded + "&title=" + title, "_blank");
+  const title   = encodeURIComponent(cam.road + " - " + cam.location);
+  let url = "/view?url=" + encoded + "&title=" + title;
+  // FL cameras: pass source + id so glasses view fetches fresh IMAGE url each cycle
+  if (cam.source === 'fl' && cam.id) {
+    url += "&source=fl&id=" + encodeURIComponent(cam.id);
+  }
+  window.open(url, "_blank");
 }
 
 function copyLocation() {

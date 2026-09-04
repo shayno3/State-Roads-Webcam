@@ -94,6 +94,39 @@ app.get('/api/cameras/:state', async (req, res) => {
   }
 });
 
+// ─── FL Single-Camera Lookup ─────────────────────────────────────────
+// GET /api/camera/fl/:id  – returns fresh metadata + IMAGE url for one FL camera
+app.get('/api/camera/fl/:id', async (req, res) => {
+  const { id } = req.params;
+  const url = `https://services.arcgis.com/3wFbqsFPLeKqOlIK/arcgis/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query?where=ID%3D'${encodeURIComponent(id)}'&outFields=*&f=json`;
+
+  console.log(`[camera/fl] ${id}`);
+
+  try {
+    const response = await axios.get(url, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+      timeout: 10000,
+    });
+    const features = response.data?.features || [];
+    if (!features.length) return res.status(404).json({ error: 'Camera not found' });
+    const a = features[0].attributes;
+    return res.json({
+      id:        a.ID,
+      road:      a.HIGHWAY   || '—',
+      location:  a.DESCRIPT  || a.COUNTY || '—',
+      direction: a.DIRECTION || '—',
+      lat:       a.LATITUDE,
+      lon:       a.LONGITUDE,
+      imageUrl:  a.IMAGE     || '',
+      timestamp: a.TIMESTAMP,        // epoch ms from ArcGIS
+    });
+  } catch (err) {
+    const status = err.response?.status || 502;
+    console.error(`[camera/fl] error ${status}:`, err.message);
+    return res.status(status).json({ error: err.message });
+  }
+});
+
 // ─── Image Proxy ─────────────────────────────────────────────────────
 // GET /api/image?url=ENCODED_URL&t=TIMESTAMP
 // Fetches a camera JPEG snapshot and re-serves it with CORS headers.
