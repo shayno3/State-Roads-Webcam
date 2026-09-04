@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Road Cams</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #12121a;
+      --surface2:  #1c1c28;
+      --border:    #2a2a3e;
+      --accent:    #4f8ef7;
+      --accent2:   #7c5cfc;
+      --text:      #e8e8f0;
+      --text-muted:#7878a0;
+      --green:     #2ecc8a;
+      --red:       #e85555;
+      --radius:    10px;
+      --font:      -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    /* ─── App Shell ─────────────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ─── Header ────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 10px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    /* State selector */
+    #state-select {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 13px;
+      padding: 6px 10px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237878a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      cursor: pointer;
+    }
+
+    #state-select:focus { outline: none; border-color: var(--accent); }
+
+    .header-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .icon-btn:hover, .icon-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ─── Status bar ────────────────────────────────────────────── */
+    #status-bar {
+      padding: 6px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.loading { background: var(--accent); }
+    .status-dot.error { background: var(--red); animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ─── Main Content ──────────────────────────────────────────── */
+    #content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ─── Views ─────────────────────────────────────────────────── */
+    .view {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .view.active { display: block; }
+
+    /* ─── Camera List View ──────────────────────────────────────── */
+    #list-view { padding: 10px; }
+
+    .camera-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .camera-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+      position: relative;
+    }
+
+    .camera-card:hover {
+      border-color: var(--accent);
+      transform: scale(1.01);
+    }
+
+    .camera-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      object-fit: cover;
+      display: block;
+    }
+
+    .camera-thumb-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 22px;
+    }
+
+    .camera-info {
+      padding: 7px 8px;
+    }
+
+    .camera-road {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .camera-location {
+      font-size: 11px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .camera-status-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 1.5px solid var(--bg);
+    }
+
+    .camera-status-badge.offline { background: var(--red); }
+
+    /* Search bar */
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    #search-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    #search-input::placeholder { color: var(--text-muted); }
+    #search-input:focus { outline: none; border-color: var(--accent); }
+
+    /* Count badge */
+    .count-badge {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding: 0 2px;
+    }
+
+    /* ─── Camera Detail View ────────────────────────────────────── */
+    #detail-view {
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #detail-view.active { display: flex; }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(10,10,15,0.9);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .detail-title { flex: 1; }
+    .detail-road {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .detail-location {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .refresh-info {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .detail-image-wrap {
+      flex: 1;
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    #detail-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .img-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      font-size: 13px;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    .img-overlay.visible { display: flex; }
+
+    .refresh-badge {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(10,10,15,0.85);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 10px;
+      color: var(--text-muted);
+      backdrop-filter: blur(4px);
+    }
+
+    .detail-meta {
+      padding: 10px 14px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .meta-item {
+      text-align: center;
+    }
+
+    .meta-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .meta-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .detail-controls {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .ctrl-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .ctrl-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .ctrl-btn:hover { opacity: 0.85; }
+
+    /* Nav arrows for previous/next camera */
+    .detail-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(10,10,15,0.8);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+
+    #nav-prev { left: 10px; }
+    #nav-next { right: 10px; }
+
+    /* ─── Settings View ─────────────────────────────────────────── */
+    #settings-view {
+      padding: 14px;
+      overflow-y: auto;
+    }
+
+    .settings-section {
+      margin-bottom: 20px;
+    }
+
+    .settings-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      padding: 11px 14px;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-row:last-child { border-bottom: none; }
+
+    .settings-row label {
+      font-size: 12px;
+      color: var(--text-muted);
+      width: 48px;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .settings-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      padding: 5px 8px;
+    }
+
+    .settings-row input:focus { outline: none; border-color: var(--accent); }
+
+    .settings-row input::placeholder { color: var(--text-muted); }
+
+    .save-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .save-btn:hover { opacity: 0.88; }
+
+    .settings-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-top: 8px;
+      padding: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .settings-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ─── Empty / Loading States ────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon { font-size: 36px; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .empty-sub { font-size: 12px; line-height: 1.5; }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Toast ─────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--text);
+      z-index: 1000;
+      transition: transform 0.25s;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ─── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo" onclick="showView('list')">
+      <div class="logo-icon">🚗</div>
+      Road Cams
+    </div>
+    <select id="state-select" onchange="onStateChange()">
+      <option value="">— Select State —</option>
+      <option value="ny">New York</option>
+      <option value="ga">Georgia</option>
+      <option value="az">Arizona</option>
+      <option value="ak">Alaska</option>
+      <option value="nv">Nevada</option>
+      <option value="sf">SF Bay Area (CA)</option>
+      <option value="pa">Pennsylvania</option>
+    </select>
+    <div class="header-btns">
+      <button class="icon-btn" id="view-toggle-btn" onclick="toggleView()" title="Toggle view">⊞</button>
+      <button class="icon-btn" onclick="showView('settings')" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Select a state to load cameras</span>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- ── LIST VIEW ── -->
+    <div id="list-view" class="view active">
+      <div style="padding: 10px;">
+        <div class="search-row">
+          <input type="text" id="search-input" placeholder="🔍  Search road or location…" oninput="filterCameras()" />
+        </div>
+        <div class="count-badge" id="count-badge"></div>
+        <div class="camera-grid" id="camera-grid">
+          <div style="grid-column:1/-1;">
+            <div class="empty-state">
+              <div class="empty-icon">🗺️</div>
+              <div class="empty-title">No state selected</div>
+              <div class="empty-sub">Choose a state above to browse live road cameras.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DETAIL VIEW ── -->
+    <div id="detail-view" class="view">
+      <div class="detail-header">
+        <button class="back-btn" onclick="showView('list')">‹</button>
+        <div class="detail-title">
+          <div class="detail-road" id="detail-road">—</div>
+          <div class="detail-location" id="detail-location">—</div>
+        </div>
+        <div class="refresh-info" id="refresh-info">—</div>
+      </div>
+
+      <div class="detail-image-wrap">
+        <img id="detail-img" alt="Camera feed" />
+        <div class="img-overlay" id="img-overlay">
+          <div class="empty-state">
+            <div class="spinner"></div>
+            <div class="empty-sub">Loading feed…</div>
+          </div>
+        </div>
+        <div class="refresh-badge" id="refresh-badge">⟳ auto-refresh</div>
+        <button class="detail-nav" id="nav-prev" onclick="navigateCamera(-1)">‹</button>
+        <button class="detail-nav" id="nav-next" onclick="navigateCamera(1)">›</button>
+      </div>
+
+      <div class="detail-meta">
+        <div class="meta-item">
+          <div class="meta-label">Direction</div>
+          <div class="meta-value" id="meta-dir">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Last Update</div>
+          <div class="meta-value" id="meta-time">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div class="meta-value" id="meta-status">—</div>
+        </div>
+      </div>
+
+      <div class="detail-controls">
+        <button class="ctrl-btn" onclick="toggleAutoRefresh()">⟳ <span id="auto-label">Auto: ON</span></button>
+        <button class="ctrl-btn primary" onclick="manualRefresh()">Refresh Now</button>
+        <button class="ctrl-btn" onclick="copyLocation()">📋 Copy</button>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS VIEW ── -->
+    <div id="settings-view" class="view">
+      <div class="settings-section">
+        <div class="settings-title">API Keys (free — register at each state's 511 portal)</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <label>NY</label>
+            <input type="text" id="key-ny" placeholder="511NY developer key" />
+          </div>
+          <div class="settings-row">
+            <label>GA</label>
+            <input type="text" id="key-ga" placeholder="511GA developer key" />
+          </div>
+          <div class="settings-row">
+            <label>AZ</label>
+            <input type="text" id="key-az" placeholder="AZ511 developer key" />
+          </div>
+          <div class="settings-row">
+            <label>AK</label>
+            <input type="text" id="key-ak" placeholder="511 Alaska key" />
+          </div>
+          <div class="settings-row">
+            <label>NV</label>
+            <input type="text" id="key-nv" placeholder="NVRoads key" />
+          </div>
+          <div class="settings-row">
+            <label>SF</label>
+            <input type="text" id="key-sf" placeholder="511 SF Bay key" />
+          </div>
+          <div class="settings-row">
+            <label>PA</label>
+            <input type="text" id="key-pa" placeholder="PennDOT key" />
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
+        <div class="settings-note">
+          All keys are free. Get them at:<br>
+          NY → <a href="#">511ny.org/developers</a> &nbsp;·&nbsp;
+          GA → <a href="#">511ga.org/developers</a><br>
+          AZ → <a href="#">az511.com/developers</a> &nbsp;·&nbsp;
+          AK → <a href="#">511.alaska.gov/developers</a><br>
+          NV → <a href="#">nvroads.com/developers</a> &nbsp;·&nbsp;
+          SF → <a href="#">511.org/open-data</a>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Refresh Rate</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <label>Every</label>
+            <select id="refresh-rate" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:5px 8px;">
+              <option value="10">10 seconds</option>
+              <option value="30" selected>30 seconds</option>
+              <option value="60">1 minute</option>
+              <option value="120">2 minutes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">About</div>
+        <div class="settings-note">
+          Road Cams — Meta Ray-Ban Display web app.<br>
+          Uses free 511 state DOT traffic camera APIs.<br>
+          Optimized for glasses display via Meta Wearables Toolkit.<br><br>
+          Version 1.0.0 · Built for Meta Ray-Ban Display
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────
+const STATE_CONFIGS = {
+  ny: {
+    label: 'New York',
+    endpoint: '/api/cameras/ny',
+    apiUrl: 'https://511ny.org/api/v2/get/cameras',
+    keyParam: 'key',
+  },
+  ga: {
+    label: 'Georgia',
+    endpoint: '/api/cameras/ga',
+    apiUrl: 'https://511ga.org/api/v2/get/cameras',
+    keyParam: 'key',
+  },
+  az: {
+    label: 'Arizona',
+    endpoint: '/api/cameras/az',
+    apiUrl: 'https://www.az511.com/api/v2/get/cameras',
+    keyParam: 'key',
+  },
+  ak: {
+    label: 'Alaska',
+    endpoint: '/api/cameras/ak',
+    apiUrl: 'https://511.alaska.gov/api/v2/get/cameras',
+    keyParam: 'key',
+  },
+  nv: {
+    label: 'Nevada',
+    endpoint: '/api/cameras/nv',
+    apiUrl: 'https://www.nvroads.com/api/v2/get/cameras',
+    keyParam: 'key',
+  },
+  sf: {
+    label: 'SF Bay Area',
+    endpoint: '/api/cameras/sf',
+    apiUrl: 'https://api.511.org/traffic/cameras',
+    keyParam: 'api_key',
+  },
+  pa: {
+    label: 'Pennsylvania',
+    endpoint: '/api/cameras/pa',
+    apiUrl: 'https://www.511pa.com/api/v2/get/cameras',
+    keyParam: 'key',
+  },
+};
+
+let cameras = [];
+let filteredCameras = [];
+let currentCameraIndex = -1;
+let autoRefreshEnabled = true;
+let refreshTimer = null;
+let refreshCountdown = 30;
+let countdownTimer = null;
+let gridView = true;
+
+// ─── Init ───────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+});
+
+function loadSettings() {
+  const keys = ['ny', 'ga', 'az', 'ak', 'nv', 'sf', 'pa'];
+  keys.forEach(k => {
+    const saved = localStorage.getItem(`apikey_${k}`);
+    if (saved) document.getElementById(`key-${k}`).value = saved;
+  });
+  const rate = localStorage.getItem('refresh_rate');
+  if (rate) document.getElementById('refresh-rate').value = rate;
+}
+
+function saveKeys() {
+  const keys = ['ny', 'ga', 'az', 'ak', 'nv', 'sf', 'pa'];
+  keys.forEach(k => {
+    const val = document.getElementById(`key-${k}`).value.trim();
+    if (val) localStorage.setItem(`apikey_${k}`, val);
+    else localStorage.removeItem(`apikey_${k}`);
+  });
+  const rate = document.getElementById('refresh-rate').value;
+  localStorage.setItem('refresh_rate', rate);
+  showToast('Keys saved ✓');
+  showView('list');
+}
+
+// ─── View Routing ───────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`${name}-view`).classList.add('active');
+  if (name !== 'detail') clearDetailTimers();
+}
+
+// ─── State / Camera Loading ─────────────────────────────────────────
+async function onStateChange() {
+  const state = document.getElementById('state-select').value;
+  if (!state) return;
+
+  const apiKey = localStorage.getItem(`apikey_${state}`);
+  if (!apiKey) {
+    setStatus('loading', false);
+    showEmptyState('🔑', 'API Key Required',
+      `Go to Settings and add your free ${STATE_CONFIGS[state].label} 511 API key.`);
+    return;
+  }
+
+  setStatus('loading', true, `Loading ${STATE_CONFIGS[state].label} cameras…`);
+  showEmptyState('', '', '', true);
+
+  try {
+    const res = await fetch(`${STATE_CONFIGS[state].endpoint}?key=${encodeURIComponent(apiKey)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    cameras = normalizeCameras(state, data);
+    filteredCameras = cameras;
+    renderGrid(filteredCameras);
+    setStatus('ok', false, `${cameras.length} cameras loaded · ${STATE_CONFIGS[state].label}`);
+  } catch (err) {
+    console.error(err);
+    setStatus('error', false, `Failed to load: ${err.message}`);
+    showEmptyState('⚠️', 'Load Failed',
+      `Check your API key in Settings or try again. (${err.message})`);
+  }
+}
+
+// ─── Normalize camera data from different 511 APIs ──────────────────
+function normalizeCameras(state, data) {
+  // Standard 511 format (NY, GA, AZ, AK, NV, PA)
+  if (Array.isArray(data)) {
+    return data.map((cam, i) => {
+      // Each cam may have Views array with URL(s)
+      const view = (cam.Views || cam.views || [])[0] || {};
+      const imgUrl = view.Url || view.url || view.VideoUrl || cam.VideoUrl || cam.url || '';
+      return {
+        id: cam.Id || cam.id || i,
+        road: cam.Roadway || cam.roadway || cam.Route || '—',
+        location: cam.Location || cam.location || cam.Description || '—',
+        direction: cam.Direction || cam.direction || '—',
+        lat: cam.Latitude || cam.latitude || 0,
+        lon: cam.Longitude || cam.longitude || 0,
+        imageUrl: imgUrl,
+        status: view.Status || view.status || 'active',
+        source: state,
+      };
+    });
+  }
+
+  // SF Bay 511 format (slightly different)
+  if (data && data.CCTV) {
+    return data.CCTV.map((cam, i) => ({
+      id: cam['@id'] || i,
+      road: cam.roadway || '—',
+      location: cam.location || '—',
+      direction: cam.direction || '—',
+      lat: parseFloat(cam.latitude) || 0,
+      lon: parseFloat(cam.longitude) || 0,
+      imageUrl: cam.imageUrl || '',
+      status: 'active',
+      source: state,
+    }));
+  }
+
+  return [];
+}
+
+// ─── Render Camera Grid ─────────────────────────────────────────────
+function renderGrid(cams) {
+  const grid = document.getElementById('camera-grid');
+  const badge = document.getElementById('count-badge');
+
+  if (!cams.length) {
+    showEmptyState('📷', 'No Cameras Found', 'Try a different state or check your API key.');
+    badge.textContent = '';
+    return;
+  }
+
+  badge.textContent = `${cams.length} camera${cams.length !== 1 ? 's' : ''}`;
+
+  grid.innerHTML = cams.map((cam, idx) => {
+    const online = cam.status !== 'offline' && cam.status !== 'inactive';
+    return `
+      <div class="camera-card" onclick="openCamera(${idx})">
+        ${cam.imageUrl
+          ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+             /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
+          : `<div class="camera-thumb-placeholder">📷</div>`}
+        <div class="camera-status-badge ${online ? '' : 'offline'}"></div>
+        <div class="camera-info">
+          <div class="camera-road">${cam.road}</div>
+          <div class="camera-location">${cam.location}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function proxyImage(url) {
+  if (!url) return '';
+  // Route images through proxy to handle CORS
+  return `/api/image?url=${encodeURIComponent(url)}&t=${Date.now()}`;
+}
+
+// ─── Camera Detail ──────────────────────────────────────────────────
+function openCamera(filteredIdx) {
+  currentCameraIndex = filteredIdx;
+  loadDetail(filteredCameras[filteredIdx]);
+  showView('detail');
+  startAutoRefresh();
+}
+
+function loadDetail(cam) {
+  document.getElementById('detail-road').textContent = cam.road;
+  document.getElementById('detail-location').textContent = cam.location;
+  document.getElementById('meta-dir').textContent = cam.direction;
+  document.getElementById('meta-status').textContent =
+    cam.status === 'active' || cam.status === 'ok' ? '🟢 Online' :
+    cam.status === 'offline' ? '🔴 Offline' : '⚪ Unknown';
+
+  updateDetailImage(cam);
+}
+
+function updateDetailImage(cam) {
+  const img = document.getElementById('detail-img');
+  const overlay = document.getElementById('img-overlay');
+
+  if (!cam.imageUrl) {
+    overlay.classList.add('visible');
+    overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-sub">No feed URL available</div></div>';
+    return;
+  }
+
+  overlay.classList.add('visible');
+  overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+  const src = `/api/image?url=${encodeURIComponent(cam.imageUrl)}&t=${Date.now()}`;
+  img.onload = () => { overlay.classList.remove('visible'); updateMetaTime(); };
+  img.onerror = () => {
+    overlay.classList.add('visible');
+    overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-sub">Feed unavailable</div></div>';
+  };
+  img.src = src;
+}
+
+function updateMetaTime() {
+  const now = new Date();
+  document.getElementById('meta-time').textContent =
+    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ─── Auto Refresh ───────────────────────────────────────────────────
+function startAutoRefresh() {
+  clearDetailTimers();
+  const rate = parseInt(localStorage.getItem('refresh_rate') || '30');
+  refreshCountdown = rate;
+  updateRefreshBadge();
+
+  refreshTimer = setInterval(() => {
+    if (autoRefreshEnabled && currentCameraIndex >= 0) {
+      updateDetailImage(filteredCameras[currentCameraIndex]);
+    }
+  }, rate * 1000);
+
+  countdownTimer = setInterval(() => {
+    if (autoRefreshEnabled) {
+      refreshCountdown--;
+      if (refreshCountdown <= 0) {
+        const savedRate = parseInt(localStorage.getItem('refresh_rate') || '30');
+        refreshCountdown = savedRate;
+      }
+    }
+    updateRefreshBadge();
+  }, 1000);
+}
+
+function clearDetailTimers() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+}
+
+function updateRefreshBadge() {
+  const badge = document.getElementById('refresh-badge');
+  if (autoRefreshEnabled) {
+    badge.textContent = `⟳ ${refreshCountdown}s`;
+  } else {
+    badge.textContent = '⏸ Paused';
+  }
+  const info = document.getElementById('refresh-info');
+  info.textContent = autoRefreshEnabled ? `Refreshes in ${refreshCountdown}s` : 'Paused';
+}
+
+function toggleAutoRefresh() {
+  autoRefreshEnabled = !autoRefreshEnabled;
+  document.getElementById('auto-label').textContent = `Auto: ${autoRefreshEnabled ? 'ON' : 'OFF'}`;
+  updateRefreshBadge();
+}
+
+function manualRefresh() {
+  if (currentCameraIndex >= 0) {
+    const rate = parseInt(localStorage.getItem('refresh_rate') || '30');
+    refreshCountdown = rate;
+    updateDetailImage(filteredCameras[currentCameraIndex]);
+    showToast('Refreshed');
+  }
+}
+
+// ─── Navigate Cameras ───────────────────────────────────────────────
+function navigateCamera(dir) {
+  const next = currentCameraIndex + dir;
+  if (next < 0 || next >= filteredCameras.length) return;
+  currentCameraIndex = next;
+  loadDetail(filteredCameras[currentCameraIndex]);
+  const rate = parseInt(localStorage.getItem('refresh_rate') || '30');
+  refreshCountdown = rate;
+}
+
+// ─── Search / Filter ────────────────────────────────────────────────
+function filterCameras() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  filteredCameras = cameras.filter(c =>
+    c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q)
+  );
+  renderGrid(filteredCameras);
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────
+function setStatus(type, spinner, text) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
+  if (text) document.getElementById('status-text').textContent = text;
+}
+
+function showEmptyState(icon, title, sub, loading = false) {
+  const grid = document.getElementById('camera-grid');
+  if (loading) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><div class="spinner"></div><div class="empty-sub">Loading…</div></div></div>`;
+  } else {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state">
+      <div class="empty-icon">${icon}</div>
+      <div class="empty-title">${title}</div>
+      <div class="empty-sub">${sub}</div>
+    </div></div>`;
+  }
+}
+
+function toggleView() {
+  gridView = !gridView;
+  const grid = document.getElementById('camera-grid');
+  grid.style.gridTemplateColumns = gridView ? '1fr 1fr' : '1fr';
+  document.getElementById('view-toggle-btn').textContent = gridView ? '⊞' : '☰';
+}
+
+function copyLocation() {
+  if (currentCameraIndex < 0) return;
+  const cam = filteredCameras[currentCameraIndex];
+  const text = `${cam.road} – ${cam.location} (${cam.lat}, ${cam.lon})`;
+  navigator.clipboard?.writeText(text).then(() => showToast('Copied!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
