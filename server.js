@@ -33,7 +33,7 @@ const STATE_ENDPOINTS = {
   sf: 'https://api.511.org/traffic/cameras',
   pa: 'https://www.511pa.com/api/v2/get/cameras',
   nc: 'https://www.drivenc.gov/api/v2/get/cameras',
-  fl: 'https://fl511.com/api/v2/get/cameras',
+  fl: 'https://services.arcgis.com/3wFbqsFPLeKqOlIK/arcgis/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query', // public ArcGIS – no key needed
   // ── v1.2.0 additions (ibi511 platform, free registration) ────────
   wi: 'https://511wi.gov/api/v2/get/cameras',
   ut: 'https://www.udottraffic.utah.gov/api/v2/get/cameras',
@@ -61,13 +61,18 @@ app.get('/api/cameras/:state', async (req, res) => {
     return res.status(400).json({ error: `Unknown state: ${state}` });
   }
 
-  if (!key) {
-    return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
+  // FL uses a public ArcGIS FeatureServer — no API key required
+  let upstreamUrl;
+  if (state === 'fl') {
+    upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
+  } else {
+    if (!key) {
+      return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
+    }
+    // SF Bay uses api_key param, all other ibi511 states use key
+    const paramName = state === 'sf' ? 'api_key' : 'key';
+    upstreamUrl = `${baseUrl}?${paramName}=${encodeURIComponent(key)}`;
   }
-
-  // Build upstream URL – SF Bay uses api_key param, others use key
-  const paramName = state === 'sf' ? 'api_key' : 'key';
-  const upstreamUrl = `${baseUrl}?${paramName}=${encodeURIComponent(key)}`;
 
   console.log(`[cameras] ${state.toUpperCase()} → ${baseUrl}`);
 
@@ -136,7 +141,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.2.0',
+    version: '1.3.0',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });

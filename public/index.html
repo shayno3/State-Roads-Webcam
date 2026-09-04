@@ -1029,7 +1029,7 @@
           </div>
           <div class="settings-row">
             <label>FL</label>
-            <input type="text" id="key-fl" placeholder="FL511 developer key" />
+            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
           </div>
           <div class="settings-row">
             <label>AZ</label>
@@ -1170,7 +1170,7 @@ const STATE_CONFIGS = {
   nc: { label: 'N. Carolina',   endpoint: '/api/cameras/nc', keyParam: 'key' },
   pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
   ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key' },
-  fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key' },
+  fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
@@ -1362,32 +1362,44 @@ async function loadSelectedStates() {
     return;
   }
 
-  // Check at least one state has a key
-  const statesWithKeys = states.filter(s => localStorage.getItem(`apikey_${s}`));
-  const statesNoKey = states.filter(s => !localStorage.getItem(`apikey_${s}`));
+  // noKey states (e.g. FL public ArcGIS) are always ready; others need a stored key
+  const noKeyStates   = states.filter(s => STATE_CONFIGS[s]?.noKey);
+  const keyedStates   = states.filter(s => !STATE_CONFIGS[s]?.noKey);
+  const statesWithKeys = keyedStates.filter(s => localStorage.getItem(`apikey_${s}`));
+  const statesNoKey    = keyedStates.filter(s => !localStorage.getItem(`apikey_${s}`));
 
-  if (statesWithKeys.length === 0) {
+  // States we can actually load = noKey states + keyed states that have a key
+  const loadable = [...noKeyStates, ...statesWithKeys];
+
+  if (loadable.length === 0) {
     showEmptyState('🔑', 'API Key Required',
-      `Open Settings and add your free 511 API key for: ${states.map(s => STATE_CONFIGS[s].label).join(', ')}.`);
+      `Open Settings and add your free 511 API key for: ${keyedStates.map(s => STATE_CONFIGS[s].label).join(', ')}.`);
     setStatus('ok', false, 'NO API KEYS CONFIGURED');
     updateLiveBadge(0);
     return;
   }
 
-  const label = statesWithKeys.length === 1
-    ? STATE_CONFIGS[statesWithKeys[0]].label.toUpperCase()
-    : `${statesWithKeys.length} STATES`;
+  const label = loadable.length === 1
+    ? STATE_CONFIGS[loadable[0]].label.toUpperCase()
+    : `${loadable.length} STATES`;
 
   setStatus('loading', true, `LOADING ${label}…`);
   showEmptyState('', '', '', true);
   showView('list');
 
   const results = await Promise.allSettled(
-    statesWithKeys.map(async state => {
-      const apiKey = localStorage.getItem(`apikey_${state}`);
+    loadable.map(async state => {
       const endpoint = STATE_CONFIGS[state].endpoint;
-      const keyParam = STATE_CONFIGS[state].keyParam || 'key';
-      const res = await fetch(`${endpoint}?${keyParam}=${encodeURIComponent(apiKey)}`);
+      let url;
+      if (STATE_CONFIGS[state].noKey) {
+        // Public endpoint — server handles params, no key forwarded
+        url = endpoint;
+      } else {
+        const apiKey = localStorage.getItem(`apikey_${state}`);
+        const keyParam = STATE_CONFIGS[state].keyParam || 'key';
+        url = `${endpoint}?${keyParam}=${encodeURIComponent(apiKey)}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return normalizeCameras(state, data);
@@ -1398,7 +1410,7 @@ async function loadSelectedStates() {
   let errors = [];
   results.forEach((r, i) => {
     if (r.status === 'fulfilled') allCams = allCams.concat(r.value);
-    else errors.push(statesWithKeys[i]);
+    else errors.push(loadable[i]);
   });
 
   cameras = allCams;
@@ -1433,6 +1445,24 @@ function normalizeCameras(state, data) {
         imageUrl: imgUrl,
         status: view.Status || view.status || 'active',
         source: state,
+      };
+    });
+  }
+
+  // FL ArcGIS FeatureServer format
+  if (data && data.features) {
+    return data.features.map((f, i) => {
+      const a = f.attributes || {};
+      return {
+        id:       a.ID || a.OBJECTID || i,
+        road:     a.HIGHWAY || '—',
+        location: a.DESCRIPT || a.COUNTY || '—',
+        direction:a.DIRECTION || '—',
+        lat:      a.LATITUDE  || 0,
+        lon:      a.LONGITUDE || 0,
+        imageUrl: a.IMAGE || '',
+        status:   'active',
+        source:   state,
       };
     });
   }
