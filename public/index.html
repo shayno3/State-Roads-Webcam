@@ -1692,7 +1692,7 @@ function filterCameras() {
   const q = document.getElementById('search-input').value.toLowerCase();
   filteredCameras = cameras.filter(c => {
     const textOk   = !q || c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q);
-    const countyOk = !selectedCounty || c.county === selectedCounty;
+    const countyOk = !selectedCounty || c.source !== 'fl' || c.county === selectedCounty;
     return textOk && countyOk;
   });
   renderGrid(filteredCameras);
@@ -1711,23 +1711,22 @@ function buildFlFilterBar() {
   const counties = Object.keys(counts).filter(Boolean).sort();
 
   bar.classList.remove('hidden');
+  // Use data-county to avoid inline-quote issues with county names like "St. John's"
   bar.innerHTML =
     '<span class="fl-bar-label">FL</span>' +
-    `<button class="county-chip${!selectedCounty ? ' active' : ''}" onclick="selectCounty(null)">
+    `<button class="county-chip${!selectedCounty ? ' active' : ''}" data-county="" onclick="selectCounty(this)">
        All <span class="cc-count">${flCams.length}</span>
      </button>` +
     counties.map(c =>
-      `<button class="county-chip${selectedCounty === c ? ' active' : ''}" onclick="selectCounty('${c.replace(/'/g,"\'")}')">
+      `<button class="county-chip${selectedCounty === c ? ' active' : ''}" data-county="${c.replace(/"/g,'&quot;')}" onclick="selectCounty(this)">
          ${c} <span class="cc-count">${counts[c]}</span>
        </button>`
     ).join('');
 }
 
-function selectCounty(county) {
-  selectedCounty = county;
-  // Re-render chips with updated active state
-  document.querySelectorAll('.county-chip').forEach(btn => btn.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+function selectCounty(btn) {
+  selectedCounty = btn.dataset.county || null;   // '' → null = All
+  buildFlFilterBar();   // re-render chips with correct active state
   filterCameras();
 }
 
