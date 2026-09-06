@@ -122,6 +122,78 @@ app.get('/api/cameras/:state', async (req, res) => {
   }
 });
 
+
+// ─── Windy Webcams ────────────────────────────────────────────────────
+// GET /api/weather/webcams/:state  – Windy webcams for a US state bounding box
+// WINDY_WEBCAMS_KEY stored server-side as Railway env var — never sent to browser
+
+const STATE_BBOX = {
+  al: { ne: [35.0,-84.9], sw: [30.1,-88.5] },
+  ak: { ne: [71.5,-141.0], sw: [54.5,-179.9] },
+  az: { ne: [37.0,-109.0], sw: [31.3,-114.8] },
+  ca: { ne: [42.0,-114.1], sw: [32.5,-124.5] },
+  fl: { ne: [31.0,-80.0], sw: [24.5,-87.6] },
+  ga: { ne: [35.0,-80.8], sw: [30.4,-85.6] },
+  ia: { ne: [43.5,-90.1], sw: [40.4,-96.6] },
+  id: { ne: [49.0,-111.0], sw: [41.9,-117.2] },
+  ks: { ne: [40.0,-94.6], sw: [36.9,-102.1] },
+  la: { ne: [33.0,-88.8], sw: [28.9,-94.0] },
+  md: { ne: [39.7,-75.0], sw: [37.9,-79.5] },
+  mi: { ne: [48.3,-82.4], sw: [41.7,-90.4] },
+  nc: { ne: [36.6,-75.5], sw: [33.8,-84.3] },
+  ne: { ne: [43.0,-95.3], sw: [40.0,-104.1] },
+  nh: { ne: [45.3,-70.6], sw: [42.7,-72.6] },
+  nj: { ne: [41.4,-73.9], sw: [38.9,-75.6] },
+  nm: { ne: [37.0,-103.0], sw: [31.3,-109.1] },
+  nv: { ne: [42.0,-114.0], sw: [35.0,-120.0] },
+  ny: { ne: [45.0,-71.9], sw: [40.5,-79.8] },
+  oh: { ne: [41.9,-80.5], sw: [38.4,-84.8] },
+  pa: { ne: [42.3,-74.7], sw: [39.7,-80.5] },
+  sf: { ne: [38.3,-121.4], sw: [37.1,-122.9] },
+  ut: { ne: [42.0,-109.0], sw: [37.0,-114.1] },
+  va: { ne: [39.5,-75.2], sw: [36.5,-83.7] },
+  vt: { ne: [45.0,-71.5], sw: [42.7,-73.4] },
+  wa: { ne: [49.0,-116.9], sw: [45.5,-124.8] },
+  wi: { ne: [47.1,-86.2], sw: [42.5,-92.9] },
+};
+
+app.get('/api/weather/webcams/:state', async (req, res) => {
+  const { state } = req.params;
+  const windyKey = process.env.WINDY_WEBCAMS_KEY;
+  if (!windyKey) return res.status(500).json({ error: 'WINDY_WEBCAMS_KEY not set on server' });
+
+  const bbox = STATE_BBOX[state];
+  if (!bbox) return res.status(400).json({ error: `No bounding box for state: ${state}` });
+
+  const params = new URLSearchParams({
+    limit: '50',
+    offset: '0',
+    lang: 'en',
+    include: 'location,urls,images',
+    'boundingBox[ne][lat]': bbox.ne[0],
+    'boundingBox[ne][lng]': bbox.ne[1],
+    'boundingBox[sw][lat]': bbox.sw[0],
+    'boundingBox[sw][lng]': bbox.sw[1],
+  });
+
+  console.log(`[windy] ${state.toUpperCase()} webcams`);
+
+  try {
+    const response = await axios.get(`https://api.windy.com/webcams/api/v3/webcams?${params}`, {
+      headers: {
+        'x-windy-api-key': windyKey,
+        'Accept': 'application/json',
+      },
+      timeout: 10000,
+    });
+    return res.json(response.data);
+  } catch (err) {
+    const status = err.response?.status || 502;
+    console.error(`[windy] ${state} error ${status}:`, err.message);
+    return res.status(status).json({ error: err.message });
+  }
+});
+
 // ─── FL Single-Camera Lookup ─────────────────────────────────────────
 // GET /api/camera/fl/:id  – returns fresh metadata + IMAGE url for one FL camera
 app.get('/api/camera/fl/:id', async (req, res) => {
@@ -202,7 +274,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.5',
+    version: '1.3.6',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });

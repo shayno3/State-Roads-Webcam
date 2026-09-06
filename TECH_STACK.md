@@ -2,7 +2,7 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.3.5  
+**Version:** 1.3.6  
 **Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
@@ -121,6 +121,7 @@ Client (glasses/phone/browser)
   → GET /*                            → Express → public/index.html (SPA)
 ```
 
+**Windy Webcams API (server-keyed):** `GET /api/weather/webcams/:state` → bounding-box query → up to 50 webcams per state; `WINDY_WEBCAMS_KEY` env var on Railway — free tier, 15-min image token expiry.  
 **noKey states (FL, IA):** Server builds ArcGIS FeatureServer URL directly — no key required.  
 **noKey server-keyed (WA):** Client sends no key; server injects `WSDOT_KEY` env var — key never reaches browser.  
 **All other states:** Client passes `?key=` from localStorage; key never exposed client-side.  
@@ -157,6 +158,15 @@ roadcams-glasses/
 ---
 
 ## Changelog
+
+### v1.3.6 — 2026-09-06
+- Added **Windy Webcams API** endpoint: `GET /api/weather/webcams/:state`
+  - Bounding-box query per state, returns up to 50 scenic/weather webcams
+  - `WINDY_WEBCAMS_KEY` stored as Railway env var — never sent to browser
+  - Free tier: image URLs expire after 15 min; covers all 27 app states
+  - Proxy architecture: `STATE_BBOX` lookup → `api.windy.com/webcams/api/v3/webcams`
+  - Foundation for future premium Weather Cams feature
+  - server.js: version bumped to 1.3.6
 
 ### v1.3.5 — 2026-09-06
 - Added **California (CA)**: Caltrans CWWP2 public API, ~3,343 cameras, no key needed
@@ -220,6 +230,12 @@ roadcams-glasses/
 ---
 
 ## Future Additions (Planned)
+
+### Pre-Launch (Before Public Release)
+- [ ] Move all ibi511 API keys server-side (Railway env vars) — remove "bring your own key" model
+- [ ] Remove/simplify Settings panel for end users
+- [ ] Add rate limiting on Express proxy to protect upstream API quotas
+
 
 - [x] Ohio (OH) — OHGo API (`publicapi.ohgo.com`) — free key registration; camera_views[] format (v1.3.4)
 - [x] Washington (WA) — WSDOT Traveler Info API — AccessCode stored server-side as `WSDOT_KEY` (v1.3.3)
