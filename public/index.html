@@ -1124,7 +1124,7 @@
   <div id="state-selector-wrap">
     <div class="state-selector-row">
       <button id="state-trigger" onclick="toggleDropdown()">
-        🗺 States <span id="state-count-badge">0</span>
+        <span id="state-trigger-label">🗺 States</span><span id="state-count-badge">0</span>
       </button>
       <div id="active-chips" class="active-chips"></div>
     </div>
@@ -1597,9 +1597,25 @@ function clearAll() {
 }
 
 function renderChips() {
-  const wrap = document.getElementById('active-chips');
+  const wrap  = document.getElementById('active-chips');
   const badge = document.getElementById('state-count-badge');
-  badge.textContent = selectedStates.size;
+  const label = document.getElementById('state-trigger-label');
+  const count = selectedStates.size;
+
+  if (count === 0) {
+    label.textContent = '🗺 States';
+    badge.textContent = '0';
+    badge.style.display = '';
+  } else if (count === 1) {
+    const key = [...selectedStates][0];
+    label.textContent = '🗺 ' + (STATE_CONFIGS[key]?.label || STATE_ABBR[key] || key.toUpperCase());
+    badge.style.display = 'none';
+  } else {
+    label.textContent = '🗺 States';
+    badge.textContent = count;
+    badge.style.display = '';
+  }
+
   wrap.innerHTML = [...selectedStates].map(k =>
     `<span class="chip" onclick="event.stopPropagation();toggleStateCheck('${k}')">${STATE_ABBR[k]}<span class="chip-x">✕</span></span>`
   ).join('');
