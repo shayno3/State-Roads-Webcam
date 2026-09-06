@@ -1091,6 +1091,10 @@
             <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span>
           </div>
           <div class="settings-row">
+            <label>OH</label>
+            <input type="text" id="key-oh" placeholder="OHGo developer key" />
+          </div>
+          <div class="settings-row">
             <label>AZ</label>
             <input type="text" id="key-az" placeholder="AZ511 developer key" />
           </div>
@@ -1187,7 +1191,8 @@
           MD → <a href="https://md511.org/developers" target="_blank">md511.org/developers</a> &nbsp;·&nbsp;
           AL → <a href="https://www.al511.com/developers" target="_blank">al511.com/developers</a><br>
           NM → <a href="https://nmroads.com/developers" target="_blank">nmroads.com/developers</a> &nbsp;·&nbsp;
-          MI → <a href="https://www.mi511.org/developers" target="_blank">mi511.org/developers</a>
+          MI → <a href="https://www.mi511.org/developers" target="_blank">mi511.org/developers</a><br>
+          OH → <a href="https://publicapi.ohgo.com/docs/registration" target="_blank">publicapi.ohgo.com</a>
         </div>
       </div>
 
@@ -1210,7 +1215,7 @@
         <div class="settings-title">About</div>
         <div class="settings-note">
           StateRoad.fyi — Meta Ray-Ban Display web app.<br>
-          Live traffic cameras from 23 state DOT 511 APIs.<br>
+          Live traffic cameras from 24 state DOT APIs.<br>
           Optimized for glasses display via Meta Wearables Toolkit.<br><br>
           Version 1.2.0 · stateroad.fyi
         </div>
@@ -1236,6 +1241,7 @@ const STATE_CONFIGS = {
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
   sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key' },
+  oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', keyParam: 'key' },  // OHGo — api-key param, key in localStorage
   wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key' },
   ut: { label: 'Utah',          endpoint: '/api/cameras/ut', keyParam: 'key' },
   la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
@@ -1252,7 +1258,7 @@ const STATE_CONFIGS = {
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','sf'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1303,7 +1309,7 @@ function saveKeys() {
 const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
-  { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia'] },
+  { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh'] },
   { label: 'West',      keys: ['wa','az','nv','ak','ut','id','nm'] },
   { label: 'Special',   keys: ['sf'] },
 ];
@@ -1311,7 +1317,7 @@ const REGIONS = [
 const STATE_ABBR = {
   ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
   nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
-  wi:'WI', mi:'MI', ne:'NE', ks:'KS',
+  wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
   wa:'WA',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
   ia:'IA',
@@ -1515,6 +1521,26 @@ function normalizeCameras(state, data) {
         status:   cam.IsActive === false ? 'inactive' : 'active',
         source:   'wa',
       }));
+  }
+
+  // Ohio — OHGo API format: { results: [ { id, title, roadway, location, latitude, longitude, county-name, camera_views: [{id, url, direction}] } ] }
+  if (state === 'oh' && data && data.results) {
+    return data.results.flatMap((cam, i) => {
+      const views = cam.camera_views || [];
+      if (!views.length) return [];
+      return views.map((v, j) => ({
+        id:        v.id    || `${cam.id || i}-${j}`,
+        road:      cam.roadway || cam.title || '—',
+        location:  cam.location || cam.title || '—',
+        direction: v.direction || cam.direction || '—',
+        lat:       parseFloat(cam.latitude)  || 0,
+        lon:       parseFloat(cam.longitude) || 0,
+        imageUrl:  v.url  || '',
+        county:    cam['county-name'] || '',
+        status:    'active',
+        source:    'oh',
+      }));
+    });
   }
 
   if (Array.isArray(data)) {

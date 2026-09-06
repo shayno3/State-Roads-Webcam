@@ -2,8 +2,8 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.3.3  
-**Build Date:** 2026-09-05  
+**Version:** 1.3.4  
+**Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
 
@@ -70,12 +70,14 @@
 | Alabama | ibi511 — al511.com/api/v2/get/cameras | `?key=` | JSON array | — | |
 | New Mexico | ibi511 — nmroads.com/api/v2/get/cameras | `?key=` | JSON array | — | |
 | Michigan | ibi511 — mi511.org/api/v2/get/cameras | `?key=` | JSON array | — | |
+| **Ohio** | **OHGo REST API — publicapi.ohgo.com** | **`?api-key=`** | **results[].camera_views[]** | **~600** | **Free key: publicapi.ohgo.com/docs/registration** |
 | **Florida** | **ArcGIS FeatureServer — FL511 Traffic Cameras** | **None** | **features[]** | **~600** | **Public, no key** |
 | **Iowa** | **ArcGIS FeatureServer — Iowa DOT Traffic Cameras** | **None** | **features[]** | **~1,252** | **Public, no key. CC BY 4.0** |
 | **Washington** | **WSDOT HighwayCamerasREST — GetCamerasAsJson** | **Server-side env `WSDOT_KEY`** | **JSON array** | **~1,710** | **AccessCode via wsdot.wa.gov/traffic/api/** |
 | SF Bay | 511.org/traffic/cameras | `?api_key=` | CCTV JSON | ~200 | Different param name |
 
-**ibi511 platform standard:** Camera objects include `Id`, `Roadway`, `Direction`, `Location`, `Latitude`, `Longitude`, `Views[].Url`.
+**ibi511 platform standard:** Camera objects include `Id`, `Roadway`, `Direction`, `Location`, `Latitude`, `Longitude`, `Views[].Url`.  
+**OHGo (OH):** `results[]` → `id`, `title`, `roadway`, `location`, `latitude`, `longitude`, `county-name`, `camera_views[].{id, url, direction}` — one normalized camera per view entry.
 
 **ArcGIS (FL):** `features[].attributes` → `ID`, `HIGHWAY`, `DESCRIPT`, `COUNTY`, `DIRECTION`, `LATITUDE`, `LONGITUDE`, `IMAGE`, `TIMESTAMP`  
 **ArcGIS (IA):** `features[].attributes` → `COMMON_ID`, `device_id`, `Route`, `Desc_`, `latitude`, `longitude`, `ImageURL`, `REGION`, `FUNCTION`  
@@ -154,6 +156,14 @@ roadcams-glasses/
 
 ## Changelog
 
+### v1.3.4 — 2026-09-06
+- Added **Ohio (OH)**: OHGo public REST API, ~600 cameras, free key at publicapi.ohgo.com
+  - Endpoint: `https://publicapi.ohgo.com/api/v1/cameras?api-key=KEY`
+  - Fields: `results[].{id, title, roadway, location, latitude, longitude, county-name, camera_views[].{id, url, direction}}`
+  - One camera card per `camera_views` entry (multiple angles per location)
+  - server.js: OH branch uses `api-key` param (not `key`); version bumped to 1.3.4
+  - Added to Midwest region group; settings input + OHGo registration link
+
 ### v1.3.3 — 2026-09-05
 - Added **Washington (WA)**: WSDOT HighwayCameras REST API, ~1,710 cameras, AccessCode stored server-side
   - Endpoint: `https://wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson?AccessCode=KEY`
@@ -200,7 +210,7 @@ roadcams-glasses/
 
 ## Future Additions (Planned)
 
-- [ ] Ohio (OH) — OHGo API (`publicapi.ohgo.com`) — requires free key registration; camera_views[] format
+- [x] Ohio (OH) — OHGo API (`publicapi.ohgo.com`) — free key registration; camera_views[] format (v1.3.4)
 - [x] Washington (WA) — WSDOT Traveler Info API — AccessCode stored server-side as `WSDOT_KEY` (v1.3.3)
 - [ ] California (CA) — Caltrans CWWP2 — 3,343 cameras; API format TBD
 - [ ] GA key — awaiting developer key from 511ga.org (~4,000 cameras)

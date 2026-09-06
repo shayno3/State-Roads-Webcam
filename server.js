@@ -37,6 +37,7 @@ const STATE_ENDPOINTS = {
   ia: 'https://services.arcgis.com/8lRhdTsQyJpO52F1/arcgis/rest/services/Traffic_Cameras_View/FeatureServer/0/query', // Iowa DOT – public ArcGIS, no key needed
   wa: 'https://wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson', // WSDOT – AccessCode stored server-side
   // ── v1.2.0 additions (ibi511 platform, free registration) ────────
+  oh: 'https://publicapi.ohgo.com/api/v1/cameras',          // OHGo – api-key param
   wi: 'https://511wi.gov/api/v2/get/cameras',
   ut: 'https://www.udottraffic.utah.gov/api/v2/get/cameras',
   la: 'https://511la.org/api/v2/get/cameras',
@@ -78,8 +79,8 @@ app.get('/api/cameras/:state', async (req, res) => {
     if (!key) {
       return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
     }
-    // SF Bay uses api_key param, all other ibi511 states use key
-    const paramName = state === 'sf' ? 'api_key' : 'key';
+    // SF Bay uses api_key, OHGo uses api-key, all other ibi511 states use key
+    const paramName = state === 'sf' ? 'api_key' : state === 'oh' ? 'api-key' : 'key';
     upstreamUrl = `${baseUrl}?${paramName}=${encodeURIComponent(key)}`;
   }
 
@@ -183,7 +184,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.3',
+    version: '1.3.4',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });
