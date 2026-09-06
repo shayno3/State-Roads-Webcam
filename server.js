@@ -137,6 +137,13 @@ app.get('/api/cameras/:state', async (req, res) => {
     }
   } else if (state === 'fl' || state === 'ia' || state === 'hi') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
+  } else if (state === 'nv') {
+    // Nevada nvroads.com — key stored server-side as NV_KEY env var
+    const nvKey = process.env.NV_KEY;
+    if (!nvKey) {
+      return res.status(500).json({ error: 'NV_KEY environment variable not set on server' });
+    }
+    upstreamUrl = \`\${baseUrl}?key=\${encodeURIComponent(nvKey)}\`;
   } else if (state === 'ak') {
     // Alaska ibi511 — key stored server-side as AK_KEY env var
     const akKey = process.env.AK_KEY;

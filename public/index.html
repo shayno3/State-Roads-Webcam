@@ -1440,7 +1440,7 @@ const STATE_CONFIGS = {
   wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },  // WSDOT key stored server-side
   ca: { label: 'California',    endpoint: '/api/cameras/ca', keyParam: 'key', noKey: true },  // Caltrans CWWP2 – no key, 12 districts
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
-  nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
+  nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key', noKey: true },  // nvroads.com — key server-side NV_KEY
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key', noKey: true },  // AK_KEY stored server-side
   sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key' },
   oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', keyParam: 'key' },  // OHGo — api-key param, key in localStorage
@@ -1920,6 +1920,25 @@ function normalizeCameras(state, data) {
           source:   'il',
         };
       });
+  }
+
+  // Nevada nvroads.com — JSON array, Views[0].Url is the public snapshot image
+  // Fields: Id, Roadway, Direction, Latitude, Longitude, Views[{Id,Url,Status,Description,VideoUrl}]
+  if (state === 'nv' && Array.isArray(data)) {
+    return data
+      .filter(c => c.Views?.[0]?.Status === 'Enabled')
+      .map((c, i) => ({
+        id:       c.Id || i,
+        road:     c.Roadway || '—',
+        location: c.Views?.[0]?.Description || c.Location || '—',
+        direction:c.Direction || '—',
+        lat:      c.Latitude  || 0,
+        lon:      c.Longitude || 0,
+        imageUrl: c.Views?.[0]?.Url || '',
+        county:   '',
+        status:   'active',
+        source:   'nv',
+      }));
   }
 
   // Iowa DOT ArcGIS FeatureServer format
