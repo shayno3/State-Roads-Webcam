@@ -2,7 +2,7 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.4.0  
+**Version:** 1.3.9  
 **Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
@@ -248,18 +248,24 @@ roadcams-glasses/
 ### v1.2.0 — 2026-09-04
 - Added 13 more ibi511 states: WI, UT, LA, ID, NJ, VA, NE, KS, VT, NH, MD, AL, NM, MI
 
-### v1.4.0 — 2026-09-06
-- Full UI restructure & redesign (v1.4.0)
-- Bottom tab bar navigation (Cameras / Conditions / Settings)
-- New dark design system: Inter + Barlow Condensed + JetBrains Mono
-- Active-state chips row below header; state trigger label updates dynamically
-- FL district filter bar (separate from chips row)
-- Detail view hides tab bar; back button restores it via showTab()
-- Camera card: new `.camera-source` state tag, cleaned thumb layout
-- Weather/Conditions view: 2-col grid wx-cards with temp, wind, description
-- Settings view: toggle-style grid mode pref, ibi511 key input, about section
-- Toast repositions for detail mode via `.detail-mode` class
-- package.json bumped to 1.4.0
+### v1.4.0 — 2026-09-06 ⚠️ ROLLED BACK — cameras failed to load
+> Reverted to v1.3.9. The redesign broke camera loading (fetch wiring incomplete).
+> All items below are backlogged for a correct v1.4.0 re-implementation.
+
+#### Backlog — to be added correctly in next redesign pass
+- [ ] Bottom tab bar navigation (Cameras / Conditions / Settings) — `showTab()` + `.tab-bar` nav
+- [ ] New dark token system — Inter + Barlow Condensed + JetBrains Mono fonts
+- [ ] Active-state chips row below header (separate `#chips-row` div, not inline in trigger)
+- [ ] State trigger label updates to state name when 1 selected, "States" + count badge when many
+- [ ] FL district filter bar as its own slim scrollable row (separate from chips)
+- [ ] Detail view hides tab bar on open; back button calls `showTab('list')` to restore
+- [ ] `.camera-source` state tag per card (e.g. FL, WA, CO chip on camera card)
+- [ ] Weather/Conditions view: 2-col `wx-card` grid (temp, wind, description, updated time)
+- [ ] Settings view: toggle-style grid mode pref, ibi511 key input, About section v1.4.0
+- [ ] Toast repositions for detail mode via `.detail-mode` class (`bottom: 12px` vs tab-h offset)
+- [ ] `saveKeys()` calls `showTab('list')` instead of `showView('list')`
+- [ ] `showWeather()` calls `showTab('weather')` instead of `showView('weather')`
+- [ ] NC must stay in South region + IBI511_STATES (was accidentally dropped in v1.4.0 draft)
 
 ### v1.1.0 — 2026-09-04
 - Added NC, FL (ibi511), new typography + color system, CCTV CSS effects, stateroad.fyi branding
