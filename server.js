@@ -167,7 +167,7 @@ app.get('/api/cameras/:state', async (req, res) => {
     if (!sfKey) {
       return res.status(500).json({ error: 'SF_KEY environment variable not set on server' });
     }
-    upstreamUrl = `${baseUrl}?api_key=${encodeURIComponent(sfKey)}`;
+    upstreamUrl = `${baseUrl}?api_key=${encodeURIComponent(sfKey)}&format=json`;
   } else if (state === 'ca') {
     // Caltrans CWWP2 — 12 districts, no API key required
     const districts = [1,2,3,4,5,6,7,8,9,10,11,12];
