@@ -356,3 +356,48 @@ roadcams-glasses/
 
 ### Setup required
 - Railway env var: `NV_KEY=091e0d5ad186416cbd72a15dee9b45df`
+
+---
+
+## Commit 42fe4cb — 2026-09-06 — Fix 502: escaped backticks in NV handler
+
+### Problem
+Server crashed on startup with `SyntaxError: Invalid or unexpected token` at the NV `upstreamUrl` template literal. Escaped backticks (`\``) were written instead of real backticks, causing Node to fail before handling any requests — resulting in a 502 Bad Gateway for the entire site.
+
+### Fix
+- `server.js` line 146: replaced `\`\${baseUrl}?key=\${encodeURIComponent(nvKey)}\`` with real backtick template literal
+
+### Files changed
+- `server.js` — one-line fix
+
+---
+
+## Commit 0f4bf97 — 2026-09-06 — Add Maryland (MD) cameras with HLS stream support
+
+### Data source
+- **API**: `https://chartimap1.sha.maryland.gov/arcgis/rest/services/CHART/Cameras/MapServer/0/query`
+- **Provider**: Maryland CHART (Coordinated Highways Action Response Team)
+- **Format**: ArcGIS MapServer public endpoint — no API key needed
+- **Cameras**: ~552 statewide
+- **Images**: No JPEG snapshots — HLS `.m3u8` streams only (field: `hlsurl`)
+- **Coords**: `outSR=4326` → `geometry.x` (lon), `geometry.y` (lat) in WGS84
+
+### HLS video support (new capability)
+- **HLS.js 1.5.13** loaded from cdnjs in `<head>` — enables `.m3u8` playback in Chrome/Android
+- Safari uses native `<video>` HLS support (no library needed)
+- Card thumbnail: shows 📹 icon instead of broken `<img>` for `.m3u8` cameras
+- Detail view: creates `<video autoplay muted playsinline>` element, attaches HLS.js
+- Cleanup: `clearDetailTimers()` destroys HLS instance and removes `<video>` on navigation
+
+### Key fields (ArcGIS attributes)
+- `ID` → camera id
+- `location` → road + location description
+- `hlsurl` → HLS stream URL (`.m3u8`)
+- `geometry.x`, `geometry.y` → WGS84 lon/lat (via `outSR=4326`)
+
+### Files changed
+- `server.js` — MD endpoint switched to ArcGIS; MD handler added with `outSR=4326`
+- `public/index.html` — HLS.js CDN tag; MD `noKey:true`; MD normalizer; card template; `updateDetailImage()`; `clearDetailTimers()`
+
+### Setup required
+- None — CHART endpoint is fully public
