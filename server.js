@@ -504,7 +504,7 @@ app.get('/api/hls', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.9',
+    version: '1.3.10',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });
