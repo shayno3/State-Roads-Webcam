@@ -26,6 +26,7 @@
       --font-ui:   'Inter', system-ui, sans-serif;
       --font-head: 'Barlow Condensed', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      --tab-h:     54px;
     }
 
     html, body {
@@ -1059,6 +1060,37 @@
     color: var(--muted);
     margin-top: 6px;
   }
+    /* ─── Bottom Tab Bar ────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      height: var(--tab-h);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: var(--font-ui);
+      transition: color 0.15s;
+      padding: 0;
+    }
+
+    .tab-btn.active { color: var(--accent); }
+    .tab-btn:hover  { color: var(--text); }
+
+    .tab-icon  { font-size: 18px; line-height: 1; }
+    .tab-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+
   </style>
 </head>
 <body>
@@ -1066,7 +1098,7 @@
 
   <!-- Header -->
   <header>
-    <div class="logo" onclick="showView('list')">
+    <div class="logo" onclick="showTab('list')">
       <div class="logo-mark">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M2 14 L9 4 L16 14" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1083,8 +1115,8 @@
     </div>
     <div class="header-btns">
       <button class="icon-btn" id="view-toggle-btn" onclick="toggleView()" title="Toggle view">⊞</button>
-      <button class="icon-btn" id="weather-tab-btn" onclick="showWeather()" title="Road Conditions">🌡</button>
-      <button class="icon-btn" onclick="showView('settings')" title="Settings">⚙</button>
+      <button class="icon-btn" id="weather-tab-btn" onclick="showTab('weather')" title="Road Conditions">🌡</button>
+      <button class="icon-btn" onclick="showTab('settings')" title="Settings">⚙</button>
     </div>
   </header>
 
@@ -1142,7 +1174,7 @@
     <!-- ── DETAIL VIEW ── -->
     <div id="detail-view" class="view">
       <div class="detail-header">
-        <button class="back-btn" onclick="showView('list')">‹</button>
+        <button class="back-btn" onclick="showTab('list')">‹</button>
         <div class="detail-title">
           <div class="detail-road" id="detail-road">—</div>
           <div class="detail-location" id="detail-location">—</div>
@@ -1359,7 +1391,7 @@
       <div style="padding:10px;">
         <div class="weather-header">
           <div class="weather-header-left">
-            <button class="back-btn" onclick="showView('list')" style="flex-shrink:0;">‹</button>
+            <button class="back-btn" onclick="showTab('list')" style="flex-shrink:0;">‹</button>
             <span class="weather-title">Road Conditions</span>
           </div>
           <span class="weather-count" id="weather-station-count"></span>
@@ -1375,6 +1407,23 @@
     </div>
 
   </div><!-- /content -->
+
+  <!-- ── Bottom Tab Bar ─────────────────────────────────────────── -->
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab-btn active" id="tab-cameras" onclick="showTab('list')">
+      <span class="tab-icon">📷</span>
+      <span class="tab-label">Cameras</span>
+    </button>
+    <button class="tab-btn" id="tab-conditions" onclick="showTab('weather')">
+      <span class="tab-icon">🌡</span>
+      <span class="tab-label">Conditions</span>
+    </button>
+    <button class="tab-btn" id="tab-settings" onclick="showTab('settings')">
+      <span class="tab-icon">⚙</span>
+      <span class="tab-label">Settings</span>
+    </button>
+  </nav>
+
 </div><!-- /app -->
 
 <div id="toast"></div>
@@ -1455,7 +1504,7 @@ function saveKeys() {
   const rate = document.getElementById('refresh-rate').value;
   localStorage.setItem('refresh_rate', rate);
   showToast('Keys saved ✓');
-  showView('list');
+  showTab('list');
 }
 
 // ─── State Selector Dropdown ────────────────────────────────────────
@@ -1577,6 +1626,14 @@ function showView(name) {
   if (name !== 'detail') clearDetailTimers();
 }
 
+function showTab(name) {
+  showView(name);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const tabMap = { list: 'tab-cameras', weather: 'tab-conditions', settings: 'tab-settings' };
+  if (tabMap[name]) document.getElementById(tabMap[name])?.classList.add('active');
+  document.getElementById('tab-bar').classList.remove('hidden');
+}
+
 // ─── Camera Loading ─────────────────────────────────────────────────
 async function loadSelectedStates() {
   const states = [...selectedStates];
@@ -1610,7 +1667,7 @@ async function loadSelectedStates() {
 
   setStatus('loading', true, `LOADING ${label}…`);
   showEmptyState('', '', '', true);
-  showView('list');
+  showTab('list');
 
   const results = await Promise.allSettled(
     loadable.map(async state => {
@@ -2205,7 +2262,7 @@ function renderWeatherView() {
 
 function showWeather() {
   renderWeatherView();
-  showView('weather');
+  showTab('weather');
 }
 </script>
 </body>
