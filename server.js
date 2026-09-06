@@ -124,6 +124,55 @@ app.get('/api/cameras/:state', async (req, res) => {
 });
 
 
+// ─── ibi511 Weather / Road-Condition Stations ────────────────────────
+// GET /api/weather/:state?key=APIKEY
+// Returns road-weather station data (surface status, temps, wind, humidity).
+// Uses the same developer key as /api/cameras/:state for each state.
+
+const STATE_WEATHER_ENDPOINTS = {
+  ak: 'https://511.alaska.gov/api/v2/get/weatherstations',
+  ut: 'https://www.udottraffic.utah.gov/api/v2/get/weatherstations',
+  nv: 'https://www.nvroads.com/api/v2/get/weatherstations',
+  wi: 'https://511wi.gov/api/v2/get/weatherstations',
+  id: 'https://511.idaho.gov/api/v2/get/weatherstations',
+  la: 'https://511la.org/api/v2/get/weatherstations',
+  va: 'https://511.vdot.virginia.gov/api/v2/get/weatherstations',
+  ne: 'https://511.nebraska.gov/api/v2/get/weatherstations',
+  nh: 'https://www.511nh.com/api/v2/get/weatherstations',
+  vt: 'https://www.511vt.org/api/v2/get/weatherstations',
+  ny: 'https://511ny.org/api/v2/get/weatherstations',
+  pa: 'https://www.511pa.com/api/v2/get/weatherstations',
+};
+
+app.get('/api/weather/:state', async (req, res) => {
+  const { state } = req.params;
+  const { key } = req.query;
+
+  const baseUrl = STATE_WEATHER_ENDPOINTS[state];
+  if (!baseUrl) {
+    return res.status(400).json({ error: `No weather stations for state: ${state}` });
+  }
+  if (!key) {
+    return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
+  }
+
+  const upstreamUrl = `${baseUrl}?key=${encodeURIComponent(key)}`;
+  console.log(`[weather] ${state.toUpperCase()} → ${baseUrl}`);
+
+  try {
+    const response = await axios.get(upstreamUrl, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+      timeout: 12000,
+    });
+    return res.json(response.data);
+  } catch (err) {
+    const status = err.response?.status || 502;
+    const msg    = err.response?.data || err.message;
+    console.error(`[weather] ${state} error ${status}:`, msg);
+    return res.status(status).json({ error: String(msg) });
+  }
+});
+
 // ─── Windy Webcams ────────────────────────────────────────────────────
 // GET /api/weather/webcams/:state  – Windy webcams for a US state bounding box
 // WINDY_WEBCAMS_KEY stored server-side as Railway env var — never sent to browser
@@ -310,7 +359,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.7',
+    version: '1.3.8',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });

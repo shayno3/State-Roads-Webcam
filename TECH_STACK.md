@@ -2,7 +2,7 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.3.6  
+**Version:** 1.3.8  
 **Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
@@ -158,6 +158,23 @@ roadcams-glasses/
 ---
 
 ## Changelog
+
+### v1.3.8 — 2026-09-06
+- Added **ibi511 weather stations endpoint**: `GET /api/weather/:state?key=KEY`
+  - 12 states: AK, UT, NV, WI, ID, LA, VA, NE, NH, VT, NY, PA
+  - Same developer key as cameras endpoint — no additional registration needed
+  - Fields per station: `Id`, `StationName`, `Latitude`, `Longitude`, `SurfaceStatus` (Dry/Wet/Ice/Snow), `AirTemperature`, `SurfaceTemp`, `WindSpeed`, `WindDirection`, `RelativeHumidity`, `CameraSourceId`, `LastUpdated`
+  - `STATE_WEATHER_ENDPOINTS` map added to server.js; route added before Windy Webcams section
+  - Foundation for road-condition overlays in the camera UI
+  - server.js: version bumped to 1.3.8
+
+### v1.3.7 — 2026-09-06
+- Added **Hawaii (HI)**: HDOT GoAkamai cameras via public ArcGIS FeatureServer, ~168 cameras, no key needed
+  - ArcGIS org: `6I1ysurtNWNxkuwd` → `HawaiiTrafficCameras/FeatureServer/0`
+  - Fields: `OBJECTID`, `Camera_Description`, `camerastill` (image URL), `URL`, geometry `{x, y}`
+  - Added `/api/camera/hi/:id` single-camera refresh endpoint
+  - Added `hi` to `STATE_BBOX` for Windy webcams bounding box
+  - server.js: version bumped to 1.3.7
 
 ### v1.3.6 — 2026-09-06
 - Added **Windy Webcams API** endpoint: `GET /api/weather/webcams/:state`
