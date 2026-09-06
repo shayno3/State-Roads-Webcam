@@ -439,6 +439,62 @@ app.get('/api/image', async (req, res) => {
   }
 });
 
+// ─── HLS Stream Proxy ─────────────────────────────────────────────────
+// GET /api/hls?url=ENCODED_M3U8_OR_SEGMENT_URL
+// Proxies HLS playlists (.m3u8) and their segments (.ts) through Railway
+// so the browser avoids CORS restrictions on DOT streaming servers.
+// For playlists: rewrites relative segment/sub-playlist URLs to go
+// through this proxy. For segments: streams binary data directly.
+
+app.get('/api/hls', async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).send('Missing url parameter');
+
+  const decoded = decodeURIComponent(url);
+  if (!/^https?:\/\//i.test(decoded)) return res.status(400).send('Invalid URL');
+
+  const isPlaylist = /\.m3u8/i.test(decoded);
+
+  try {
+    if (isPlaylist) {
+      const response = await axios.get(decoded, {
+        responseType: 'text',
+        timeout: 10000,
+        headers: { 'User-Agent': 'RoadCamsGlasses/1.0' },
+      });
+      // Build base URL for resolving relative segment paths
+      const baseUrl = decoded.substring(0, decoded.lastIndexOf('/') + 1);
+      // Rewrite every non-comment line to go through this proxy
+      const rewritten = response.data.replace(/^(?!#)([^\r\n]+)/gm, (match) => {
+        const trimmed = match.trim();
+        if (!trimmed) return match;
+        const absolute = /^https?:\/\//i.test(trimmed) ? trimmed : baseUrl + trimmed;
+        return `/api/hls?url=${encodeURIComponent(absolute)}`;
+      });
+      res.setHeader('Content-Type', 'application/x-mpegURL');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'no-store');
+      return res.send(rewritten);
+    } else {
+      // Binary segment — pipe the stream directly
+      const response = await axios.get(decoded, {
+        responseType: 'stream',
+        timeout: 30000,
+        headers: { 'User-Agent': 'RoadCamsGlasses/1.0' },
+      });
+      res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp2t');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'no-store');
+      response.data.pipe(res);
+    }
+  } catch (err) {
+    const status = err.response?.status || 502;
+    console.error(`[hls] proxy error ${status} for ${decoded.substring(0, 80)}`);
+    res.status(status).send('Stream unavailable');
+  }
+});
+
+
 // ─── Health check ────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({

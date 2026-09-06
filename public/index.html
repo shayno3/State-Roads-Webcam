@@ -1887,7 +1887,7 @@ function normalizeCameras(state, data) {
       .map((f, i) => {
         const a   = f.attributes || {};
         const geo = f.geometry   || {};
-        // navigator-c2c.dot.ga.gov is IP-restricted from Railway proxy — imageUrl cleared to avoid 10s hang
+        // navigator-c2c.dot.ga.gov is IP-restricted from Railway — load image directly from browser (HTTPS, no proxy)
         return {
           id:       a.cctv_id || a.OBJECTID || i,
           road:     a.route || '—',
@@ -1895,7 +1895,8 @@ function normalizeCameras(state, data) {
           direction:a.dir || '—',
           lat:      geo.y || 0,
           lon:      geo.x || 0,
-          imageUrl: '',
+          imageUrl: a.url ? a.url.replace('http://', 'https://') : '',
+          noProxy:  true,
           county:   a.county || '',
           status:   'active',
           source:   'ga',
@@ -2041,12 +2042,16 @@ function renderGrid(cams) {
     return `
       <div class="camera-card" onclick="openCamera(${idx})">
         <div class="camera-thumb-wrap">
-          ${cam.imageUrl && !cam.imageUrl.endsWith('.m3u8')
-            ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
+          ${cam.imageUrl && cam.imageUrl.endsWith('.m3u8')
+            ? `<div class="camera-thumb-placeholder">📹</div>`
+            : cam.imageUrl && cam.noProxy
+            ? `<img class="camera-thumb" src="${cam.imageUrl}" alt="${cam.location}"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
                /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
             : cam.imageUrl
-            ? `<div class="camera-thumb-placeholder">📹</div>`
+            ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+               /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
             : `<div class="camera-thumb-placeholder">📷</div>`}
           <div class="cam-id-tag">CAM-${camId}</div>
           <div class="cam-status-dot ${online ? 'online' : 'offline'}"></div>
@@ -2130,14 +2135,15 @@ function updateDetailImage(cam) {
     const imgWrap = img.closest('.detail-image-wrap') || img.parentElement;
     imgWrap.insertBefore(vid, img);
 
+    const hlsProxied = `/api/hls?url=${encodeURIComponent(cam.imageUrl)}`;
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       const hls = new Hls({ lowLatencyMode: true });
-      hls.loadSource(cam.imageUrl);
+      hls.loadSource(hlsProxied);
       hls.attachMedia(vid);
       vid._hls = hls;
     } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS
-      vid.src = cam.imageUrl;
+      // Safari native HLS — also proxy for CORS
+      vid.src = hlsProxied;
     } else {
       overlay.classList.add('visible');
       overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-sub">HLS not supported</div></div>';
@@ -2149,7 +2155,9 @@ function updateDetailImage(cam) {
   overlay.classList.add('visible');
   overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
 
-  const src = `/api/image?url=${encodeURIComponent(cam.imageUrl)}&t=${Date.now()}`;
+  const src = cam.noProxy
+    ? `${cam.imageUrl}${cam.imageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`
+    : `/api/image?url=${encodeURIComponent(cam.imageUrl)}&t=${Date.now()}`;
   img.onload  = () => { overlay.classList.remove('visible'); updateMetaTime(); };
   img.onerror = () => {
     overlay.classList.add('visible');
