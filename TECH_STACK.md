@@ -2,7 +2,7 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.3.8  
+**Version:** 1.3.9  
 **Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
@@ -158,6 +158,16 @@ roadcams-glasses/
 ---
 
 ## Changelog
+
+### v1.3.9 — 2026-09-06
+- Added **Road Conditions UI** (index.html):
+  - **Surface condition badges** on camera cards — colored overlay (Dry/Wet/Ice/Snow) using haversine nearest-station lookup within 75 km radius
+  - **Road Conditions tab** (`🌡` header button) — dedicated view listing all weather stations with surface status pill, air temp, road temp, wind speed/direction, humidity, last updated
+  - Weather data loads async after cameras — cards render instantly, badges appear once weather fetch completes
+  - `haversineKm()`, `nearestStationSurface()`, `surfaceClass()`, `windDeg2Dir()`, `normalizeWeatherStations()`, `loadWeatherForState()`, `renderWeatherView()`, `showWeather()` added to JS
+  - `WEATHER_STATES` constant: AK, UT, NV, WI, ID, LA, VA, NE, NH, VT, NY, PA (same API key as cameras)
+  - CSS: `.surface-badge` (dry/wet/ice/snow/other), `.station-card`, `.condition-pill`, `.station-metrics`, weather-view layout
+  - server.js: version bumped to 1.3.9
 
 ### v1.3.8 — 2026-09-06
 - Added **ibi511 weather stations endpoint**: `GET /api/weather/:state?key=KEY`

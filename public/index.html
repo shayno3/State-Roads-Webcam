@@ -932,6 +932,133 @@
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ─── Surface Condition Badge (on camera cards) ──────────────── */
+  .surface-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    padding: 1px 5px;
+    border-radius: 2px;
+    z-index: 4;
+    text-transform: uppercase;
+    line-height: 1.7;
+    pointer-events: none;
+  }
+  .surface-badge.dry   { background: rgba(60,184,120,0.88);  color: #000; }
+  .surface-badge.wet   { background: rgba(74,158,232,0.90);  color: #000; }
+  .surface-badge.ice   { background: rgba(0,212,240,0.90);   color: #000; }
+  .surface-badge.snow  { background: rgba(200,220,255,0.90); color: #111; }
+  .surface-badge.other { background: rgba(92,98,120,0.85);   color: #fff; }
+
+  /* ─── Weather / Road Conditions View ────────────────────────── */
+  #weather-view { padding: 10px; }
+
+  .weather-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+  .weather-header-left { display: flex; align-items: center; gap: 8px; }
+  .weather-title {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .weather-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .station-grid { display: flex; flex-direction: column; gap: 7px; }
+
+  .station-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: start;
+  }
+  .station-card.border-dry   { border-left: 3px solid #3CB878; }
+  .station-card.border-wet   { border-left: 3px solid #4A9EE8; }
+  .station-card.border-ice   { border-left: 3px solid #00D4F0; }
+  .station-card.border-snow  { border-left: 3px solid #B8CCE4; }
+  .station-card.border-other { border-left: 3px solid var(--muted); }
+
+  .station-state-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .station-name {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .condition-pill {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .condition-pill.dry   { background: rgba(60,184,120,0.15);  color: #3CB878; border: 1px solid rgba(60,184,120,0.3); }
+  .condition-pill.wet   { background: rgba(74,158,232,0.15);  color: #4A9EE8; border: 1px solid rgba(74,158,232,0.3); }
+  .condition-pill.ice   { background: rgba(0,212,240,0.15);   color: #00D4F0; border: 1px solid rgba(0,212,240,0.3); }
+  .condition-pill.snow  { background: rgba(184,204,228,0.15); color: #B8CCE4; border: 1px solid rgba(184,204,228,0.3); }
+  .condition-pill.other { background: rgba(92,98,120,0.15);   color: var(--muted); border: 1px solid var(--border); }
+
+  .station-metrics {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .station-metric { display: flex; flex-direction: column; gap: 1px; }
+  .sm-label {
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sm-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .station-updated {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
   </style>
 </head>
 <body>
@@ -956,6 +1083,7 @@
     </div>
     <div class="header-btns">
       <button class="icon-btn" id="view-toggle-btn" onclick="toggleView()" title="Toggle view">⊞</button>
+      <button class="icon-btn" id="weather-tab-btn" onclick="showWeather()" title="Road Conditions">🌡</button>
       <button class="icon-btn" onclick="showView('settings')" title="Settings">⚙</button>
     </div>
   </header>
@@ -1222,6 +1350,26 @@
           Live traffic cameras from 25 state DOT APIs.<br>
           Optimized for glasses display via Meta Wearables Toolkit.<br><br>
           Version 1.2.0 · stateroad.fyi
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WEATHER / ROAD CONDITIONS VIEW ── -->
+    <div id="weather-view" class="view">
+      <div style="padding:10px;">
+        <div class="weather-header">
+          <div class="weather-header-left">
+            <button class="back-btn" onclick="showView('list')" style="flex-shrink:0;">‹</button>
+            <span class="weather-title">Road Conditions</span>
+          </div>
+          <span class="weather-count" id="weather-station-count"></span>
+        </div>
+        <div id="station-grid" class="station-grid">
+          <div class="empty-state">
+            <div class="empty-icon">🌡</div>
+            <div class="empty-title">No Data Yet</div>
+            <div class="empty-sub">Load cameras for NY, PA, AK, NV, UT, WI, ID, LA, VA, NE, NH, or VT to see road surface conditions.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1497,6 +1645,18 @@ async function loadSelectedStates() {
   const filterQ = document.getElementById('search-input').value;
   if (filterQ) filterCameras(); else renderGrid(filteredCameras);
 
+  // Fire weather stations fetch async — badges appear once data returns
+  weatherData = {};
+  (async () => {
+    const wStates = loadable.filter(s => WEATHER_STATES.has(s));
+    if (!wStates.length) return;
+    await Promise.allSettled(wStates.map(s => loadWeatherForState(s)));
+    // Re-render grid to show surface badges, and populate weather view
+    const q = document.getElementById('search-input').value;
+    q ? filterCameras() : renderGrid(filteredCameras);
+    renderWeatherView();
+  })();
+
   const statusParts = [];
   if (allCams.length) statusParts.push(`${allCams.length} CAMERAS`);
   if (errors.length) statusParts.push(`${errors.length} FAILED`);
@@ -1681,6 +1841,12 @@ function renderGrid(cams) {
             : `<div class="camera-thumb-placeholder">📷</div>`}
           <div class="cam-id-tag">CAM-${camId}</div>
           <div class="cam-status-dot ${online ? 'online' : 'offline'}"></div>
+          ${(() => {
+            const st = nearestStationSurface(cam.lat, cam.lon);
+            if (!st || !st.surface) return '';
+            const cls = surfaceClass(st.surface);
+            return `<span class="surface-badge ${cls}">${st.surface}</span>`;
+          })()}
         </div>
         <div class="camera-info">
           <div class="camera-road">${cam.road}</div>
@@ -1912,6 +2078,134 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── Weather Stations ────────────────────────────────────────────────
+const WEATHER_STATES = new Set(['ak','ut','nv','wi','id','la','va','ne','nh','vt','ny','pa']);
+let weatherData = {}; // state → normalized stations array
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function nearestStationSurface(lat, lon) {
+  if (!lat || !lon) return null;
+  let best = null, bestDist = 75; // km radius cutoff
+  for (const stations of Object.values(weatherData)) {
+    for (const s of stations) {
+      if (!s.lat || !s.lon) continue;
+      const d = haversineKm(lat, lon, s.lat, s.lon);
+      if (d < bestDist) { bestDist = d; best = s; }
+    }
+  }
+  return best;
+}
+
+function surfaceClass(status) {
+  if (!status) return 'other';
+  const s = status.toLowerCase();
+  if (s.includes('dry'))   return 'dry';
+  if (s.includes('wet'))   return 'wet';
+  if (s.includes('ice'))   return 'ice';
+  if (s.includes('snow') || s.includes('slush') || s.includes('frost')) return 'snow';
+  return 'other';
+}
+
+function windDeg2Dir(deg) {
+  if (deg === null || deg === undefined || deg === '') return '';
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round(((+deg) % 360) / 45) % 8];
+}
+
+function normalizeWeatherStations(state, data) {
+  if (!Array.isArray(data)) return [];
+  return data.map(s => ({
+    id:          s.Id          || s.id          || '',
+    name:        s.StationName || s.stationName || s.Name || s.name || '—',
+    road:        s.Roadway     || s.roadway     || s.Route || s.route || '—',
+    lat:         parseFloat(s.Latitude   || s.latitude   || 0),
+    lon:         parseFloat(s.Longitude  || s.longitude  || 0),
+    surface:     s.SurfaceStatus    || s.surfaceStatus    || '',
+    airTemp:     s.AirTemperature   !== undefined ? s.AirTemperature   : (s.airTemperature   !== undefined ? s.airTemperature   : null),
+    surfaceTemp: s.SurfaceTemp      !== undefined ? s.SurfaceTemp      : (s.surfaceTemp      !== undefined ? s.surfaceTemp      : null),
+    windSpeed:   s.WindSpeed        !== undefined ? s.WindSpeed        : (s.windSpeed        !== undefined ? s.windSpeed        : null),
+    windDir:     s.WindDirection    !== undefined ? s.WindDirection    : (s.windDirection    !== undefined ? s.windDirection    : null),
+    humidity:    s.RelativeHumidity !== undefined ? s.RelativeHumidity : (s.relativeHumidity !== undefined ? s.relativeHumidity : null),
+    updated:     s.LastUpdated      || s.lastUpdated || '',
+    source:      state,
+  }));
+}
+
+async function loadWeatherForState(state) {
+  const key = localStorage.getItem(`apikey_${state}`);
+  if (!key) return;
+  try {
+    const res = await fetch(`/api/weather/${state}?key=${encodeURIComponent(key)}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    weatherData[state] = normalizeWeatherStations(state, data);
+  } catch (e) { /* silently skip */ }
+}
+
+function renderWeatherView() {
+  const allStations = Object.values(weatherData).flat();
+  const countEl = document.getElementById('weather-station-count');
+  if (countEl) countEl.textContent = allStations.length ? `${allStations.length} stations` : '';
+
+  const grid = document.getElementById('station-grid');
+  if (!allStations.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🌡</div>
+      <div class="empty-title">No Road Conditions</div>
+      <div class="empty-sub">Select a state with weather stations (NY, PA, AK, NV, UT, WI, ID, LA, VA, NE, NH, VT) and make sure your API key is saved in Settings.</div>
+    </div>`;
+    return;
+  }
+
+  const fmt = (v, unit) =>
+    (v !== null && v !== undefined && v !== '') ? `${(+v).toFixed(1)}${unit}` : '—';
+
+  grid.innerHTML = allStations.map(s => {
+    const cls       = surfaceClass(s.surface);
+    const surfLabel = s.surface || 'Unknown';
+    const airT      = fmt(s.airTemp, '°F');
+    const surfT     = fmt(s.surfaceTemp, '°F');
+    const wind      = (s.windSpeed !== null && s.windSpeed !== undefined && s.windSpeed !== '')
+      ? `${(+s.windSpeed).toFixed(0)} mph ${windDeg2Dir(s.windDir)}`
+      : '—';
+    const humid     = (s.humidity !== null && s.humidity !== undefined && s.humidity !== '')
+      ? `${(+s.humidity).toFixed(0)}%`
+      : '—';
+    let updatedStr = '—';
+    if (s.updated) {
+      try { updatedStr = new Date(s.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch(e) {}
+    }
+    return `
+      <div class="station-card border-${cls}">
+        <div style="min-width:0;">
+          <div class="station-state-tag">${s.source.toUpperCase()} · ${s.road}</div>
+          <div class="station-name">${s.name}</div>
+          <div class="station-metrics">
+            <div class="station-metric"><span class="sm-label">AIR</span><span class="sm-value">${airT}</span></div>
+            <div class="station-metric"><span class="sm-label">ROAD</span><span class="sm-value">${surfT}</span></div>
+            <div class="station-metric"><span class="sm-label">WIND</span><span class="sm-value">${wind}</span></div>
+            <div class="station-metric"><span class="sm-label">HUMID</span><span class="sm-value">${humid}</span></div>
+          </div>
+          <div class="station-updated">Updated ${updatedStr}</div>
+        </div>
+        <div><span class="condition-pill ${cls}">${surfLabel}</span></div>
+      </div>`;
+  }).join('');
+}
+
+function showWeather() {
+  renderWeatherView();
+  showView('weather');
 }
 </script>
 </body>
