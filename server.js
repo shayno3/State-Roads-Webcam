@@ -161,6 +161,13 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'WSDOT_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?AccessCode=${encodeURIComponent(wsdotKey)}`;
+  } else if (state === 'sf') {
+    // SF Bay Area 511.org — api_key stored server-side as SF_KEY env var
+    const sfKey = process.env.SF_KEY;
+    if (!sfKey) {
+      return res.status(500).json({ error: 'SF_KEY environment variable not set on server' });
+    }
+    upstreamUrl = `${baseUrl}?api_key=${encodeURIComponent(sfKey)}`;
   } else if (state === 'ca') {
     // Caltrans CWWP2 — 12 districts, no API key required
     const districts = [1,2,3,4,5,6,7,8,9,10,11,12];
