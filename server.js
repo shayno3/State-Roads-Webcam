@@ -45,7 +45,7 @@ const STATE_ENDPOINTS = {
   la: 'https://511la.org/api/v2/get/cameras',
   id: 'https://511.idaho.gov/api/v2/get/cameras',
   nj: 'https://www.511nj.org/api/v2/get/cameras',
-  va: 'https://511.vdot.virginia.gov/api/v2/get/cameras',
+  va: 'https://511.vdot.virginia.gov/services/map/layers/map/cams', // VDOT public GeoJSON – no key needed
   ne: 'https://511.nebraska.gov/api/v2/get/cameras',
   ks: 'https://www.kandrive.gov/api/v2/get/cameras',
   vt: 'https://www.511vt.org/api/v2/get/cameras',
@@ -67,8 +67,12 @@ app.get('/api/cameras/:state', async (req, res) => {
   }
 
   // FL / IA / HI use public ArcGIS FeatureServer — no API key required
+  // VA uses VDOT public GeoJSON endpoint — no API key required
   let upstreamUrl;
-  if (state === 'fl' || state === 'ia' || state === 'hi') {
+  if (state === 'va') {
+    // VDOT public GeoJSON — no key, fetch directly
+    upstreamUrl = baseUrl;
+  } else if (state === 'fl' || state === 'ia' || state === 'hi') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
   } else if (state === 'ak') {
     // Alaska ibi511 — key stored server-side as AK_KEY env var

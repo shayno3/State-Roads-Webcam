@@ -1449,7 +1449,7 @@ const STATE_CONFIGS = {
   la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
   id: { label: 'Idaho',         endpoint: '/api/cameras/id', keyParam: 'key' },
   nj: { label: 'New Jersey',    endpoint: '/api/cameras/nj', keyParam: 'key' },
-  va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key' },
+  va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key', noKey: true },  // VDOT public GeoJSON
   ne: { label: 'Nebraska',      endpoint: '/api/cameras/ne', keyParam: 'key' },
   ks: { label: 'Kansas',        endpoint: '/api/cameras/ks', keyParam: 'key' },
   vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', keyParam: 'key' },
@@ -1831,6 +1831,28 @@ function normalizeCameras(state, data) {
         source: state,
       };
     });
+  }
+
+  // Virginia VDOT public GeoJSON FeatureCollection (coordinates=[lon,lat], properties.*)
+  if (state === 'va' && data && data.features) {
+    return data.features
+      .filter(f => f.properties?.active !== false)
+      .map((f, i) => {
+        const p   = f.properties || {};
+        const geo = f.geometry?.coordinates || [0, 0];
+        return {
+          id:       p.id || p.guid || i,
+          road:     p.route || p.description || '—',
+          location: p.description || '—',
+          direction:p.direction || '—',
+          lat:      geo[1] || 0,
+          lon:      geo[0] || 0,
+          imageUrl: p.image_url || '',
+          county:   p.jurisdiction || '',
+          status:   'active',
+          source:   'va',
+        };
+      });
   }
 
   // Hawaii DOT ArcGIS FeatureServer format (OBJECTID, Camera_Description, camerastill, geometry)
