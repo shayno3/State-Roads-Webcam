@@ -401,3 +401,24 @@ Server crashed on startup with `SyntaxError: Invalid or unexpected token` at the
 
 ### Setup required
 - None — CHART endpoint is fully public
+
+---
+
+## Commit f1656da — 2026-09-06 — Fix GA direct load, MD HLS proxy
+
+### Georgia (GA) fix
+- **Root cause**: `navigator-c2c.dot.ga.gov` image server is IP-restricted on Railway; previous fix cleared imageUrl entirely
+- **Fix**: Restore imageUrl to HTTPS version of the `url` field; add `noProxy: true` flag on GA camera objects
+- **Behavior**: Browser loads GA images directly (user's IP, not Railway) — no CORS restriction on `<img>` tags; onerror shows placeholder if unreachable
+- **Files**: `public/index.html` — GA normalizer, card template, updateDetailImage
+
+### Maryland (MD) HLS fix
+- **Root cause**: `strmr5.sha.maryland.gov` HLS streaming server blocks CORS requests from browser; HLS.js cannot load .m3u8 directly
+- **Fix**: Added `/api/hls?url=<encoded>` proxy endpoint to server.js; Railway server fetches and rewrites the playlist
+- **M3U8 rewriting**: Relative segment URLs in playlist rewritten to absolute, then wrapped in `/api/hls?url=...`; segment .ts files piped as binary stream
+- **updateDetailImage**: Now passes `/api/hls?url=<encoded_hlsurl>` to HLS.js instead of direct URL (applies to Safari too)
+- **Files**: `server.js` — new /api/hls route; `public/index.html` — updateDetailImage HLS source
+
+### Pending user actions
+- **NV**: Set Railway env var `NV_KEY = 091e0d5ad186416cbd72a15dee9b45df` in railway.app → stateroad-fyi → Variables
+- **SF**: Register free API key at https://511.org/open-data/token — enter in Settings when loaded
