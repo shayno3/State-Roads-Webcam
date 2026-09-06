@@ -1458,9 +1458,10 @@ const STATE_CONFIGS = {
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
   nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
+  hi: { label: 'Hawaii',        endpoint: '/api/cameras/hi', keyParam: 'key', noKey: true },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf','hi'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1512,7 +1513,7 @@ const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
   { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh'] },
-  { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm'] },
+  { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm','hi'] },
   { label: 'Special',   keys: ['sf'] },
 ];
 
@@ -1520,7 +1521,7 @@ const STATE_ABBR = {
   ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
   nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
-  wa:'WA', ca:'CA',
+  wa:'WA', ca:'CA', hi:'HI',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
   ia:'IA',
   sf:'SF Bay',
@@ -1832,6 +1833,26 @@ function normalizeCameras(state, data) {
     });
   }
 
+  // Hawaii DOT ArcGIS FeatureServer format (OBJECTID, Camera_Description, camerastill, geometry)
+  if (state === 'hi' && data && data.features) {
+    return data.features.map((f, i) => {
+      const a   = f.attributes || {};
+      const geo = f.geometry   || {};
+      return {
+        id:       a.OBJECTID || i,
+        road:     a.Camera_Description || '—',
+        location: a.Camera_Description || '—',
+        direction:'—',
+        lat:      geo.y || 0,
+        lon:      geo.x || 0,
+        imageUrl: a.camerastill || a.URL || '',
+        county:   a.Island || '',
+        status:   'active',
+        source:   'hi',
+      };
+    });
+  }
+
   // Iowa DOT ArcGIS FeatureServer format
   if (state === 'ia' && data && data.features) {
     return data.features.map((f, i) => {
@@ -2128,13 +2149,16 @@ function toggleView() {
 function openOnGlasses() {
   if (currentCameraIndex < 0) return;
   const cam = filteredCameras[currentCameraIndex];
-  if (!cam.imageUrl && cam.source !== 'fl') { showToast("No feed URL"); return; }
+  if (!cam.imageUrl && cam.source !== 'fl' && cam.source !== 'hi') { showToast("No feed URL"); return; }
   const encoded = encodeURIComponent(cam.imageUrl);
   const title   = encodeURIComponent(cam.road + " - " + cam.location);
   let url = "/view?url=" + encoded + "&title=" + title;
-  // FL cameras: pass source + id so glasses view fetches fresh IMAGE url each cycle
+  // FL/HI cameras: pass source + id so glasses view fetches fresh IMAGE url each cycle
   if (cam.source === 'fl' && cam.id) {
     url += "&source=fl&id=" + encodeURIComponent(cam.id);
+  }
+  if (cam.source === 'hi' && cam.id) {
+    url += "&source=hi&id=" + encodeURIComponent(cam.id);
   }
   window.open(url, "_blank");
 }
