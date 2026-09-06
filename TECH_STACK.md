@@ -309,3 +309,20 @@ roadcams-glasses/
 - Geometry: already WGS84/NAD83 (x = lon, y = lat in attributes)
 - Image: `SnapShot` field → `https://cctv.travelmidwest.com/snapshots/...jpg`
 - Added to Midwest region
+
+---
+
+## Commit 11e4647 — 2026-09-06 — Bug fixes: IL TooOld filter, GA image hang
+
+### IL fix
+- **Problem**: `.filter(f => !f.attributes?.TooOld)` in `normalizeCameras()` (index.html) dropped all cameras when IDOT returned stale data (TooOld=true for all features), causing IL to display 0 results.
+- **Fix**: Removed the TooOld filter entirely. All IDOT cameras now shown regardless of staleness flag.
+
+### GA fix
+- **Problem**: `navigator-c2c.dot.ga.gov` (the only image host in GDOT ArcGIS data) is IP-restricted from Railway's servers. The `/api/image` proxy timed out after 10 seconds, causing the detail view to hang before showing "Feed unavailable".
+- **Fix**: Set `imageUrl: ''` in GA normalizer. Detail view now immediately shows "No feed URL available" instead of a 10-second hang. Camera list still shows all 3100+ GA cameras with location data.
+- **Note**: No alternative public CDN found for GDOT camera snapshots. Only source is `http://navigator-c2c.dot.ga.gov/snapshots/<name>.jpg` which is IP-restricted. GA cameras are location-data only until an alternative image source is found.
+- **Filter change**: GA normalizer filter changed from `f.attributes?.url` presence check to `f.attributes?.cctv_id || f.attributes?.OBJECTID` so cameras without a url field still appear.
+
+### Files changed
+- `public/index.html` — normalizeCameras() GA and IL blocks
