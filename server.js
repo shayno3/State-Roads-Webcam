@@ -70,6 +70,13 @@ app.get('/api/cameras/:state', async (req, res) => {
   let upstreamUrl;
   if (state === 'fl' || state === 'ia' || state === 'hi') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
+  } else if (state === 'ak') {
+    // Alaska ibi511 — key stored server-side as AK_KEY env var
+    const akKey = process.env.AK_KEY;
+    if (!akKey) {
+      return res.status(500).json({ error: 'AK_KEY environment variable not set on server' });
+    }
+    upstreamUrl = `${baseUrl}?key=${encodeURIComponent(akKey)}`;
   } else if (state === 'wa') {
     // WSDOT — AccessCode stored server-side as WSDOT_KEY env var
     const wsdotKey = process.env.WSDOT_KEY;
