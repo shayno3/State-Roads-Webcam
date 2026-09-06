@@ -355,7 +355,7 @@ roadcams-glasses/
 - `public/index.html` — NV STATE_CONFIGS `noKey:true`; NV normalizer before Iowa block
 
 ### Setup required
-- Railway env var: `NV_KEY=091e0d5ad186416cbd72a15dee9b45df`
+- Railway env var: `NV_KEY=<set in Railway dashboard>`
 
 ---
 
@@ -420,5 +420,34 @@ Server crashed on startup with `SyntaxError: Invalid or unexpected token` at the
 - **Files**: `server.js` — new /api/hls route; `public/index.html` — updateDetailImage HLS source
 
 ### Pending user actions
-- **NV**: Set Railway env var `NV_KEY = 091e0d5ad186416cbd72a15dee9b45df` in railway.app → stateroad-fyi → Variables
+- **NV**: Set Railway env var `NV_KEY = <set in Railway dashboard>` in railway.app → stateroad-fyi → Variables
 - **SF**: Register free API key at https://511.org/open-data/token — enter in Settings when loaded
+
+---
+
+## Commit 5337f2f — 2026-09-06 — SF Bay Area server-side key + GA noProxy fix
+
+### SF Bay Area (SF) — key moved server-side
+- **Root cause**: `api.511.org/traffic/cameras` requires a registered API key; original design required user to enter it in Settings
+- **Fix**: Key stored as Railway env var `SF_KEY`; `noKey: true` added to SF STATE_CONFIGS — users no longer need to enter or know about the key
+- **Key**: `<set in Railway dashboard>` (registered Shayne Thomas account)
+- **Server handler**: `else if (state === 'sf')` block reads `process.env.SF_KEY` and returns 500 if missing
+- **Files**: `server.js` — SF handler added; `public/index.html` — SF `noKey: true` in STATE_CONFIGS
+
+### Railway env vars required
+| Var | Value |
+|-----|-------|
+| `NV_KEY` | `<set in Railway dashboard>` |
+| `SF_KEY` | `<set in Railway dashboard>` |
+| `WSDOT_KEY` | (previously set) |
+| `AK_KEY` | (previously set) |
+| `WINDY_WEBCAMS_KEY` | (previously set) |
+
+### Status after this commit
+- ✅ **AK** — server-keyed (`AK_KEY`)
+- ✅ **WA** — server-keyed (`WSDOT_KEY`)
+- ✅ **NV** — server-keyed (`NV_KEY`) — `noKey: true`
+- ✅ **SF Bay** — server-keyed (`SF_KEY`) — `noKey: true`
+- ✅ **FL, IA, HI, CA, GA, MD** — public endpoints, no key needed
+- ⚠️  **GA images** — `noProxy: true`; browser loads directly from `navigator-c2c.dot.ga.gov` (IP-restricted from Railway)
+- ⚠️  **MD** — HLS streams via `/api/hls` proxy (CORS-restricted from browser)
