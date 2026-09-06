@@ -2029,7 +2029,13 @@ function renderGrid(cams) {
   const badge = document.getElementById('count-badge');
 
   if (!cams.length) {
-    showEmptyState('📷', 'No Cameras Found', 'Try a different state or check your API key.');
+    // SF Bay specific: 511.org has no cameras endpoint; point user to CA
+    const sfOnly = selectedStates.size === 1 && selectedStates.has('sf');
+    if (sfOnly) {
+      showEmptyState('🌉', 'SF Bay Area — No Camera Feed', 'The 511 SF Bay API doesn't offer a cameras endpoint. Bay Area freeway cameras are included in the CA (California) state feed.');
+    } else {
+      showEmptyState('📷', 'No Cameras Found', 'Try a different state or check your API key.');
+    }
     badge.textContent = '';
     return;
   }
