@@ -1083,6 +1083,14 @@
             <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
           </div>
           <div class="settings-row">
+            <label>IA</label>
+            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
+          </div>
+          <div class="settings-row">
+            <label>WA</label>
+            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span>
+          </div>
+          <div class="settings-row">
             <label>AZ</label>
             <input type="text" id="key-az" placeholder="AZ511 developer key" />
           </div>
@@ -1222,6 +1230,8 @@ const STATE_CONFIGS = {
   pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
   ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key' },
   fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
+  ia: { label: 'Iowa',          endpoint: '/api/cameras/ia', keyParam: 'key', noKey: true },
+  wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },  // WSDOT key stored server-side
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
@@ -1242,7 +1252,7 @@ const STATE_CONFIGS = {
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','sf'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','sf'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1293,8 +1303,8 @@ function saveKeys() {
 const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
-  { label: 'Midwest',   keys: ['wi','mi','ne','ks'] },
-  { label: 'West',      keys: ['az','nv','ak','ut','id','nm'] },
+  { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia'] },
+  { label: 'West',      keys: ['wa','az','nv','ak','ut','id','nm'] },
   { label: 'Special',   keys: ['sf'] },
 ];
 
@@ -1302,7 +1312,9 @@ const STATE_ABBR = {
   ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
   nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
   wi:'WI', mi:'MI', ne:'NE', ks:'KS',
+  wa:'WA',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
+  ia:'IA',
   sf:'SF Bay',
 };
 
@@ -1487,6 +1499,24 @@ function loadCameras(state) { loadSelectedStates(); }
 
 // ─── Normalize 511 camera data ──────────────────────────────────────
 function normalizeCameras(state, data) {
+  // Washington — WSDOT GetCamerasAsJson format (direct array with WSDOT field names)
+  if (state === 'wa' && Array.isArray(data)) {
+    return data
+      .filter(cam => cam.IsActive !== false)
+      .map((cam, i) => ({
+        id:       cam.CameraID || i,
+        road:     cam.Title || '—',
+        location: cam.Description || cam.Title || '—',
+        direction:'—',
+        lat:      cam.DisplayLatitude  || (cam.CameraLocation && cam.CameraLocation.Latitude)  || 0,
+        lon:      cam.DisplayLongitude || (cam.CameraLocation && cam.CameraLocation.Longitude) || 0,
+        imageUrl: cam.ImageURL || '',
+        county:   cam.Region || '',
+        status:   cam.IsActive === false ? 'inactive' : 'active',
+        source:   'wa',
+      }));
+  }
+
   if (Array.isArray(data)) {
     return data.map((cam, i) => {
       const view = (cam.Views || cam.views || [])[0] || {};
@@ -1501,6 +1531,25 @@ function normalizeCameras(state, data) {
         imageUrl: imgUrl,
         status: view.Status || view.status || 'active',
         source: state,
+      };
+    });
+  }
+
+  // Iowa DOT ArcGIS FeatureServer format
+  if (state === 'ia' && data && data.features) {
+    return data.features.map((f, i) => {
+      const a = f.attributes || {};
+      return {
+        id:       a.COMMON_ID || String(a.device_id || a.FID || i),
+        road:     a.Route || '—',
+        location: a.Desc_ || '—',
+        direction:'—',
+        lat:      a.latitude  || 0,
+        lon:      a.longitude || 0,
+        imageUrl: a.ImageURL  || '',
+        county:   a.REGION    || '',
+        status:   'active',
+        source:   state,
       };
     });
   }
@@ -1692,7 +1741,7 @@ function filterCameras() {
   const q = document.getElementById('search-input').value.toLowerCase();
   filteredCameras = cameras.filter(c => {
     const textOk   = !q || c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q);
-    const countyOk = !selectedCounty || c.source !== 'fl' || c.county === selectedCounty;
+    const countyOk = !selectedCounty || (c.source !== 'fl' && c.source !== 'ia' && c.source !== 'wa') || c.county === selectedCounty;
     return textOk && countyOk;
   });
   renderGrid(filteredCameras);

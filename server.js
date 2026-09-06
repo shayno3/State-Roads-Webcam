@@ -34,6 +34,8 @@ const STATE_ENDPOINTS = {
   pa: 'https://www.511pa.com/api/v2/get/cameras',
   nc: 'https://www.drivenc.gov/api/v2/get/cameras',
   fl: 'https://services.arcgis.com/3wFbqsFPLeKqOlIK/arcgis/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query', // public ArcGIS – no key needed
+  ia: 'https://services.arcgis.com/8lRhdTsQyJpO52F1/arcgis/rest/services/Traffic_Cameras_View/FeatureServer/0/query', // Iowa DOT – public ArcGIS, no key needed
+  wa: 'https://wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson', // WSDOT – AccessCode stored server-side
   // ── v1.2.0 additions (ibi511 platform, free registration) ────────
   wi: 'https://511wi.gov/api/v2/get/cameras',
   ut: 'https://www.udottraffic.utah.gov/api/v2/get/cameras',
@@ -61,10 +63,17 @@ app.get('/api/cameras/:state', async (req, res) => {
     return res.status(400).json({ error: `Unknown state: ${state}` });
   }
 
-  // FL uses a public ArcGIS FeatureServer — no API key required
+  // FL / IA use public ArcGIS FeatureServer — no API key required
   let upstreamUrl;
-  if (state === 'fl') {
+  if (state === 'fl' || state === 'ia') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
+  } else if (state === 'wa') {
+    // WSDOT — AccessCode stored server-side as WSDOT_KEY env var
+    const wsdotKey = process.env.WSDOT_KEY;
+    if (!wsdotKey) {
+      return res.status(500).json({ error: 'WSDOT_KEY environment variable not set on server' });
+    }
+    upstreamUrl = `${baseUrl}?AccessCode=${encodeURIComponent(wsdotKey)}`;
   } else {
     if (!key) {
       return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
@@ -174,7 +183,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.0',
+    version: '1.3.3',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });
