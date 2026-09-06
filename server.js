@@ -35,6 +35,7 @@ const STATE_ENDPOINTS = {
   nc: 'https://www.drivenc.gov/api/v2/get/cameras',
   fl: 'https://services.arcgis.com/3wFbqsFPLeKqOlIK/arcgis/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query', // public ArcGIS – no key needed
   ia: 'https://services.arcgis.com/8lRhdTsQyJpO52F1/arcgis/rest/services/Traffic_Cameras_View/FeatureServer/0/query', // Iowa DOT – public ArcGIS, no key needed
+  hi: 'https://services.arcgis.com/6I1ysurtNWNxkuwd/arcgis/rest/services/HawaiiTrafficCameras/FeatureServer/0/query', // HDOT GoAkamai – public ArcGIS, no key needed (~168 cams)
   wa: 'https://wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson', // WSDOT – AccessCode stored server-side
   // ── v1.2.0 additions (ibi511 platform, free registration) ────────
   oh: 'https://publicapi.ohgo.com/api/v1/cameras',          // OHGo – api-key param
@@ -65,9 +66,9 @@ app.get('/api/cameras/:state', async (req, res) => {
     return res.status(400).json({ error: `Unknown state: ${state}` });
   }
 
-  // FL / IA use public ArcGIS FeatureServer — no API key required
+  // FL / IA / HI use public ArcGIS FeatureServer — no API key required
   let upstreamUrl;
-  if (state === 'fl' || state === 'ia') {
+  if (state === 'fl' || state === 'ia' || state === 'hi') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
   } else if (state === 'wa') {
     // WSDOT — AccessCode stored server-side as WSDOT_KEY env var
@@ -133,6 +134,7 @@ const STATE_BBOX = {
   az: { ne: [37.0,-109.0], sw: [31.3,-114.8] },
   ca: { ne: [42.0,-114.1], sw: [32.5,-124.5] },
   fl: { ne: [31.0,-80.0], sw: [24.5,-87.6] },
+  hi: { ne: [22.3,-154.8], sw: [18.9,-160.3] },
   ga: { ne: [35.0,-80.8], sw: [30.4,-85.6] },
   ia: { ne: [43.5,-90.1], sw: [40.4,-96.6] },
   id: { ne: [49.0,-111.0], sw: [41.9,-117.2] },
@@ -190,6 +192,40 @@ app.get('/api/weather/webcams/:state', async (req, res) => {
   } catch (err) {
     const status = err.response?.status || 502;
     console.error(`[windy] ${state} error ${status}:`, err.message);
+    return res.status(status).json({ error: err.message });
+  }
+});
+
+// ─── HI Single-Camera Lookup ─────────────────────────────────────────
+// GET /api/camera/hi/:id  – returns fresh metadata + IMAGE url for one HI camera
+app.get('/api/camera/hi/:id', async (req, res) => {
+  const { id } = req.params;
+  const url = `https://services.arcgis.com/6I1ysurtNWNxkuwd/arcgis/rest/services/HawaiiTrafficCameras/FeatureServer/0/query?where=OBJECTID%3D${encodeURIComponent(id)}&outFields=*&f=json`;
+
+  console.log(`[camera/hi] ${id}`);
+
+  try {
+    const response = await axios.get(url, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+      timeout: 10000,
+    });
+    const features = response.data?.features || [];
+    if (!features.length) return res.status(404).json({ error: 'Camera not found' });
+    const a = features[0].attributes;
+    const geo = features[0].geometry;
+    return res.json({
+      id:        a.OBJECTID,
+      road:      a.Camera_Description || '—',
+      location:  a.Camera_Description || '—',
+      direction: '—',
+      lat:       geo?.y,
+      lon:       geo?.x,
+      imageUrl:  a.camerastill || a.URL || '',
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    const status = err.response?.status || 502;
+    console.error(`[camera/hi] error ${status}:`, err.message);
     return res.status(status).json({ error: err.message });
   }
 });
@@ -274,7 +310,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.6',
+    version: '1.3.7',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });
