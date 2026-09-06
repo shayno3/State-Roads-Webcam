@@ -1523,19 +1523,19 @@ function normalizeCameras(state, data) {
       }));
   }
 
-  // Ohio — OHGo API format: { results: [ { id, title, roadway, location, latitude, longitude, county-name, camera_views: [{id, url, direction}] } ] }
+  // Ohio — OHGo API format: { results: [ { id, location, description, latitude, longitude, cameraViews: [{direction, largeUrl, smallUrl, mainRoute}] } ] }
   if (state === 'oh' && data && data.results) {
     return data.results.flatMap((cam, i) => {
-      const views = cam.camera_views || [];
+      const views = cam.cameraViews || cam.camera_views || [];
       if (!views.length) return [];
       return views.map((v, j) => ({
-        id:        v.id    || `${cam.id || i}-${j}`,
-        road:      cam.roadway || cam.title || '—',
-        location:  cam.location || cam.title || '—',
-        direction: v.direction || cam.direction || '—',
+        id:        `${cam.id || i}-${j}`,
+        road:      v.mainRoute || cam.location || cam.description || '—',
+        location:  cam.location || cam.description || '—',
+        direction: v.direction || '—',
         lat:       parseFloat(cam.latitude)  || 0,
         lon:       parseFloat(cam.longitude) || 0,
-        imageUrl:  v.url  || '',
+        imageUrl:  v.largeUrl || v.smallUrl || v.url || '',
         county:    cam['county-name'] || '',
         status:    'active',
         source:    'oh',
