@@ -1509,18 +1509,26 @@ function normalizeCameras(state, data) {
   if (state === 'wa' && Array.isArray(data)) {
     return data
       .filter(cam => cam.IsActive !== false)
-      .map((cam, i) => ({
-        id:       cam.CameraID || i,
-        road:     cam.Title || '—',
-        location: cam.Description || cam.Title || '—',
-        direction:'—',
-        lat:      cam.DisplayLatitude  || (cam.CameraLocation && cam.CameraLocation.Latitude)  || 0,
-        lon:      cam.DisplayLongitude || (cam.CameraLocation && cam.CameraLocation.Longitude) || 0,
-        imageUrl: cam.ImageURL || '',
-        county:   cam.Region || '',
-        status:   cam.IsActive === false ? 'inactive' : 'active',
-        source:   'wa',
-      }));
+      .filter(cam => {
+        // Strip WSDOT Aviation airport cameras — not road cameras
+        const roadName = (cam.CameraLocation && cam.CameraLocation.RoadName) || '';
+        return roadName.toLowerCase() !== 'airports';
+      })
+      .map((cam, i) => {
+        const loc = cam.CameraLocation || {};
+        return {
+          id:       cam.CameraID || i,
+          road:     loc.RoadName  || cam.Title || '—',
+          location: loc.Description || cam.Description || cam.Title || '—',
+          direction:loc.Direction || '—',
+          lat:      cam.DisplayLatitude  || loc.Latitude  || 0,
+          lon:      cam.DisplayLongitude || loc.Longitude || 0,
+          imageUrl: cam.ImageURL || '',
+          county:   cam.Region || '',
+          status:   'active',
+          source:   'wa',
+        };
+      });
   }
 
   // Ohio — OHGo API format: { results: [ { id, location, description, latitude, longitude, cameraViews: [{direction, largeUrl, smallUrl, mainRoute}] } ] }
