@@ -1263,7 +1263,7 @@ const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','az','nv','ak','wi','ut','la','i
 let cameras = [];
 let filteredCameras = [];
 let selectedStates = new Set();
-let selectedCounty = null;
+let selectedFilter = { source: null, value: null }; // { source:'fl'|'ia', value:'COUNTY/REGION' }
 let currentCameraIndex = -1;
 let autoRefreshEnabled = true;
 let refreshTimer = null;
@@ -1387,7 +1387,7 @@ function clearAll() {
   renderChips();
   cameras = [];
   filteredCameras = [];
-  selectedCounty = null;
+  selectedFilter = { source: null, value: null };
   buildFlFilterBar();
   renderGrid([]);
   setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
@@ -1486,7 +1486,7 @@ async function loadSelectedStates() {
   });
 
   cameras = allCams;
-  selectedCounty = null;          // reset county filter on each fresh load
+  selectedFilter = { source: null, value: null }; // reset filter on each fresh load
   buildFlFilterBar();
   filteredCameras = cameras;
   const filterQ = document.getElementById('search-input').value;
@@ -1775,41 +1775,51 @@ function filterCameras() {
   const q = document.getElementById('search-input').value.toLowerCase();
   filteredCameras = cameras.filter(c => {
     const textOk   = !q || c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q);
-    const countyOk = !selectedCounty || (c.source !== 'fl' && c.source !== 'ia' && c.source !== 'wa') || c.county === selectedCounty;
+    // Filter by selected FL county or IA region — other sources always pass through
+    const countyOk = !selectedFilter.source || c.source !== selectedFilter.source || c.county === selectedFilter.value;
     return textOk && countyOk;
   });
   renderGrid(filteredCameras);
 }
 
-// ─── FL County Filter Bar ────────────────────────────────────────────
+// ─── FL County / IA Region Filter Bar ───────────────────────────────
 function buildFlFilterBar() {
-  const bar  = document.getElementById('fl-filter-bar');
+  const bar    = document.getElementById('fl-filter-bar');
   const flCams = cameras.filter(c => c.source === 'fl');
+  const iaCams = cameras.filter(c => c.source === 'ia');
 
-  if (!flCams.length) { bar.classList.add('hidden'); return; }
+  if (!flCams.length && !iaCams.length) { bar.classList.add('hidden'); return; }
 
-  // Count cameras per county, sort alphabetically
-  const counts = {};
-  flCams.forEach(c => { counts[c.county] = (counts[c.county] || 0) + 1; });
-  const counties = Object.keys(counts).filter(Boolean).sort();
+  function chipsHtml(source, label, cams) {
+    const counts = {};
+    cams.forEach(c => { if (c.county) counts[c.county] = (counts[c.county] || 0) + 1; });
+    const keys = Object.keys(counts).sort();
+    const isActive = selectedFilter.source === source;
+    return (
+      `<span class="fl-bar-label">${label}</span>` +
+      `<button class="county-chip${!isActive ? ' active' : ''}" data-source="${source}" data-county="" onclick="selectCounty(this)">
+         All <span class="cc-count">${cams.length}</span>
+       </button>` +
+      keys.map(k =>
+        `<button class="county-chip${isActive && selectedFilter.value === k ? ' active' : ''}" data-source="${source}" data-county="${k.replace(/"/g,'&quot;')}" onclick="selectCounty(this)">
+           ${k} <span class="cc-count">${counts[k]}</span>
+         </button>`
+      ).join('')
+    );
+  }
 
   bar.classList.remove('hidden');
-  // Use data-county to avoid inline-quote issues with county names like "St. John's"
   bar.innerHTML =
-    '<span class="fl-bar-label">FL</span>' +
-    `<button class="county-chip${!selectedCounty ? ' active' : ''}" data-county="" onclick="selectCounty(this)">
-       All <span class="cc-count">${flCams.length}</span>
-     </button>` +
-    counties.map(c =>
-      `<button class="county-chip${selectedCounty === c ? ' active' : ''}" data-county="${c.replace(/"/g,'&quot;')}" onclick="selectCounty(this)">
-         ${c} <span class="cc-count">${counts[c]}</span>
-       </button>`
-    ).join('');
+    (flCams.length ? chipsHtml('fl', 'FL', flCams) : '') +
+    (iaCams.length ? chipsHtml('ia', 'IA', iaCams) : '');
 }
 
 function selectCounty(btn) {
-  selectedCounty = btn.dataset.county || null;   // '' → null = All
-  buildFlFilterBar();   // re-render chips with correct active state
+  const source = btn.dataset.source;
+  const value  = btn.dataset.county || null;  // '' → null = All
+  // Tapping "All" for a source clears the filter entirely
+  selectedFilter = value ? { source, value } : { source: null, value: null };
+  buildFlFilterBar();
   filterCameras();
 }
 
