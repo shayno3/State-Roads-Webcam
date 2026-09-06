@@ -143,7 +143,7 @@ app.get('/api/cameras/:state', async (req, res) => {
     if (!nvKey) {
       return res.status(500).json({ error: 'NV_KEY environment variable not set on server' });
     }
-    upstreamUrl = \`\${baseUrl}?key=\${encodeURIComponent(nvKey)}\`;
+    upstreamUrl = `${baseUrl}?key=${encodeURIComponent(nvKey)}`;
   } else if (state === 'ak') {
     // Alaska ibi511 — key stored server-side as AK_KEY env var
     const akKey = process.env.AK_KEY;
