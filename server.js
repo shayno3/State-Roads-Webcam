@@ -38,6 +38,7 @@ const STATE_ENDPOINTS = {
   wa: 'https://wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson', // WSDOT – AccessCode stored server-side
   // ── v1.2.0 additions (ibi511 platform, free registration) ────────
   oh: 'https://publicapi.ohgo.com/api/v1/cameras',          // OHGo – api-key param
+  ca: 'https://cwwp2.dot.ca.gov/data',                        // Caltrans CWWP2 – no key, 12 districts
   wi: 'https://511wi.gov/api/v2/get/cameras',
   ut: 'https://www.udottraffic.utah.gov/api/v2/get/cameras',
   la: 'https://511la.org/api/v2/get/cameras',
@@ -75,6 +76,23 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'WSDOT_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?AccessCode=${encodeURIComponent(wsdotKey)}`;
+  } else if (state === 'ca') {
+    // Caltrans CWWP2 — 12 districts, no API key required
+    const districts = [1,2,3,4,5,6,7,8,9,10,11,12];
+    console.log(`[cameras] CA → Caltrans CWWP2 (12 districts)`);
+    const districtResults = await Promise.allSettled(
+      districts.map(n => axios.get(
+        `${baseUrl}/d${n}/cctv/cctvStatusD${String(n).padStart(2,'0')}.json`,
+        { headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' }, timeout: 15000 }
+      ))
+    );
+    const allCctv = [];
+    districtResults.forEach(r => {
+      if (r.status === 'fulfilled' && r.value.data?.data) allCctv.push(...r.value.data.data);
+    });
+    const ok = districtResults.filter(r => r.status === 'fulfilled').length;
+    console.log(`[cameras] CA → ${allCctv.length} cameras from ${ok}/12 districts`);
+    return res.json({ data: allCctv });
   } else {
     if (!key) {
       return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
@@ -184,7 +202,7 @@ app.get('/api/image', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.4',
+    version: '1.3.5',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });

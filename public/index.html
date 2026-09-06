@@ -1091,6 +1091,10 @@
             <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span>
           </div>
           <div class="settings-row">
+            <label>CA</label>
+            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
+          </div>
+          <div class="settings-row">
             <label>OH</label>
             <input type="text" id="key-oh" placeholder="OHGo developer key" />
           </div>
@@ -1215,7 +1219,7 @@
         <div class="settings-title">About</div>
         <div class="settings-note">
           StateRoad.fyi — Meta Ray-Ban Display web app.<br>
-          Live traffic cameras from 24 state DOT APIs.<br>
+          Live traffic cameras from 25 state DOT APIs.<br>
           Optimized for glasses display via Meta Wearables Toolkit.<br><br>
           Version 1.2.0 · stateroad.fyi
         </div>
@@ -1237,6 +1241,7 @@ const STATE_CONFIGS = {
   fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
   ia: { label: 'Iowa',          endpoint: '/api/cameras/ia', keyParam: 'key', noKey: true },
   wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },  // WSDOT key stored server-side
+  ca: { label: 'California',    endpoint: '/api/cameras/ca', keyParam: 'key', noKey: true },  // Caltrans CWWP2 – no key, 12 districts
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
@@ -1258,7 +1263,7 @@ const STATE_CONFIGS = {
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1310,7 +1315,7 @@ const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
   { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh'] },
-  { label: 'West',      keys: ['wa','az','nv','ak','ut','id','nm'] },
+  { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm'] },
   { label: 'Special',   keys: ['sf'] },
 ];
 
@@ -1318,7 +1323,7 @@ const STATE_ABBR = {
   ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
   nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
-  wa:'WA',
+  wa:'WA', ca:'CA',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
   ia:'IA',
   sf:'SF Bay',
@@ -1549,6 +1554,31 @@ function normalizeCameras(state, data) {
         source:    'oh',
       }));
     });
+  }
+
+  // California — Caltrans CWWP2: { data: [{ cctv: { location, inService, imageData.static.currentImageURL } }] }
+  if (state === 'ca' && data && data.data) {
+    return data.data
+      .filter(item => item.cctv && item.cctv.inService === 'true')
+      .map((item, i) => {
+        const cam = item.cctv;
+        const loc = cam.location || {};
+        const staticImg = (cam.imageData && cam.imageData.static) || {};
+        // locationName like "TV102 -- I-580 : West of SR-24"
+        const parts = (loc.locationName || '').split(' -- ');
+        return {
+          id:        `ca-d${loc.district || 0}-${i}`,
+          road:      loc.route || parts[0] || '—',
+          location:  parts[1] || loc.nearbyPlace || loc.locationName || '—',
+          direction: loc.direction || '—',
+          lat:       parseFloat(loc.latitude)  || 0,
+          lon:       parseFloat(loc.longitude) || 0,
+          imageUrl:  staticImg.currentImageURL || '',
+          county:    loc.county || '',
+          status:    'active',
+          source:    'ca',
+        };
+      });
   }
 
   if (Array.isArray(data)) {

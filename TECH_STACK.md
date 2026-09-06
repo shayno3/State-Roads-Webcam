@@ -2,7 +2,7 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.3.4  
+**Version:** 1.3.5  
 **Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
@@ -71,6 +71,7 @@
 | New Mexico | ibi511 — nmroads.com/api/v2/get/cameras | `?key=` | JSON array | — | |
 | Michigan | ibi511 — mi511.org/api/v2/get/cameras | `?key=` | JSON array | — | |
 | **Ohio** | **OHGo REST API — publicapi.ohgo.com** | **`?api-key=`** | **results[].camera_views[]** | **~600** | **Free key: publicapi.ohgo.com/docs/registration** |
+| **California** | **Caltrans CWWP2 — cwwp2.dot.ca.gov** | **None** | **data[].cctv{}** | **~3,343** | **Public, no key. 12 districts (D01–D12). Conditions of use.** |
 | **Florida** | **ArcGIS FeatureServer — FL511 Traffic Cameras** | **None** | **features[]** | **~600** | **Public, no key** |
 | **Iowa** | **ArcGIS FeatureServer — Iowa DOT Traffic Cameras** | **None** | **features[]** | **~1,252** | **Public, no key. CC BY 4.0** |
 | **Washington** | **WSDOT HighwayCamerasREST — GetCamerasAsJson** | **Server-side env `WSDOT_KEY`** | **JSON array** | **~1,710** | **AccessCode via wsdot.wa.gov/traffic/api/** |
@@ -78,6 +79,7 @@
 
 **ibi511 platform standard:** Camera objects include `Id`, `Roadway`, `Direction`, `Location`, `Latitude`, `Longitude`, `Views[].Url`.  
 **OHGo (OH):** `results[]` → `id`, `title`, `roadway`, `location`, `latitude`, `longitude`, `county-name`, `camera_views[].{id, url, direction}` — one normalized camera per view entry.
+**CWWP2 (CA):** `data[].cctv` → `location.{district, locationName, nearbyPlace, route, county, latitude, longitude, direction}`, `inService`, `imageData.static.currentImageURL` — 12 district files fetched in parallel server-side.
 
 **ArcGIS (FL):** `features[].attributes` → `ID`, `HIGHWAY`, `DESCRIPT`, `COUNTY`, `DIRECTION`, `LATITUDE`, `LONGITUDE`, `IMAGE`, `TIMESTAMP`  
 **ArcGIS (IA):** `features[].attributes` → `COMMON_ID`, `device_id`, `Route`, `Desc_`, `latitude`, `longitude`, `ImageURL`, `REGION`, `FUNCTION`  
@@ -156,6 +158,15 @@ roadcams-glasses/
 
 ## Changelog
 
+### v1.3.5 — 2026-09-06
+- Added **California (CA)**: Caltrans CWWP2 public API, ~3,343 cameras, no key needed
+  - 12 district endpoints: `https://cwwp2.dot.ca.gov/data/d{n}/cctv/cctvStatusD{0n}.json`
+  - Fields: `data[].cctv.{location.{route, county, lat, lon, direction, nearbyPlace}, inService, imageData.static.currentImageURL}`
+  - Server fetches all 12 districts via `Promise.allSettled()`, combines into single response
+  - Filters out `inService !== 'true'` cameras; locationName split at ' -- ' for road/location
+  - Added to West region group; Settings shows "✓ PUBLIC FEED — NO KEY NEEDED"
+  - server.js: CA branch returns early with multi-district data; version bumped to 1.3.5
+
 ### v1.3.4 — 2026-09-06
 - Added **Ohio (OH)**: OHGo public REST API, ~600 cameras, free key at publicapi.ohgo.com
   - Endpoint: `https://publicapi.ohgo.com/api/v1/cameras?api-key=KEY`
@@ -212,7 +223,7 @@ roadcams-glasses/
 
 - [x] Ohio (OH) — OHGo API (`publicapi.ohgo.com`) — free key registration; camera_views[] format (v1.3.4)
 - [x] Washington (WA) — WSDOT Traveler Info API — AccessCode stored server-side as `WSDOT_KEY` (v1.3.3)
-- [ ] California (CA) — Caltrans CWWP2 — 3,343 cameras; API format TBD
+- [x] California (CA) — Caltrans CWWP2 — ~3,343 cameras, no key, 12-district parallel fetch (v1.3.5)
 - [ ] GA key — awaiting developer key from 511ga.org (~4,000 cameras)
 - [ ] IA region filter bar — extend FL county bar to show IA REGION chips
 - [ ] Map view (Leaflet.js) showing camera pins by GPS coordinates
