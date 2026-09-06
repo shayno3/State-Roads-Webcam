@@ -1434,7 +1434,7 @@ const STATE_CONFIGS = {
   ny: { label: 'New York',      endpoint: '/api/cameras/ny', keyParam: 'key' },
   nc: { label: 'N. Carolina',   endpoint: '/api/cameras/nc', keyParam: 'key' },
   pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
-  ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key' },
+  ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key', noKey: true },  // GDOT public ArcGIS
   fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
   ia: { label: 'Iowa',          endpoint: '/api/cameras/ia', keyParam: 'key', noKey: true },
   wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },  // WSDOT key stored server-side
@@ -1458,10 +1458,11 @@ const STATE_CONFIGS = {
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
   nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
+  il: { label: 'Illinois',      endpoint: '/api/cameras/il', keyParam: 'key', noKey: true },  // IDOT public ArcGIS
   hi: { label: 'Hawaii',        endpoint: '/api/cameras/hi', keyParam: 'key', noKey: true },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf','hi'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf','hi','il'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1512,7 +1513,7 @@ function saveKeys() {
 const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
-  { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh'] },
+  { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh','il'] },
   { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm','hi'] },
   { label: 'Special',   keys: ['sf'] },
 ];
@@ -1523,7 +1524,7 @@ const STATE_ABBR = {
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
   wa:'WA', ca:'CA', hi:'HI',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
-  ia:'IA',
+  ia:'IA', il:'IL',
   sf:'SF Bay',
 };
 
@@ -1873,6 +1874,52 @@ function normalizeCameras(state, data) {
         source:   'hi',
       };
     });
+  }
+
+
+  // Georgia GDOT public ArcGIS (geometry already converted to WGS84 by server)
+  // Fields: cctv_id, route, location_description, url (snapshot JPG), dir, county, geometry.x=lon, geometry.y=lat
+  if (state === 'ga' && data && data.features) {
+    return data.features
+      .filter(f => f.attributes?.url || f.attributes?.URL)
+      .map((f, i) => {
+        const a   = f.attributes || {};
+        const geo = f.geometry   || {};
+        return {
+          id:       a.cctv_id || a.OBJECTID || i,
+          road:     a.route || '—',
+          location: a.location_description || a.name || '—',
+          direction:a.dir || '—',
+          lat:      geo.y || 0,
+          lon:      geo.x || 0,
+          imageUrl: a.url || '',
+          county:   a.county || '',
+          status:   'active',
+          source:   'ga',
+        };
+      });
+  }
+
+  // Illinois IDOT public ArcGIS (x=lon, y=lat already WGS84)
+  // Fields: OBJECTID, CameraLocation, CameraDirection, SnapShot, x (lon), y (lat)
+  if (state === 'il' && data && data.features) {
+    return data.features
+      .filter(f => !f.attributes?.TooOld)
+      .map((f, i) => {
+        const a = f.attributes || {};
+        return {
+          id:       a.OBJECTID || i,
+          road:     '—',
+          location: a.CameraLocation || '—',
+          direction:a.CameraDirection || '—',
+          lat:      a.y || 0,
+          lon:      a.x || 0,
+          imageUrl: a.SnapShot || '',
+          county:   '',
+          status:   'active',
+          source:   'il',
+        };
+      });
   }
 
   // Iowa DOT ArcGIS FeatureServer format

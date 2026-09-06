@@ -26,8 +26,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const STATE_ENDPOINTS = {
   // ── v1.0 / v1.1 states ──────────────────────────────────────────
   ny: 'https://511ny.org/api/v2/get/cameras',
-  ga: 'https://511ga.org/api/v2/get/cameras',
+  ga: 'https://services1.arcgis.com/2iUE8l8JKrP2tygQ/arcgis/rest/services/GDOT_Live_Traffic_Cameras/FeatureServer/0/query', // GDOT public ArcGIS – no key needed
   az: 'https://www.az511.com/api/v2/get/cameras',
+  il: 'https://services2.arcgis.com/aIrBD8yn1TDTEXoz/arcgis/rest/services/TrafficCamerasTM_Public/FeatureServer/0/query', // IDOT public ArcGIS – no key needed
   ak: 'https://511.alaska.gov/api/v2/get/cameras',
   nv: 'https://www.nvroads.com/api/v2/get/cameras',
   sf: 'https://api.511.org/traffic/cameras',
@@ -56,6 +57,36 @@ const STATE_ENDPOINTS = {
   mi: 'https://www.mi511.org/api/v2/get/cameras',
 };
 
+
+// ─── ArcGIS helpers ──────────────────────────────────────────────────
+
+// Fetch all features from a paginated ArcGIS FeatureServer query endpoint
+async function fetchArcGISAll(baseUrl, pageSize = 1000) {
+  let allFeatures = [];
+  let offset = 0;
+  const cap = 8000; // safety cap
+
+  while (allFeatures.length < cap) {
+    const url = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=${pageSize}&resultOffset=${offset}`;
+    const resp = await axios.get(url, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+      timeout: 20000,
+    });
+    const batch = resp.data?.features || [];
+    allFeatures.push(...batch);
+    if (!resp.data?.exceededTransferLimit || batch.length === 0) break;
+    offset += batch.length;
+  }
+  return { features: allFeatures };
+}
+
+// Convert Web Mercator (WKID 3857) x/y to WGS84 lat/lon
+function mercatorToWgs84(x, y) {
+  const lon = x * 180 / 20037508.34;
+  const lat = Math.atan(Math.exp(y * Math.PI / 20037508.34)) * 360 / Math.PI - 90;
+  return { lat, lon };
+}
+
 // GET /api/cameras/:state?key=APIKEY
 app.get('/api/cameras/:state', async (req, res) => {
   const { state } = req.params;
@@ -72,6 +103,38 @@ app.get('/api/cameras/:state', async (req, res) => {
   if (state === 'va') {
     // VDOT public GeoJSON — no key, fetch directly
     upstreamUrl = baseUrl;
+  } else if (state === 'ga') {
+    // GDOT public ArcGIS — Web Mercator coords, needs pagination + conversion
+    console.log(`[cameras] GA → GDOT ArcGIS (paginated)`);
+    try {
+      const result = await fetchArcGISAll(baseUrl);
+      // Convert Web Mercator geometry to WGS84 for each feature
+      result.features = result.features.map(f => {
+        if (f.geometry) {
+          const { lat, lon } = mercatorToWgs84(f.geometry.x, f.geometry.y);
+          f.geometry = { x: lon, y: lat };
+        }
+        return f;
+      });
+      console.log(`[cameras] GA → ${result.features.length} cameras`);
+      return res.json(result);
+    } catch (err) {
+      const status = err.response?.status || 502;
+      console.error(`[cameras] GA error ${status}:`, err.message);
+      return res.status(status).json({ error: String(err.message) });
+    }
+  } else if (state === 'il') {
+    // IDOT public ArcGIS — already WGS84/NAD83, needs pagination
+    console.log(`[cameras] IL → IDOT ArcGIS (paginated)`);
+    try {
+      const result = await fetchArcGISAll(baseUrl);
+      console.log(`[cameras] IL → ${result.features.length} cameras`);
+      return res.json(result);
+    } catch (err) {
+      const status = err.response?.status || 502;
+      console.error(`[cameras] IL error ${status}:`, err.message);
+      return res.status(status).json({ error: String(err.message) });
+    }
   } else if (state === 'fl' || state === 'ia' || state === 'hi') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
   } else if (state === 'ak') {

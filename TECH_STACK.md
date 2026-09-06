@@ -294,3 +294,18 @@ roadcams-glasses/
 - [ ] Meta Neural Band gesture support (swipe left/right to navigate cameras)
 - [ ] Voice query integration (Meta AI → "show me I-95 cameras")
 - [ ] PWA manifest for installable phone app
+
+## v1.4.x — Public Endpoint Upgrades
+
+### GA — Switched to GDOT public ArcGIS (no key)
+- Endpoint: `https://services1.arcgis.com/2iUE8l8JKrP2tygQ/arcgis/rest/services/GDOT_Live_Traffic_Cameras/FeatureServer/0/query`
+- Paginated via `fetchArcGISAll()` (resultOffset loop, cap 8000)
+- Geometry: Web Mercator (WKID 3857) → converted to WGS84 server-side via `mercatorToWgs84()`
+- Image: `url` field → `http://navigator-c2c.dot.ga.gov/snapshots/<name>.jpg`
+
+### IL — New state (IDOT public ArcGIS, no key)
+- Endpoint: `https://services2.arcgis.com/aIrBD8yn1TDTEXoz/arcgis/rest/services/TrafficCamerasTM_Public/FeatureServer/0/query`
+- Paginated via `fetchArcGISAll()`
+- Geometry: already WGS84/NAD83 (x = lon, y = lat in attributes)
+- Image: `SnapShot` field → `https://cctv.travelmidwest.com/snapshots/...jpg`
+- Added to Midwest region
