@@ -326,3 +326,33 @@ roadcams-glasses/
 
 ### Files changed
 - `public/index.html` — normalizeCameras() GA and IL blocks
+
+---
+
+## Commit 98b6ab4 — 2026-09-06 — Add Nevada (NV) cameras
+
+### Data source
+- **API**: `https://www.nvroads.com/api/v2/get/cameras?key=<NV_KEY>`
+- **Provider**: Nevada DOT / nvroads.com
+- **Format**: JSON array (not ArcGIS)
+- **Cameras**: 101 total, Reno/Las Vegas metro area
+- **Auth**: API key required → stored as Railway env var `NV_KEY` (never sent to browser)
+- **Images**: `Views[0].Url` = `https://www.nvroads.com/map/Cctv/{id}` — public JPEG snapshot, no key needed
+- **Coords**: `Latitude` / `Longitude` directly in WGS84
+- **Filter**: Only cameras where `Views[0].Status === 'Enabled'`
+
+### Key fields
+- `Id` → camera id
+- `Roadway` → road name
+- `Views[0].Description` → location label
+- `Direction` → direction (often "Unknown")
+- `Latitude`, `Longitude` → WGS84
+- `Views[0].Url` → snapshot image URL (public)
+- `Views[0].VideoUrl` → HLS .m3u8 stream (not used — glasses app shows stills only)
+
+### Files changed
+- `server.js` — NV route added before AK block, uses `process.env.NV_KEY`
+- `public/index.html` — NV STATE_CONFIGS `noKey:true`; NV normalizer before Iowa block
+
+### Setup required
+- Railway env var: `NV_KEY=091e0d5ad186416cbd72a15dee9b45df`
