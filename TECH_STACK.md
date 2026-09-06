@@ -2,7 +2,7 @@
 ## Road Cams — Meta Ray-Ban Display Web App
 
 **Project:** roadcams-glasses  
-**Version:** 1.3.9  
+**Version:** 1.4.0  
 **Build Date:** 2026-09-06  
 **Purpose:** View state road camera feeds on Meta Ray-Ban Display glasses  
 **Live URL:** https://stateroad.fyi
@@ -247,6 +247,19 @@ roadcams-glasses/
 
 ### v1.2.0 — 2026-09-04
 - Added 13 more ibi511 states: WI, UT, LA, ID, NJ, VA, NE, KS, VT, NH, MD, AL, NM, MI
+
+### v1.4.0 — 2026-09-06
+- Full UI restructure & redesign (v1.4.0)
+- Bottom tab bar navigation (Cameras / Conditions / Settings)
+- New dark design system: Inter + Barlow Condensed + JetBrains Mono
+- Active-state chips row below header; state trigger label updates dynamically
+- FL district filter bar (separate from chips row)
+- Detail view hides tab bar; back button restores it via showTab()
+- Camera card: new `.camera-source` state tag, cleaned thumb layout
+- Weather/Conditions view: 2-col grid wx-cards with temp, wind, description
+- Settings view: toggle-style grid mode pref, ibi511 key input, about section
+- Toast repositions for detail mode via `.detail-mode` class
+- package.json bumped to 1.4.0
 
 ### v1.1.0 — 2026-09-04
 - Added NC, FL (ibi511), new typography + color system, CCTV CSS effects, stateroad.fyi branding

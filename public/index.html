@@ -8,16 +8,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* ─── Reset & Base ────────────────────────────────────────────── */
+    /* ─── Reset & Base ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0A0C12;
-      --surface:   #141720;
-      --surface2:  #1C2030;
-      --border:    #252A3A;
-      --text:      #DDE1EC;
-      --muted:     #5C6278;
+      --bg:        #080A10;
+      --surface:   #0F1220;
+      --surface2:  #171B2C;
+      --border:    #1E2438;
+      --text:      #E2E6F4;
+      --muted:     #515A72;
       --accent:    #F5C318;
       --accent-dim:rgba(245,195,24,0.10);
       --live:      #3CB878;
@@ -26,6 +26,7 @@
       --font-ui:   'Inter', system-ui, sans-serif;
       --font-head: 'Barlow Condensed', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      --tab-h:     54px;
     }
 
     html, body {
@@ -50,66 +51,60 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
+      padding: 0 12px;
+      height: 46px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
-      gap: 10px;
+      gap: 8px;
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 9px;
+      gap: 7px;
       cursor: pointer;
       flex-shrink: 0;
-      text-decoration: none;
     }
 
     .logo-mark {
-      width: 30px;
-      height: 30px;
+      width: 27px;
+      height: 27px;
       background: var(--accent);
-      border-radius: 6px;
+      border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
     }
 
     .logo-mark svg { display: block; }
 
-    .logo-text {
-      line-height: 1;
-    }
-
     .logo-name {
       font-family: var(--font-head);
       font-weight: 800;
-      font-size: 18px;
-      letter-spacing: 0.5px;
+      font-size: 17px;
+      letter-spacing: 0.3px;
       color: var(--text);
       text-transform: uppercase;
+      line-height: 1;
     }
 
-    .logo-tld {
-      color: var(--accent);
-    }
+    .logo-tld { color: var(--accent); }
 
     .live-badge {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       background: var(--live-dim);
-      border: 1px solid rgba(60,184,120,0.25);
+      border: 1px solid rgba(60,184,120,0.22);
       border-radius: 20px;
-      padding: 2px 7px;
+      padding: 3px 8px;
       font-family: var(--font-mono);
       font-size: 9px;
-      font-weight: 500;
       color: var(--live);
       letter-spacing: 0.5px;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .live-dot {
@@ -120,99 +115,78 @@
       animation: pulse 2s infinite;
     }
 
-    .header-btns {
-      display: flex;
-      gap: 6px;
+    /* ─── State Selector ────────────────────────────────────────── */
+    #state-selector-wrap {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 0 12px 8px;
       flex-shrink: 0;
+      position: relative;
+      z-index: 100;
     }
 
-    .icon-btn {
-      width: 34px;
-      height: 34px;
+    #state-trigger {
+      width: 100%;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 5px 10px;
+      border-radius: 4px;
       border: 1px solid var(--border);
-      border-radius: 7px;
       background: var(--surface2);
       color: var(--muted);
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      gap: 6px;
+      transition: all 0.15s;
     }
 
-    .icon-btn:hover, .icon-btn.active {
+    #state-trigger.has-states {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    #state-trigger:hover, #state-trigger.open {
       background: var(--accent);
       color: #000;
       border-color: var(--accent);
     }
 
-    /* ─── State Selector Dropdown ───────────────────────────────────── */
-    #state-selector-wrap {
-      position: relative;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      z-index: 100;
-    }
-    .state-selector-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .state-selector-row::-webkit-scrollbar { display: none; }
+    #state-trigger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-    #state-trigger {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 1px;
-      padding: 5px 12px;
-      border-radius: 4px;
-      border: 1px solid var(--accent);
-      background: var(--accent-dim);
-      color: var(--accent);
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.15s, color 0.15s;
-    }
-    #state-trigger:hover, #state-trigger.open {
-      background: var(--accent);
-      color: #000;
-    }
     #state-count-badge {
-      background: var(--surface);
-      color: var(--accent);
+      background: rgba(0,0,0,0.18);
       border-radius: 10px;
       padding: 1px 6px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      min-width: 18px;
-      text-align: center;
-    }
-    #state-trigger.open #state-count-badge,
-    #state-trigger:hover #state-count-badge {
-      background: rgba(0,0,0,0.2);
-      color: #000;
-    }
-    .active-chips {
-      display: flex;
-      gap: 5px;
       flex-shrink: 0;
     }
+
+    /* chips row */
+    #chips-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    #chips-row::-webkit-scrollbar { display: none; }
+    #chips-row.hidden { display: none; }
+
     .chip {
       font-family: var(--font-head);
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.5px;
-      padding: 3px 7px 3px 9px;
+      padding: 2px 6px 2px 8px;
       border-radius: 3px;
       background: var(--accent);
       color: #000;
@@ -220,12 +194,14 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      flex-shrink: 0;
       transition: opacity 0.12s;
     }
-    .chip:hover { opacity: 0.75; }
-    .chip-x { font-size: 10px; opacity: 0.7; font-weight: 900; }
+    .chip:hover { opacity: 0.72; }
+    .chip-x { font-size: 9px; opacity: 0.6; font-weight: 900; }
 
+    /* ─── Dropdown Panel ────────────────────────────────────────── */
     .dropdown-panel {
       position: absolute;
       top: 100%;
@@ -233,7 +209,7 @@
       right: 0;
       background: var(--surface);
       border-bottom: 2px solid var(--accent);
-      max-height: 340px;
+      max-height: 360px;
       overflow-y: auto;
       z-index: 200;
       scrollbar-width: thin;
@@ -242,7 +218,7 @@
     .dropdown-panel.hidden { display: none; }
 
     .dropdown-header {
-      padding: 10px 14px 8px;
+      padding: 10px 12px 8px;
       display: flex;
       flex-direction: column;
       gap: 7px;
@@ -252,6 +228,7 @@
       border-bottom: 1px solid var(--border);
       z-index: 1;
     }
+
     #dd-search {
       width: 100%;
       background: var(--surface2);
@@ -266,10 +243,7 @@
     #dd-search:focus { border-color: var(--accent); }
     #dd-search::placeholder { color: var(--muted); }
 
-    .dd-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .dd-actions { display: flex; gap: 8px; }
     .dd-actions button {
       font-family: var(--font-head);
       font-weight: 700;
@@ -285,7 +259,7 @@
     }
     .dd-actions button:hover { border-color: var(--accent); color: var(--accent); }
 
-    .region-group { padding: 8px 14px 4px; }
+    .region-group { padding: 6px 12px 3px; }
     .region-label {
       font-family: var(--font-head);
       font-size: 10px;
@@ -295,6 +269,7 @@
       color: var(--muted);
       margin-bottom: 2px;
     }
+
     .state-check-row {
       display: flex;
       align-items: center;
@@ -306,56 +281,29 @@
       transition: opacity 0.1s;
     }
     .state-check-row:last-child { border-bottom: none; }
-    .state-check-row:hover { opacity: 0.85; }
+    .state-check-row:hover { opacity: 0.8; }
     .scr-left { display: flex; align-items: center; gap: 10px; }
-    .scr-code {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-      color: var(--text);
-      width: 40px;
-    }
+    .scr-code { font-family: var(--font-head); font-weight: 700; font-size: 14px; color: var(--text); width: 40px; }
     .scr-label { font-size: 13px; color: var(--muted); }
-    .scr-count {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted);
-    }
     .scr-box {
-      width: 18px;
-      height: 18px;
-      border-radius: 3px;
-      border: 1.5px solid var(--border);
-      background: var(--surface2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.12s;
+      width: 18px; height: 18px; border-radius: 3px;
+      border: 1.5px solid var(--border); background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.12s;
     }
-    .scr-box.checked {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-    .scr-box.checked::after {
-      content: '✓';
-      font-size: 11px;
-      color: #000;
-      font-weight: 900;
-    }
+    .scr-box.checked { background: var(--accent); border-color: var(--accent); }
+    .scr-box.checked::after { content: '✓'; font-size: 11px; color: #000; font-weight: 900; }
 
-    /* ─── FL County Filter Bar ─────────────────────────────────────── */
+    /* ─── FL/IA Filter Bar ──────────────────────────────────────── */
     #fl-filter-bar {
       display: flex;
-      gap: 6px;
-      padding: 5px 14px;
+      gap: 5px;
+      padding: 5px 12px;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       overflow-x: auto;
       flex-shrink: 0;
       scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
       align-items: center;
     }
     #fl-filter-bar::-webkit-scrollbar { display: none; }
@@ -363,1849 +311,1104 @@
 
     .fl-bar-label {
       font-family: var(--font-head);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      flex-shrink: 0;
-      padding-right: 4px;
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted);
+      flex-shrink: 0; padding-right: 3px;
     }
+
     .county-chip {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-      padding: 3px 9px;
-      border-radius: 3px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--muted);
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-      transition: all 0.12s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      font-family: var(--font-head); font-weight: 700; font-size: 10px;
+      letter-spacing: 0.5px; padding: 3px 8px; border-radius: 3px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); cursor: pointer; white-space: nowrap;
+      flex-shrink: 0; transition: all 0.12s;
+      display: flex; align-items: center; gap: 3px;
     }
     .county-chip:hover { border-color: var(--accent); color: var(--accent); }
     .county-chip.active { background: var(--accent); border-color: var(--accent); color: #000; }
-    .county-chip .cc-count { font-size: 9px; opacity: 0.65; }
+    .county-chip .cc-count { font-size: 9px; opacity: 0.6; }
 
-    /* ─── Status bar ────────────────────────────────────────────── */
+    /* ─── Status Strip ──────────────────────────────────────────── */
     #status-bar {
-      padding: 5px 14px;
+      padding: 3px 12px;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
+      font-size: 9px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+      flex-shrink: 0; letter-spacing: 0.3px;
     }
-
     .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--live);
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--live); animation: pulse 2s infinite; flex-shrink: 0;
     }
-
     .status-dot.loading { background: var(--accent); }
     .status-dot.error   { background: var(--offline); animation: none; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.35; }
-    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-    /* ─── Main Content ──────────────────────────────────────────── */
-    #content {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
+    /* ─── Content ───────────────────────────────────────────────── */
+    #content { flex: 1; overflow: hidden; position: relative; }
 
-    /* ─── Views ─────────────────────────────────────────────────── */
-    .view {
-      position: absolute;
-      inset: 0;
-      overflow-y: auto;
-      display: none;
-    }
-
+    .view { position: absolute; inset: 0; overflow-y: auto; display: none; }
     .view.active { display: block; }
 
-    /* ─── Camera List View ──────────────────────────────────────── */
-    #list-view { padding: 10px; }
-
-    .search-row {
+    /* ─── Bottom Tab Bar ────────────────────────────────────────── */
+    .tab-bar {
+      height: var(--tab-h);
       display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
     }
+    .tab-bar.hidden { display: none; }
+
+    .tab-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); transition: color 0.15s; padding: 0;
+    }
+    .tab-btn.active { color: var(--accent); }
+    .tab-btn:hover  { color: var(--text); }
+
+    .tab-icon  { font-size: 18px; line-height: 1; }
+    .tab-label {
+      font-family: var(--font-head); font-size: 9px;
+      font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    /* ─── List View ─────────────────────────────────────────────── */
+    #list-view { padding: 8px; }
+
+    .search-row { display: flex; gap: 7px; margin-bottom: 7px; }
 
     #search-input {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 13px;
-      padding: 7px 12px;
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-family: var(--font-ui);
+      font-size: 12px; padding: 7px 11px; outline: none; transition: border-color 0.15s;
     }
-
     #search-input::placeholder { color: var(--muted); }
-    #search-input:focus { outline: none; border-color: var(--accent); }
+    #search-input:focus { border-color: var(--accent); }
+
+    .view-toggle-btn {
+      width: 34px; height: 34px; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--surface); color: var(--muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0; transition: color 0.15s, border-color 0.15s;
+    }
+    .view-toggle-btn:hover { color: var(--accent); border-color: var(--accent); }
 
     .count-badge {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      padding: 0 2px;
-      letter-spacing: 0.3px;
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--muted); margin-bottom: 7px; letter-spacing: 0.3px;
     }
 
-    .camera-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
+    .camera-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 
     /* ─── Camera Card ────────────────────────────────────────────── */
     .camera-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: border-color 0.15s, transform 0.1s;
-      position: relative;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 7px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.15s; position: relative;
     }
-
-    .camera-card:hover {
-      border-color: var(--accent);
-      transform: scale(1.01);
-    }
+    .camera-card:hover { border-color: rgba(245,195,24,0.45); }
 
     .camera-thumb-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: var(--surface2);
-      overflow: hidden;
+      position: relative; width: 100%; aspect-ratio: 16/9;
+      background: var(--surface2); overflow: hidden;
     }
 
-    .camera-thumb-wrap::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 3px,
-        rgba(0,0,0,0.18) 3px,
-        rgba(0,0,0,0.18) 4px
-      );
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    .camera-thumb {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      filter: contrast(1.05);
-    }
+    .camera-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     .camera-thumb-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted);
-      font-size: 22px;
-    }
-
-    .cam-id-tag {
-      position: absolute;
-      bottom: 5px;
-      left: 5px;
-      font-family: var(--font-mono);
-      font-size: 8px;
-      color: rgba(255,255,255,0.55);
-      background: rgba(0,0,0,0.5);
-      padding: 1px 4px;
-      border-radius: 2px;
-      z-index: 3;
-      letter-spacing: 0.3px;
+      width: 100%; height: 100%; display: flex;
+      align-items: center; justify-content: center; color: var(--muted); font-size: 20px;
     }
 
     .cam-status-dot {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--live);
-      border: 1.5px solid rgba(0,0,0,0.6);
-      z-index: 3;
+      position: absolute; top: 5px; right: 5px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--live); border: 1.5px solid rgba(0,0,0,0.5); z-index: 3;
     }
-
     .cam-status-dot.offline { background: var(--offline); }
     .cam-status-dot.online  { animation: pulse 2s infinite; }
 
-    .camera-info {
-      padding: 6px 8px 7px;
+    .cam-id-tag {
+      position: absolute; bottom: 4px; left: 4px;
+      font-family: var(--font-mono); font-size: 7.5px;
+      color: rgba(255,255,255,0.48); background: rgba(0,0,0,0.55);
+      padding: 1px 4px; border-radius: 2px; z-index: 3; letter-spacing: 0.3px;
+    }
+
+    .surface-badge {
+      position: absolute; bottom: 4px; right: 4px;
+      font-family: var(--font-mono); font-size: 7px; font-weight: 500;
+      letter-spacing: 0.4px; padding: 1px 4px; border-radius: 2px;
+      z-index: 4; text-transform: uppercase; line-height: 1.7; pointer-events: none;
+    }
+    .surface-badge.dry   { background: rgba(60,184,120,0.9);  color: #000; }
+    .surface-badge.wet   { background: rgba(74,158,232,0.9);  color: #000; }
+    .surface-badge.ice   { background: rgba(0,212,240,0.9);   color: #000; }
+    .surface-badge.snow  { background: rgba(200,220,255,0.9); color: #111; }
+    .surface-badge.other { background: rgba(80,88,112,0.85);  color: #fff; }
+
+    .camera-info { padding: 5px 8px 7px; }
+
+    .camera-source {
+      font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 1px;
     }
 
     .camera-road {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 12px;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 1px;
+      font-family: var(--font-head); font-weight: 700; font-size: 12px;
+      color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     .camera-location {
-      font-size: 11px;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 10.5px; color: var(--text); opacity: 0.78;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* ─── Camera Detail View ────────────────────────────────────── */
-    #detail-view {
-      background: #000;
-      flex-direction: column;
-    }
-
+    /* ─── Detail View ───────────────────────────────────────────── */
+    #detail-view { background: #000; flex-direction: column; }
     #detail-view.active { display: flex; }
 
     .detail-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: rgba(10,12,18,0.95);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      background: rgba(8,10,16,0.96); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
 
     .back-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      width: 30px; height: 30px; border-radius: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
     }
 
     .detail-title { flex: 1; min-width: 0; }
 
     .detail-road {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-family: var(--font-head); font-weight: 700; font-size: 13px;
+      color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
     }
 
     .detail-location {
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 12px; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85;
     }
 
     .refresh-info {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted);
-      text-align: right;
-      flex-shrink: 0;
+      font-family: var(--font-mono); font-size: 10px;
+      color: var(--muted); text-align: right; flex-shrink: 0;
     }
 
     .detail-image-wrap {
-      flex: 1;
-      position: relative;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-      overflow: hidden;
+      flex: 1; position: relative; background: #000;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 200px; overflow: hidden;
     }
 
-    .detail-image-wrap::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 3px,
-        rgba(0,0,0,0.12) 3px,
-        rgba(0,0,0,0.12) 4px
-      );
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    #detail-img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-    }
+    #detail-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
     .img-overlay {
-      position: absolute;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.75);
-      font-size: 13px;
-      color: var(--muted);
-      z-index: 10;
+      position: absolute; inset: 0; display: none;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.75); font-size: 13px; color: var(--muted); z-index: 10;
     }
-
     .img-overlay.visible { display: flex; }
 
     .refresh-badge {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(10,12,18,0.85);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 3px 9px;
-      font-family: var(--font-mono);
-      font-size: 9px;
-      color: var(--muted);
-      backdrop-filter: blur(4px);
-      z-index: 5;
+      position: absolute; bottom: 10px; right: 10px;
+      background: rgba(8,10,16,0.85); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 8px;
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--muted); backdrop-filter: blur(4px); z-index: 5;
     }
 
     .detail-meta {
-      padding: 10px 14px;
-      background: var(--surface);
+      padding: 9px 12px; background: var(--surface);
       border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-      flex-shrink: 0;
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; flex-shrink: 0;
     }
 
     .meta-item { text-align: center; }
-
     .meta-label {
-      font-family: var(--font-mono);
-      font-size: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--muted);
-      margin-bottom: 3px;
+      font-family: var(--font-mono); font-size: 8px;
+      text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 3px;
     }
-
-    .meta-value {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
-    }
+    .meta-value { font-size: 12px; font-weight: 600; color: var(--text); }
 
     .detail-controls {
-      display: flex;
-      gap: 8px;
-      padding: 10px 14px;
-      background: var(--surface);
-      flex-shrink: 0;
+      display: flex; gap: 7px; padding: 9px 12px;
+      background: var(--surface); flex-shrink: 0;
     }
 
     .ctrl-btn {
-      flex: 1;
-      padding: 9px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 12px;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.15s, border-color 0.15s;
+      flex: 1; padding: 8px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); font-family: var(--font-ui); font-size: 11px;
+      cursor: pointer; text-align: center; transition: opacity 0.15s;
     }
-
-    .ctrl-btn.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #000;
-      font-weight: 600;
-    }
-
-    .ctrl-btn:hover { opacity: 0.85; }
+    .ctrl-btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+    .ctrl-btn:hover { opacity: 0.82; }
 
     .detail-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(10,12,18,0.82);
-      border: 1px solid var(--border);
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      z-index: 10;
-      backdrop-filter: blur(4px);
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(8,10,16,0.80); border: 1px solid var(--border);
+      color: var(--text); cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 16px; z-index: 10; backdrop-filter: blur(4px);
     }
+    #nav-prev { left: 8px; }
+    #nav-next { right: 8px; }
 
-    #nav-prev { left: 10px; }
-    #nav-next { right: 10px; }
-
-    /* ─── Settings View ─────────────────────────────────────────── */
-    #settings-view {
-      padding: 14px;
-      overflow-y: auto;
-    }
-
+    /* ── Settings View ─────────────────────────────── */
     .settings-section {
-      margin-bottom: 20px;
+      padding: 14px 14px 4px;
     }
-
-    .settings-title {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      margin-bottom: 8px;
+    .settings-label {
+      font-family: var(--font-ui); font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); margin-bottom: 8px;
     }
-
     .settings-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-bottom: 12px;
     }
-
     .settings-row {
-      display: flex;
-      align-items: center;
-      padding: 10px 14px;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 13px; border-bottom: 1px solid var(--border);
     }
-
     .settings-row:last-child { border-bottom: none; }
-
-    .settings-row label {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--muted);
-      width: 42px;
-      flex-shrink: 0;
-      letter-spacing: 0.5px;
+    .settings-row-label {
+      flex: 1; font-size: 13px; color: var(--text);
     }
+    .settings-row-sub {
+      font-size: 10px; color: var(--muted); margin-top: 1px;
+    }
+    .settings-input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-family: var(--font-mono);
+      font-size: 11px; padding: 5px 8px; width: 160px;
+    }
+    .settings-input:focus { outline: none; border-color: var(--accent); }
+    .settings-toggle {
+      width: 38px; height: 22px; border-radius: 11px;
+      background: var(--border); border: none; cursor: pointer;
+      position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    .settings-toggle.on { background: var(--accent); }
+    .settings-toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: left 0.2s;
+    }
+    .settings-toggle.on::after { left: 19px; }
+    .settings-save-btn {
+      margin: 6px 14px 14px; width: calc(100% - 28px);
+      padding: 11px; border-radius: 8px;
+      background: var(--accent); border: none;
+      color: #000; font-family: var(--font-ui); font-size: 13px;
+      font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+    }
+    .settings-save-btn:hover { opacity: 0.85; }
+    .about-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 13px;
+    }
+    .about-app { font-size: 13px; font-weight: 600; color: var(--text); }
+    .about-version { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
 
-    .settings-row input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      color: var(--text);
+    /* ── Weather / Conditions View ──────────────────── */
+    .weather-header {
+      padding: 12px 14px 6px;
+      font-family: var(--font-head); font-size: 18px;
+      font-weight: 700; color: var(--text); letter-spacing: 0.3px;
+    }
+    .weather-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; padding: 0 14px 14px;
+    }
+    .wx-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 12px;
+    }
+    .wx-card-station {
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .wx-card-temp {
+      font-family: var(--font-head); font-size: 28px;
+      font-weight: 700; color: var(--text); margin: 4px 0 2px;
+      letter-spacing: -0.5px;
+    }
+    .wx-card-desc {
+      font-size: 11px; color: var(--muted); white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .wx-card-wind {
+      font-size: 10px; color: var(--muted); margin-top: 5px;
       font-family: var(--font-mono);
-      font-size: 11px;
-      padding: 5px 8px;
+    }
+    .wx-card-updated {
+      font-size: 9px; color: var(--muted); margin-top: 3px;
+      font-family: var(--font-mono); opacity: 0.7;
+    }
+    .wx-no-data {
+      grid-column: 1 / -1; text-align: center;
+      padding: 30px 0; color: var(--muted); font-size: 13px;
     }
 
-    .settings-row input:focus { outline: none; border-color: var(--accent); }
-    .settings-row input::placeholder { color: var(--muted); }
-
-    .save-btn {
-      width: 100%;
-      padding: 11px;
-      background: var(--accent);
-      border: none;
-      border-radius: 7px;
-      color: #000;
-      font-family: var(--font-head);
-      font-weight: 800;
-      font-size: 15px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      margin-top: 6px;
-    }
-
-    .save-btn:hover { opacity: 0.88; }
-
-    .settings-note {
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-top: 8px;
-      padding: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-    }
-
-    .settings-note a { color: var(--accent); text-decoration: none; }
-
-    /* ─── Empty / Loading States ────────────────────────────────── */
+    /* ── Shared Utilities ───────────────────────────── */
     .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      text-align: center;
-      gap: 10px;
-      color: var(--muted);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 20px;
+      color: var(--muted); text-align: center;
     }
-
-    .empty-icon { font-size: 36px; }
-    .empty-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
-    .empty-sub { font-size: 12px; line-height: 1.5; }
+    .empty-state-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state-msg  { font-size: 14px; line-height: 1.5; }
 
     .spinner {
-      width: 26px;
-      height: 26px;
-      border: 2px solid var(--border);
+      width: 28px; height: 28px; margin: 40px auto;
+      border: 3px solid var(--border);
       border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ─── Toast ─────────────────────────────────────────────────── */
     #toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(60px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 7px 16px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text);
-      z-index: 1000;
-      transition: transform 0.25s;
-      white-space: nowrap;
-      pointer-events: none;
+      position: fixed; bottom: calc(var(--tab-h) + 12px); left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-size: 12px; padding: 7px 14px;
+      border-radius: 20px; z-index: 9999; opacity: 0;
+      transition: opacity 0.25s; pointer-events: none; white-space: nowrap;
     }
+    #toast.show { opacity: 1; }
+    #toast.detail-mode { bottom: 12px; }
 
-    #toast.show { transform: translateX(-50%) translateY(0); }
-
-    /* ─── Scrollbar ─────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 3px; }
+    /* ── Scrollbar ──────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* ─── Surface Condition Badge (on camera cards) ──────────────── */
-  .surface-badge {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    font-family: var(--font-mono);
-    font-size: 7.5px;
-    font-weight: 500;
-    letter-spacing: 0.4px;
-    padding: 1px 5px;
-    border-radius: 2px;
-    z-index: 4;
-    text-transform: uppercase;
-    line-height: 1.7;
-    pointer-events: none;
-  }
-  .surface-badge.dry   { background: rgba(60,184,120,0.88);  color: #000; }
-  .surface-badge.wet   { background: rgba(74,158,232,0.90);  color: #000; }
-  .surface-badge.ice   { background: rgba(0,212,240,0.90);   color: #000; }
-  .surface-badge.snow  { background: rgba(200,220,255,0.90); color: #111; }
-  .surface-badge.other { background: rgba(92,98,120,0.85);   color: #fff; }
+    /* ── Hidden / Utility ───────────────────────────── */
+    .hidden { display: none !important; }
+    .has-states #state-trigger-arrow { transform: rotate(180deg); }
 
-  /* ─── Weather / Road Conditions View ────────────────────────── */
-  #weather-view { padding: 10px; }
-
-  .weather-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    gap: 8px;
-  }
-  .weather-header-left { display: flex; align-items: center; gap: 8px; }
-  .weather-title {
-    font-family: var(--font-head);
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--text);
-    letter-spacing: 0.5px;
-  }
-  .weather-count {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
-
-  .station-grid { display: flex; flex-direction: column; gap: 7px; }
-
-  .station-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 10px 12px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: start;
-  }
-  .station-card.border-dry   { border-left: 3px solid #3CB878; }
-  .station-card.border-wet   { border-left: 3px solid #4A9EE8; }
-  .station-card.border-ice   { border-left: 3px solid #00D4F0; }
-  .station-card.border-snow  { border-left: 3px solid #B8CCE4; }
-  .station-card.border-other { border-left: 3px solid var(--muted); }
-
-  .station-state-tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-  .station-name {
-    font-family: var(--font-head);
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.3px;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .condition-pill {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .condition-pill.dry   { background: rgba(60,184,120,0.15);  color: #3CB878; border: 1px solid rgba(60,184,120,0.3); }
-  .condition-pill.wet   { background: rgba(74,158,232,0.15);  color: #4A9EE8; border: 1px solid rgba(74,158,232,0.3); }
-  .condition-pill.ice   { background: rgba(0,212,240,0.15);   color: #00D4F0; border: 1px solid rgba(0,212,240,0.3); }
-  .condition-pill.snow  { background: rgba(184,204,228,0.15); color: #B8CCE4; border: 1px solid rgba(184,204,228,0.3); }
-  .condition-pill.other { background: rgba(92,98,120,0.15);   color: var(--muted); border: 1px solid var(--border); }
-
-  .station-metrics {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-  .station-metric { display: flex; flex-direction: column; gap: 1px; }
-  .sm-label {
-    font-family: var(--font-mono);
-    font-size: 7.5px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .sm-value {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .station-updated {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
   </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- Header -->
-  <header>
-    <div class="logo" onclick="showView('list')">
-      <div class="logo-mark">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 14 L9 4 L16 14" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 4 L9 14" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
-        </svg>
-      </div>
-      <div class="logo-text">
-        <div class="logo-name">StateRoad<span class="logo-tld">.fyi</span></div>
-      </div>
+  <!-- ── Header ──────────────────────────────────────── -->
+  <header id="app-header">
+    <div class="logo">
+      <span class="logo-mark">◈</span>
+      <span class="logo-name">StateRoad</span>
     </div>
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      <span id="live-count">LIVE</span>
-    </div>
-    <div class="header-btns">
-      <button class="icon-btn" id="view-toggle-btn" onclick="toggleView()" title="Toggle view">⊞</button>
-      <button class="icon-btn" id="weather-tab-btn" onclick="showWeather()" title="Road Conditions">🌡</button>
-      <button class="icon-btn" onclick="showView('settings')" title="Settings">⚙</button>
-    </div>
+    <span class="live-badge" id="live-badge">● LIVE</span>
   </header>
 
-  <!-- State Selector Dropdown -->
+  <!-- ── State Selector Row ───────────────────────────── -->
   <div id="state-selector-wrap">
-    <div class="state-selector-row">
-      <button id="state-trigger" onclick="toggleDropdown()">
-        🗺 States <span id="state-count-badge">0</span>
-      </button>
-      <div id="active-chips" class="active-chips"></div>
-    </div>
+    <button id="state-trigger" onclick="toggleDropdown()">
+      <span class="state-trigger-label" id="state-trigger-label">Select States</span>
+      <span class="state-trigger-count hidden" id="state-trigger-count"></span>
+      <span id="state-trigger-arrow">▾</span>
+    </button>
+
+    <!-- Dropdown Panel -->
     <div id="dropdown-panel" class="dropdown-panel hidden">
       <div class="dropdown-header">
-        <input id="dd-search" type="text" placeholder="🔍  Search states…" oninput="filterDropdown()" autocomplete="off">
+        <input class="dd-search" id="dd-search" type="text"
+               placeholder="Search states…" oninput="filterDropdown(this.value)">
         <div class="dd-actions">
-          <button onclick="selectAll()">Select All</button>
-          <button onclick="clearAll()">Clear All</button>
+          <button onclick="selectAllStates()">All</button>
+          <button onclick="clearAllStates()">Clear</button>
         </div>
       </div>
-      <div id="dd-regions"></div>
+      <div id="dd-list"><!-- region groups injected by JS --></div>
+    </div>
+  </div><!-- /state-selector-wrap -->
+
+  <!-- ── Active-State Chips Row ───────────────────────── -->
+  <div id="chips-row" class="hidden"></div>
+
+  <!-- ── FL / IA Filter Bar ───────────────────────────── -->
+  <div id="fl-filter-bar" class="hidden">
+    <div class="fl-filter-inner" id="fl-filter-inner">
+      <!-- district/county chips injected by JS -->
     </div>
   </div>
 
-  <!-- FL County/Highway Filter Bar (shown when FL cameras are loaded) -->
-  <div id="fl-filter-bar" class="hidden"></div>
-
-  <!-- Status bar -->
-  <div id="status-bar">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">SELECT STATES TO LOAD CAMERAS</span>
+  <!-- ── Status Bar ───────────────────────────────────── -->
+  <div id="status-bar" class="status-strip">
+    <span id="status-text">Loading cameras…</span>
   </div>
 
-  <!-- Content -->
+  <!-- ── Content Area ────────────────────────────────── -->
   <div id="content">
 
-    <!-- ── LIST VIEW ── -->
+    <!-- List View -->
     <div id="list-view" class="view active">
-      <div style="padding: 10px;">
-        <div class="search-row">
-          <input type="text" id="search-input" placeholder="🔍  Search road or location…" oninput="filterCameras()" />
-        </div>
-        <div class="count-badge" id="count-badge"></div>
-        <div class="camera-grid" id="camera-grid">
-          <div style="grid-column:1/-1;">
-            <div class="empty-state">
-              <div class="empty-icon">🛣️</div>
-              <div class="empty-title">No State Selected</div>
-              <div class="empty-sub">Tap a state above to browse live road cameras.</div>
-            </div>
-          </div>
-        </div>
+      <div class="search-row">
+        <input id="search-input" class="search-input" type="text"
+               placeholder="Search cameras…" oninput="filterCameras()">
+        <button class="view-toggle-btn" id="view-toggle-btn"
+                onclick="toggleGridMode()" title="Toggle grid/list">⊞</button>
       </div>
+      <div class="count-badge" id="count-badge"></div>
+      <div id="camera-grid" class="camera-grid"></div>
     </div>
 
-    <!-- ── DETAIL VIEW ── -->
+    <!-- Detail View -->
     <div id="detail-view" class="view">
       <div class="detail-header">
-        <button class="back-btn" onclick="showView('list')">‹</button>
-        <div class="detail-title">
-          <div class="detail-road" id="detail-road">—</div>
-          <div class="detail-location" id="detail-location">—</div>
+        <button class="back-btn" onclick="showTab('list')">← Back</button>
+        <div>
+          <div class="detail-title" id="detail-title">Camera</div>
+          <div class="detail-road" id="detail-road"></div>
+          <div class="detail-location" id="detail-location"></div>
         </div>
-        <div class="refresh-info" id="refresh-info">—</div>
+        <span class="refresh-info" id="refresh-info"></span>
       </div>
-
       <div class="detail-image-wrap">
-        <img id="detail-img" alt="Camera feed" />
+        <img id="detail-img" class="detail-img" src="" alt="Camera feed">
         <div class="img-overlay" id="img-overlay">
-          <div class="empty-state">
-            <div class="spinner"></div>
-            <div class="empty-sub">Loading feed…</div>
-          </div>
+          <span class="refresh-badge" id="refresh-badge">Live</span>
         </div>
-        <div class="refresh-badge" id="refresh-badge">⟳ auto-refresh</div>
         <button class="detail-nav" id="nav-prev" onclick="navigateCamera(-1)">‹</button>
         <button class="detail-nav" id="nav-next" onclick="navigateCamera(1)">›</button>
       </div>
-
-      <div class="detail-meta">
-        <div class="meta-item">
-          <div class="meta-label">Direction</div>
-          <div class="meta-value" id="meta-dir">—</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Last Update</div>
-          <div class="meta-value" id="meta-time">—</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Status</div>
-          <div class="meta-value" id="meta-status">—</div>
-        </div>
-      </div>
-
+      <div class="detail-meta" id="detail-meta"></div>
       <div class="detail-controls">
-        <button class="ctrl-btn" onclick="toggleAutoRefresh()">⟳ <span id="auto-label">Auto: ON</span></button>
-        <button class="ctrl-btn primary" onclick="openOnGlasses()">🕶 Glasses</button>
-        <button class="ctrl-btn" onclick="copyLocation()">📋 Copy</button>
+        <button class="ctrl-btn" onclick="refreshDetail()">↻ Refresh</button>
+        <button class="ctrl-btn" onclick="copyDetailLink()">⎘ Copy Link</button>
+        <button class="ctrl-btn primary" onclick="openFullImage()">Full ↗</button>
       </div>
-    </div>
+    </div><!-- /detail-view -->
 
-    <!-- ── SETTINGS VIEW ── -->
+    <!-- Settings View -->
     <div id="settings-view" class="view">
       <div class="settings-section">
-        <div class="settings-title">API Keys — free at each state's 511 portal</div>
+        <div class="settings-label">API Keys</div>
         <div class="settings-card">
           <div class="settings-row">
-            <label>NY</label>
-            <input type="text" id="key-ny" placeholder="511NY developer key" />
+            <div class="settings-row-label">
+              ibi511 Key
+              <div class="settings-row-sub">Required for ibi511 states</div>
+            </div>
+            <input class="settings-input" id="ibi-key-input"
+                   type="password" placeholder="Enter key…">
           </div>
-          <div class="settings-row">
-            <label>NC</label>
-            <input type="text" id="key-nc" placeholder="DriveNC developer key" />
-          </div>
-          <div class="settings-row">
-            <label>PA</label>
-            <input type="text" id="key-pa" placeholder="511PA developer key" />
-          </div>
-          <div class="settings-row">
-            <label>GA</label>
-            <input type="text" id="key-ga" placeholder="511GA developer key" />
-          </div>
-          <div class="settings-row">
-            <label>FL</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
-          </div>
-          <div class="settings-row">
-            <label>IA</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
-          </div>
-          <div class="settings-row">
-            <label>WA</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span>
-          </div>
-          <div class="settings-row">
-            <label>CA</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
-          </div>
-          <div class="settings-row">
-            <label>OH</label>
-            <input type="text" id="key-oh" placeholder="OHGo developer key" />
-          </div>
-          <div class="settings-row">
-            <label>AZ</label>
-            <input type="text" id="key-az" placeholder="AZ511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NV</label>
-            <input type="text" id="key-nv" placeholder="NVRoads developer key" />
-          </div>
-          <div class="settings-row">
-            <label>AK</label>
-            <input type="text" id="key-ak" placeholder="511 Alaska developer key" />
-          </div>
-          <div class="settings-row">
-            <label>WI</label>
-            <input type="text" id="key-wi" placeholder="511WI developer key" />
-          </div>
-          <div class="settings-row">
-            <label>UT</label>
-            <input type="text" id="key-ut" placeholder="UDOT Traffic developer key" />
-          </div>
-          <div class="settings-row">
-            <label>LA</label>
-            <input type="text" id="key-la" placeholder="511LA developer key" />
-          </div>
-          <div class="settings-row">
-            <label>ID</label>
-            <input type="text" id="key-id" placeholder="511 Idaho developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NJ</label>
-            <input type="text" id="key-nj" placeholder="511NJ developer key" />
-          </div>
-          <div class="settings-row">
-            <label>VA</label>
-            <input type="text" id="key-va" placeholder="511 Virginia developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NE</label>
-            <input type="text" id="key-ne" placeholder="511 Nebraska developer key" />
-          </div>
-          <div class="settings-row">
-            <label>KS</label>
-            <input type="text" id="key-ks" placeholder="KanDrive developer key" />
-          </div>
-          <div class="settings-row">
-            <label>VT</label>
-            <input type="text" id="key-vt" placeholder="511VT developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NH</label>
-            <input type="text" id="key-nh" placeholder="511NH developer key" />
-          </div>
-          <div class="settings-row">
-            <label>MD</label>
-            <input type="text" id="key-md" placeholder="MD511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>AL</label>
-            <input type="text" id="key-al" placeholder="AL511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NM</label>
-            <input type="text" id="key-nm" placeholder="NMRoads developer key" />
-          </div>
-          <div class="settings-row">
-            <label>MI</label>
-            <input type="text" id="key-mi" placeholder="MI511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>SF</label>
-            <input type="text" id="key-sf" placeholder="511 SF Bay api_key" />
-          </div>
-        </div>
-        <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
-        <div class="settings-note">
-          All keys are free. Register at each state's developer portal:<br><br>
-          NY → <a href="https://511ny.org/developers" target="_blank">511ny.org/developers</a> &nbsp;·&nbsp;
-          NC → <a href="https://www.drivenc.gov/developers" target="_blank">drivenc.gov/developers</a><br>
-          PA → <a href="https://www.511pa.com/developers" target="_blank">511pa.com/developers</a> &nbsp;·&nbsp;
-          GA → <a href="https://511ga.org/developers" target="_blank">511ga.org/developers</a><br>
-          FL → <a href="https://fl511.com/developers/doc" target="_blank">fl511.com/developers</a> &nbsp;·&nbsp;
-          AZ → <a href="https://www.az511.com/developers" target="_blank">az511.com/developers</a><br>
-          NV → <a href="https://www.nvroads.com/developers" target="_blank">nvroads.com/developers</a> &nbsp;·&nbsp;
-          AK → <a href="https://511.alaska.gov/developers" target="_blank">511.alaska.gov</a><br>
-          WI → <a href="https://511wi.gov/developers" target="_blank">511wi.gov/developers</a> &nbsp;·&nbsp;
-          UT → <a href="https://www.udottraffic.utah.gov/developers" target="_blank">udottraffic.utah.gov</a><br>
-          LA → <a href="https://511la.org/developers" target="_blank">511la.org/developers</a> &nbsp;·&nbsp;
-          ID → <a href="https://511.idaho.gov/developers" target="_blank">511.idaho.gov</a><br>
-          NJ → <a href="https://www.511nj.org/developers" target="_blank">511nj.org/developers</a> &nbsp;·&nbsp;
-          VA → <a href="https://511.vdot.virginia.gov/developers" target="_blank">511.vdot.virginia.gov</a><br>
-          NE → <a href="https://511.nebraska.gov/developers" target="_blank">511.nebraska.gov</a> &nbsp;·&nbsp;
-          KS → <a href="https://www.kandrive.gov/developers" target="_blank">kandrive.gov/developers</a><br>
-          VT → <a href="https://www.511vt.org/developers" target="_blank">511vt.org/developers</a> &nbsp;·&nbsp;
-          NH → <a href="https://www.511nh.com/developers" target="_blank">511nh.com/developers</a><br>
-          MD → <a href="https://md511.org/developers" target="_blank">md511.org/developers</a> &nbsp;·&nbsp;
-          AL → <a href="https://www.al511.com/developers" target="_blank">al511.com/developers</a><br>
-          NM → <a href="https://nmroads.com/developers" target="_blank">nmroads.com/developers</a> &nbsp;·&nbsp;
-          MI → <a href="https://www.mi511.org/developers" target="_blank">mi511.org/developers</a><br>
-          OH → <a href="https://publicapi.ohgo.com/docs/registration" target="_blank">publicapi.ohgo.com</a>
         </div>
       </div>
-
       <div class="settings-section">
-        <div class="settings-title">Refresh Rate</div>
+        <div class="settings-label">Display</div>
         <div class="settings-card">
           <div class="settings-row">
-            <label>Every</label>
-            <select id="refresh-rate" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;padding:5px 8px;">
-              <option value="10">10 seconds</option>
-              <option value="30" selected>30 seconds</option>
-              <option value="60">1 minute</option>
-              <option value="120">2 minutes</option>
-            </select>
+            <div class="settings-row-label">
+              Grid Mode
+              <div class="settings-row-sub">Show cameras in grid layout</div>
+            </div>
+            <button class="settings-toggle" id="grid-toggle"
+                    onclick="toggleGridPref()"></button>
           </div>
         </div>
       </div>
+      <button class="settings-save-btn" onclick="saveKeys()">Save &amp; Load Cameras</button>
 
       <div class="settings-section">
-        <div class="settings-title">About</div>
-        <div class="settings-note">
-          StateRoad.fyi — Meta Ray-Ban Display web app.<br>
-          Live traffic cameras from 25 state DOT APIs.<br>
-          Optimized for glasses display via Meta Wearables Toolkit.<br><br>
-          Version 1.2.0 · stateroad.fyi
+        <div class="settings-label">About</div>
+        <div class="settings-card">
+          <div class="about-row">
+            <div class="about-app">StateRoad.fyi</div>
+            <div class="about-version">v1.4.0</div>
+          </div>
         </div>
       </div>
-    </div>
+    </div><!-- /settings-view -->
 
-    <!-- ── WEATHER / ROAD CONDITIONS VIEW ── -->
+    <!-- Weather / Conditions View -->
     <div id="weather-view" class="view">
-      <div style="padding:10px;">
-        <div class="weather-header">
-          <div class="weather-header-left">
-            <button class="back-btn" onclick="showView('list')" style="flex-shrink:0;">‹</button>
-            <span class="weather-title">Road Conditions</span>
-          </div>
-          <span class="weather-count" id="weather-station-count"></span>
-        </div>
-        <div id="station-grid" class="station-grid">
-          <div class="empty-state">
-            <div class="empty-icon">🌡</div>
-            <div class="empty-title">No Data Yet</div>
-            <div class="empty-sub">Load cameras for NY, PA, AK, NV, UT, WI, ID, LA, VA, NE, NH, or VT to see road surface conditions.</div>
-          </div>
+      <div class="weather-header">Road Conditions</div>
+      <div class="weather-grid" id="weather-grid">
+        <div class="wx-no-data">
+          <div class="spinner"></div>
         </div>
       </div>
-    </div>
+    </div><!-- /weather-view -->
 
   </div><!-- /content -->
+
+  <!-- ── Bottom Tab Bar ───────────────────────────────── -->
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab-btn active" id="tab-cameras" onclick="showTab('list')">
+      <span class="tab-icon">📷</span>
+      <span class="tab-label">Cameras</span>
+    </button>
+    <button class="tab-btn" id="tab-conditions" onclick="showTab('weather')">
+      <span class="tab-icon">🌡</span>
+      <span class="tab-label">Conditions</span>
+    </button>
+    <button class="tab-btn" id="tab-settings" onclick="showTab('settings')">
+      <span class="tab-icon">⚙</span>
+      <span class="tab-label">Settings</span>
+    </button>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
 </div><!-- /app -->
 
-<div id="toast"></div>
-
 <script>
-// ─── State Configs ──────────────────────────────────────────────────
-const STATE_CONFIGS = {
-  ny: { label: 'New York',      endpoint: '/api/cameras/ny', keyParam: 'key' },
-  nc: { label: 'N. Carolina',   endpoint: '/api/cameras/nc', keyParam: 'key' },
-  pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
-  ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key' },
-  fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
-  ia: { label: 'Iowa',          endpoint: '/api/cameras/ia', keyParam: 'key', noKey: true },
-  wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },  // WSDOT key stored server-side
-  ca: { label: 'California',    endpoint: '/api/cameras/ca', keyParam: 'key', noKey: true },  // Caltrans CWWP2 – no key, 12 districts
-  az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
-  nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key' },
-  ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key' },
-  sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key' },
-  oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', keyParam: 'key' },  // OHGo — api-key param, key in localStorage
-  wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key' },
-  ut: { label: 'Utah',          endpoint: '/api/cameras/ut', keyParam: 'key' },
-  la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
-  id: { label: 'Idaho',         endpoint: '/api/cameras/id', keyParam: 'key' },
-  nj: { label: 'New Jersey',    endpoint: '/api/cameras/nj', keyParam: 'key' },
-  va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key' },
-  ne: { label: 'Nebraska',      endpoint: '/api/cameras/ne', keyParam: 'key' },
-  ks: { label: 'Kansas',        endpoint: '/api/cameras/ks', keyParam: 'key' },
-  vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', keyParam: 'key' },
-  nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', keyParam: 'key' },
-  md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key' },
-  al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
-  nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
-  mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
+'use strict';
+
+/* ── Constants ─────────────────────────────────────── */
+const REGIONS = {
+  'Northwest': ['ak','id','mt','or','wa'],
+  'Southwest': ['az','ca','co','nv','nm','ut'],
+  'Midwest':   ['ia','il','in','ks','mi','mn','mo','nd','ne','oh','sd','wi'],
+  'South':     ['al','ar','fl','ga','ky','la','ms','ok','sc','tn','tx'],
+  'Northeast': ['ct','dc','de','ma','md','me','nh','nj','ny','pa','ri','va','vt','wv'],
+  'Other':     ['wy']
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf'];
+const STATE_NAMES = {
+  ak:'Alaska', al:'Alabama', ar:'Arkansas', az:'Arizona', ca:'California',
+  co:'Colorado', ct:'Connecticut', dc:'DC', de:'Delaware', fl:'Florida',
+  ga:'Georgia', ia:'Iowa', id:'Idaho', il:'Illinois', in:'Indiana',
+  ks:'Kansas', ky:'Kentucky', la:'Louisiana', ma:'Massachusetts', md:'Maryland',
+  me:'Maine', mi:'Michigan', mn:'Minnesota', mo:'Missouri', ms:'Mississippi',
+  mt:'Montana', nc:'North Carolina', nd:'North Dakota', ne:'Nebraska',
+  nh:'New Hampshire', nj:'New Jersey', nm:'New Mexico', nv:'Nevada',
+  ny:'New York', oh:'Ohio', ok:'Oklahoma', or:'Oregon', pa:'Pennsylvania',
+  ri:'Rhode Island', sc:'South Carolina', sd:'South Dakota', tn:'Tennessee',
+  tx:'Texas', ut:'Utah', va:'Virginia', vt:'Vermont', wa:'Washington',
+  wi:'Wisconsin', wv:'West Virginia', wy:'Wyoming'
+};
 
-let cameras = [];
+// Source type per state
+const IBI511_STATES   = ['co','id','in','ks','mn','mo','mt','nd','ne','nm','oh','ok','or','sd','tn','wy'];
+const WSDOT_STATES    = ['wa'];
+const FL_STATES       = ['fl'];
+const IA_STATES       = ['ia'];
+const WEATHER_STATES  = ['ak','id','la','ne','nh','nv','ny','pa','ut','va','vt','wi'];
+
+/* ── App State ─────────────────────────────────────── */
+let selectedStates  = [];
+let allCameras      = [];
 let filteredCameras = [];
-let selectedStates = new Set();
-let selectedFilter = { source: null, value: null }; // { source:'fl'|'ia', value:'COUNTY/REGION' }
-let currentCameraIndex = -1;
-let autoRefreshEnabled = true;
-let refreshTimer = null;
-let refreshCountdown = 30;
-let countdownTimer = null;
-let gridView = true;
+let currentCamera   = null;
+let currentIndex    = 0;
+let isGridMode      = false;
+let activeTab       = 'list';
+let ibiKey          = '';
+let toastTimer      = null;
+let dropdownOpen    = false;
 
-// ─── Init ───────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  buildDropdown();
-  loadSettings();
-  // close dropdown when clicking outside
-  document.addEventListener('click', e => {
-    if (ddOpen && !document.getElementById('state-selector-wrap').contains(e.target)) closeDropdown();
-  });
-});
-
-function loadSettings() {
-  ALL_KEYS.forEach(k => {
-    const saved = localStorage.getItem(`apikey_${k}`);
-    const el = document.getElementById(`key-${k}`);
-    if (saved && el) el.value = saved;
-  });
-  const rate = localStorage.getItem('refresh_rate');
-  if (rate) document.getElementById('refresh-rate').value = rate;
+/* ── Tab / View Management ─────────────────────────── */
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById(name + '-view');
+  if (el) el.classList.add('active');
 }
 
-function saveKeys() {
-  ALL_KEYS.forEach(k => {
-    const el = document.getElementById(`key-${k}`);
-    if (!el) return;
-    const val = el.value.trim();
-    if (val) localStorage.setItem(`apikey_${k}`, val);
-    else localStorage.removeItem(`apikey_${k}`);
-  });
-  const rate = document.getElementById('refresh-rate').value;
-  localStorage.setItem('refresh_rate', rate);
-  showToast('Keys saved ✓');
-  showView('list');
+function showTab(name) {
+  activeTab = name;
+  showView(name);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const tabMap = { list: 'tab-cameras', weather: 'tab-conditions', settings: 'tab-settings' };
+  if (tabMap[name]) document.getElementById(tabMap[name])?.classList.add('active');
+  document.getElementById('tab-bar').classList.remove('hidden');
+  document.getElementById('toast').classList.remove('detail-mode');
 }
 
-// ─── State Selector Dropdown ────────────────────────────────────────
-const REGIONS = [
-  { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
-  { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
-  { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh'] },
-  { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm'] },
-  { label: 'Special',   keys: ['sf'] },
-];
-
-const STATE_ABBR = {
-  ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
-  nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
-  wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
-  wa:'WA', ca:'CA',
-  az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
-  ia:'IA',
-  sf:'SF Bay',
-};
-
-let ddOpen = false;
-
+/* ── Dropdown / State Selector ─────────────────────── */
 function buildDropdown() {
-  const container = document.getElementById('dd-regions');
-  container.innerHTML = REGIONS.map(r => `
-    <div class="region-group">
-      <div class="region-label">${r.label}</div>
-      ${r.keys.map(k => `
-        <div class="state-check-row" onclick="toggleStateCheck('${k}')" id="row-${k}">
-          <div class="scr-left">
-            <span class="scr-code">${STATE_ABBR[k]}</span>
-            <span class="scr-label">${STATE_CONFIGS[k].label}</span>
-          </div>
-          <div class="scr-box" id="box-${k}"></div>
-        </div>`).join('')}
-    </div>`).join('');
+  const list = document.getElementById('dd-list');
+  list.innerHTML = '';
+  for (const [region, states] of Object.entries(REGIONS)) {
+    const grp = document.createElement('div');
+    grp.className = 'region-group';
+    grp.innerHTML = `<div class="region-label">${region}</div>`;
+    states.forEach(code => {
+      const row = document.createElement('div');
+      row.className = 'scr' + (selectedStates.includes(code) ? ' checked' : '');
+      row.dataset.state = code;
+      row.innerHTML = `<span class="scr-box">${selectedStates.includes(code) ? '✓' : ''}</span>
+        <span class="scr-name">${STATE_NAMES[code] || code.toUpperCase()}</span>
+        <span class="scr-code">${code.toUpperCase()}</span>`;
+      row.addEventListener('click', () => toggleStateCheck(code));
+      grp.appendChild(row);
+    });
+    list.appendChild(grp);
+  }
 }
 
 function toggleDropdown() {
-  ddOpen = !ddOpen;
+  dropdownOpen = !dropdownOpen;
   const panel = document.getElementById('dropdown-panel');
   const trigger = document.getElementById('state-trigger');
-  panel.classList.toggle('hidden', !ddOpen);
-  trigger.classList.toggle('open', ddOpen);
-  if (ddOpen) {
-    document.getElementById('dd-search').value = '';
-    filterDropdown();
-    document.getElementById('dd-search').focus();
-  }
-}
-
-function closeDropdown() {
-  ddOpen = false;
-  document.getElementById('dropdown-panel').classList.add('hidden');
-  document.getElementById('state-trigger').classList.remove('open');
-}
-
-function toggleStateCheck(key) {
-  if (selectedStates.has(key)) {
-    selectedStates.delete(key);
+  if (dropdownOpen) {
+    panel.classList.remove('hidden');
+    trigger.classList.add('has-states');
+    buildDropdown();
   } else {
-    selectedStates.add(key);
+    panel.classList.add('hidden');
+    trigger.classList.remove('has-states');
   }
-  document.getElementById('box-' + key)?.classList.toggle('checked', selectedStates.has(key));
-  renderChips();
-  loadSelectedStates();
 }
 
-function selectAll() {
-  ALL_KEYS.forEach(k => {
-    selectedStates.add(k);
-    document.getElementById('box-' + k)?.classList.add('checked');
+function filterDropdown(q) {
+  document.querySelectorAll('.scr').forEach(row => {
+    const name = row.querySelector('.scr-name').textContent.toLowerCase();
+    const code = row.dataset.state;
+    row.style.display = (name.includes(q.toLowerCase()) || code.includes(q.toLowerCase())) ? '' : 'none';
   });
-  renderChips();
-  loadSelectedStates();
+  document.querySelectorAll('.region-group').forEach(grp => {
+    const visible = [...grp.querySelectorAll('.scr')].some(r => r.style.display !== 'none');
+    grp.style.display = visible ? '' : 'none';
+  });
 }
 
-function clearAll() {
-  selectedStates.clear();
-  ALL_KEYS.forEach(k => document.getElementById('box-' + k)?.classList.remove('checked'));
+function toggleStateCheck(code) {
+  if (selectedStates.includes(code)) {
+    selectedStates = selectedStates.filter(s => s !== code);
+  } else {
+    selectedStates.push(code);
+  }
+  saveSelectedStates();
+  buildDropdown();
   renderChips();
-  cameras = [];
-  filteredCameras = [];
-  selectedFilter = { source: null, value: null };
-  buildFlFilterBar();
-  renderGrid([]);
-  setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
-  updateLiveBadge(0);
+  loadAllCameras();
 }
 
+function selectAllStates() {
+  selectedStates = Object.values(REGIONS).flat();
+  saveSelectedStates(); buildDropdown(); renderChips(); loadAllCameras();
+}
+
+function clearAllStates() {
+  selectedStates = [];
+  saveSelectedStates(); buildDropdown(); renderChips(); loadAllCameras();
+}
+
+function saveSelectedStates() {
+  try { localStorage.setItem('selectedStates', JSON.stringify(selectedStates)); } catch(e){}
+}
+function loadSelectedStates() {
+  try { return JSON.parse(localStorage.getItem('selectedStates') || '[]'); } catch(e){ return []; }
+}
+
+/* ── Chips Row ─────────────────────────────────────── */
 function renderChips() {
-  const wrap = document.getElementById('active-chips');
-  const badge = document.getElementById('state-count-badge');
-  badge.textContent = selectedStates.size;
-  wrap.innerHTML = [...selectedStates].map(k =>
-    `<span class="chip" onclick="event.stopPropagation();toggleStateCheck('${k}')">${STATE_ABBR[k]}<span class="chip-x">✕</span></span>`
+  const row = document.getElementById('chips-row');
+  const label = document.getElementById('state-trigger-label');
+  const countBadge = document.getElementById('state-trigger-count');
+  if (!selectedStates.length) {
+    row.innerHTML = '';
+    row.classList.add('hidden');
+    label.textContent = 'Select States';
+    countBadge.classList.add('hidden');
+    return;
+  }
+  label.textContent = selectedStates.length === 1
+    ? (STATE_NAMES[selectedStates[0]] || selectedStates[0].toUpperCase())
+    : 'States';
+  countBadge.textContent = selectedStates.length;
+  countBadge.classList.remove('hidden');
+  row.innerHTML = selectedStates.map(code =>
+    `<span class="chip" onclick="removeChip('${code}')">${code.toUpperCase()} ×</span>`
   ).join('');
+  row.classList.remove('hidden');
 }
 
-function filterDropdown() {
-  const q = document.getElementById('dd-search').value.toLowerCase();
-  document.querySelectorAll('.state-check-row').forEach(row => {
-    const key = row.id.replace('row-', '');
-    const label = STATE_CONFIGS[key]?.label.toLowerCase() || '';
-    const code = STATE_ABBR[key]?.toLowerCase() || '';
-    row.style.display = (!q || label.includes(q) || code.includes(q)) ? '' : 'none';
-  });
-  document.querySelectorAll('.region-group').forEach(rg => {
-    const anyVisible = [...rg.querySelectorAll('.state-check-row')].some(r => r.style.display !== 'none');
-    rg.style.display = anyVisible ? '' : 'none';
-  });
+function removeChip(code) {
+  selectedStates = selectedStates.filter(s => s !== code);
+  saveSelectedStates(); renderChips(); loadAllCameras();
 }
 
-// ─── View Routing ───────────────────────────────────────────────────
-function showView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(`${name}-view`).classList.add('active');
-  if (name !== 'detail') clearDetailTimers();
+/* ── FL District Filter ───────────────────────────── */
+let flDistrict = null;
+function buildFlFilter(cameras) {
+  const bar = document.getElementById('fl-filter-bar');
+  const inner = document.getElementById('fl-filter-inner');
+  const districts = [...new Set(cameras.map(c => c.district).filter(Boolean))].sort();
+  if (!districts.length) { bar.classList.add('hidden'); return; }
+  inner.innerHTML = `<button class="fl-chip${!flDistrict?' active':''}" onclick="setFlDistrict(null)">All</button>`
+    + districts.map(d =>
+      `<button class="fl-chip${flDistrict===d?' active':''}" onclick="setFlDistrict('${d}')">${d}</button>`
+    ).join('');
+  bar.classList.remove('hidden');
 }
+function setFlDistrict(d) { flDistrict = d; renderCameras(); buildFlFilter(allCameras.filter(c=>c.state==='fl')); }
 
-// ─── Camera Loading ─────────────────────────────────────────────────
-async function loadSelectedStates() {
-  const states = [...selectedStates];
-  if (states.length === 0) {
-    showEmptyState('🗺', 'No States Selected', 'Tap "🗺 States" to choose which states to load.');
-    setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
-    updateLiveBadge(0);
+/* ── Camera Loading ─────────────────────────────────── */
+async function loadAllCameras() {
+  if (!selectedStates.length) {
+    allCameras = []; filteredCameras = [];
+    document.getElementById('camera-grid').innerHTML =
+      '<div class="empty-state"><div class="empty-state-icon">📍</div><div class="empty-state-msg">Select one or more states to load cameras</div></div>';
+    document.getElementById('count-badge').textContent = '';
+    document.getElementById('status-text').textContent = 'No states selected';
+    document.getElementById('fl-filter-bar').classList.add('hidden');
     return;
   }
-
-  // noKey states (e.g. FL public ArcGIS) are always ready; others need a stored key
-  const noKeyStates   = states.filter(s => STATE_CONFIGS[s]?.noKey);
-  const keyedStates   = states.filter(s => !STATE_CONFIGS[s]?.noKey);
-  const statesWithKeys = keyedStates.filter(s => localStorage.getItem(`apikey_${s}`));
-  const statesNoKey    = keyedStates.filter(s => !localStorage.getItem(`apikey_${s}`));
-
-  // States we can actually load = noKey states + keyed states that have a key
-  const loadable = [...noKeyStates, ...statesWithKeys];
-
-  if (loadable.length === 0) {
-    showEmptyState('🔑', 'API Key Required',
-      `Open Settings and add your free 511 API key for: ${keyedStates.map(s => STATE_CONFIGS[s].label).join(', ')}.`);
-    setStatus('ok', false, 'NO API KEYS CONFIGURED');
-    updateLiveBadge(0);
-    return;
+  document.getElementById('camera-grid').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('status-text').textContent = 'Loading…';
+  try {
+    const promises = selectedStates.map(s => fetchForState(s));
+    const results  = await Promise.allSettled(promises);
+    allCameras = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+    const flCams = allCameras.filter(c => c.state === 'fl');
+    if (flCams.length) buildFlFilter(flCams);
+    else document.getElementById('fl-filter-bar').classList.add('hidden');
+    filterCameras();
+    document.getElementById('status-text').textContent =
+      `${allCameras.length} cameras across ${selectedStates.length} state${selectedStates.length>1?'s':''}`;
+    if (WEATHER_STATES.some(s => selectedStates.includes(s))) loadWeather();
+  } catch(e) {
+    showToast('Error loading cameras');
+    document.getElementById('status-text').textContent = 'Load error';
   }
-
-  const label = loadable.length === 1
-    ? STATE_CONFIGS[loadable[0]].label.toUpperCase()
-    : `${loadable.length} STATES`;
-
-  setStatus('loading', true, `LOADING ${label}…`);
-  showEmptyState('', '', '', true);
-  showView('list');
-
-  const results = await Promise.allSettled(
-    loadable.map(async state => {
-      const endpoint = STATE_CONFIGS[state].endpoint;
-      let url;
-      if (STATE_CONFIGS[state].noKey) {
-        // Public endpoint — server handles params, no key forwarded
-        url = endpoint;
-      } else {
-        const apiKey = localStorage.getItem(`apikey_${state}`);
-        const keyParam = STATE_CONFIGS[state].keyParam || 'key';
-        url = `${endpoint}?${keyParam}=${encodeURIComponent(apiKey)}`;
-      }
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return normalizeCameras(state, data);
-    })
-  );
-
-  let allCams = [];
-  let errors = [];
-  results.forEach((r, i) => {
-    if (r.status === 'fulfilled') allCams = allCams.concat(r.value);
-    else errors.push(loadable[i]);
-  });
-
-  cameras = allCams;
-  selectedFilter = { source: null, value: null }; // reset filter on each fresh load
-  buildFlFilterBar();
-  filteredCameras = cameras;
-  const filterQ = document.getElementById('search-input').value;
-  if (filterQ) filterCameras(); else renderGrid(filteredCameras);
-
-  // Fire weather stations fetch async — badges appear once data returns
-  weatherData = {};
-  (async () => {
-    const wStates = loadable.filter(s => WEATHER_STATES.has(s));
-    if (!wStates.length) return;
-    await Promise.allSettled(wStates.map(s => loadWeatherForState(s)));
-    // Re-render grid to show surface badges, and populate weather view
-    const q = document.getElementById('search-input').value;
-    q ? filterCameras() : renderGrid(filteredCameras);
-    renderWeatherView();
-  })();
-
-  const statusParts = [];
-  if (allCams.length) statusParts.push(`${allCams.length} CAMERAS`);
-  if (errors.length) statusParts.push(`${errors.length} FAILED`);
-  if (statesNoKey.length) statusParts.push(`${statesNoKey.length} NO KEY`);
-  setStatus(errors.length ? 'error' : 'ok', false, statusParts.join(' · ') || 'NO CAMERAS');
-  updateLiveBadge(allCams.length);
 }
 
-// legacy alias kept for any inline callers
-function loadCameras(state) { loadSelectedStates(); }
-
-// ─── Normalize 511 camera data ──────────────────────────────────────
-function normalizeCameras(state, data) {
-  // Washington — WSDOT GetCamerasAsJson format (direct array with WSDOT field names)
-  if (state === 'wa' && Array.isArray(data)) {
-    return data
-      .filter(cam => cam.IsActive !== false)
-      .filter(cam => {
-        // Strip WSDOT Aviation airport cameras — not road cameras
-        const roadName = (cam.CameraLocation && cam.CameraLocation.RoadName) || '';
-        return roadName.toLowerCase() !== 'airports';
-      })
-      .map((cam, i) => {
-        const loc = cam.CameraLocation || {};
-        return {
-          id:       cam.CameraID || i,
-          road:     loc.RoadName  || cam.Title || '—',
-          location: loc.Description || cam.Description || cam.Title || '—',
-          direction:loc.Direction || '—',
-          lat:      cam.DisplayLatitude  || loc.Latitude  || 0,
-          lon:      cam.DisplayLongitude || loc.Longitude || 0,
-          imageUrl: cam.ImageURL || '',
-          county:   cam.Region || '',
-          status:   'active',
-          source:   'wa',
-        };
-      });
-  }
-
-  // Ohio — OHGo API format: { results: [ { id, location, description, latitude, longitude, cameraViews: [{direction, largeUrl, smallUrl, mainRoute}] } ] }
-  if (state === 'oh' && data && data.results) {
-    return data.results.flatMap((cam, i) => {
-      const views = cam.cameraViews || cam.camera_views || [];
-      if (!views.length) return [];
-      return views.map((v, j) => ({
-        id:        `${cam.id || i}-${j}`,
-        road:      v.mainRoute || cam.location || cam.description || '—',
-        location:  cam.location || cam.description || '—',
-        direction: v.direction || '—',
-        lat:       parseFloat(cam.latitude)  || 0,
-        lon:       parseFloat(cam.longitude) || 0,
-        imageUrl:  v.largeUrl || v.smallUrl || v.url || '',
-        county:    cam['county-name'] || '',
-        status:    'active',
-        source:    'oh',
-      }));
-    });
-  }
-
-  // California — Caltrans CWWP2: { data: [{ cctv: { location, inService, imageData.static.currentImageURL } }] }
-  if (state === 'ca' && data && data.data) {
-    return data.data
-      .filter(item => item.cctv && item.cctv.inService === 'true')
-      .map((item, i) => {
-        const cam = item.cctv;
-        const loc = cam.location || {};
-        const staticImg = (cam.imageData && cam.imageData.static) || {};
-        // locationName like "TV102 -- I-580 : West of SR-24"
-        const parts = (loc.locationName || '').split(' -- ');
-        return {
-          id:        `ca-d${loc.district || 0}-${i}`,
-          road:      loc.route || parts[0] || '—',
-          location:  parts[1] || loc.nearbyPlace || loc.locationName || '—',
-          direction: loc.direction || '—',
-          lat:       parseFloat(loc.latitude)  || 0,
-          lon:       parseFloat(loc.longitude) || 0,
-          imageUrl:  staticImg.currentImageURL || '',
-          county:    loc.county || '',
-          status:    'active',
-          source:    'ca',
-        };
-      });
-  }
-
-  if (Array.isArray(data)) {
-    return data.map((cam, i) => {
-      const view = (cam.Views || cam.views || [])[0] || {};
-      const imgUrl = view.Url || view.url || view.VideoUrl || cam.VideoUrl || cam.url || '';
-      return {
-        id: cam.Id || cam.id || i,
-        road: cam.Roadway || cam.roadway || cam.Route || '—',
-        location: cam.Location || cam.location || cam.Description || '—',
-        direction: cam.Direction || cam.direction || '—',
-        lat: cam.Latitude || cam.latitude || 0,
-        lon: cam.Longitude || cam.longitude || 0,
-        imageUrl: imgUrl,
-        status: view.Status || view.status || 'active',
-        source: state,
-      };
-    });
-  }
-
-  // Iowa DOT ArcGIS FeatureServer format
-  if (state === 'ia' && data && data.features) {
-    return data.features.map((f, i) => {
-      const a = f.attributes || {};
-      return {
-        id:       a.COMMON_ID || String(a.device_id || a.FID || i),
-        road:     a.Route || '—',
-        location: a.Desc_ || '—',
-        direction:'—',
-        lat:      a.latitude  || 0,
-        lon:      a.longitude || 0,
-        imageUrl: a.ImageURL  || '',
-        county:   a.REGION    || '',
-        status:   'active',
-        source:   state,
-      };
-    });
-  }
-
-  // FL ArcGIS FeatureServer format
-  if (data && data.features) {
-    return data.features.map((f, i) => {
-      const a = f.attributes || {};
-      return {
-        id:       a.ID || a.OBJECTID || i,
-        road:     a.HIGHWAY || '—',
-        location: a.DESCRIPT || a.COUNTY || '—',
-        direction:a.DIRECTION || '—',
-        lat:      a.LATITUDE  || 0,
-        lon:      a.LONGITUDE || 0,
-        imageUrl: a.IMAGE || '',
-        county:   a.COUNTY || '',
-        status:   'active',
-        source:   state,
-      };
-    });
-  }
-
-  // SF Bay 511 format
-  if (data && data.CCTV) {
-    return data.CCTV.map((cam, i) => ({
-      id: cam['@id'] || i,
-      road: cam.roadway || '—',
-      location: cam.location || '—',
-      direction: cam.direction || '—',
-      lat: parseFloat(cam.latitude) || 0,
-      lon: parseFloat(cam.longitude) || 0,
-      imageUrl: cam.imageUrl || '',
-      status: 'active',
-      source: state,
-    }));
-  }
-
+async function fetchForState(state) {
+  if (WSDOT_STATES.includes(state))   return fetchWSDOT();
+  if (FL_STATES.includes(state))       return fetchFL();
+  if (IA_STATES.includes(state))       return fetchIA();
+  if (IBI511_STATES.includes(state))  return fetchIBI511(state);
   return [];
 }
 
-// ─── Render Camera Grid ─────────────────────────────────────────────
-function renderGrid(cams) {
-  const grid = document.getElementById('camera-grid');
-  const badge = document.getElementById('count-badge');
-
-  if (!cams.length) {
-    showEmptyState('📷', 'No Cameras Found', 'Try a different state or check your API key.');
-    badge.textContent = '';
-    return;
-  }
-
-  badge.textContent = `${cams.length} camera${cams.length !== 1 ? 's' : ''}`;
-
-  grid.innerHTML = cams.map((cam, idx) => {
-    const online = cam.status !== 'offline' && cam.status !== 'inactive';
-    const camId = String(cam.id).slice(-4).toUpperCase().padStart(4, '0');
-    return `
-      <div class="camera-card" onclick="openCamera(${idx})">
-        <div class="camera-thumb-wrap">
-          ${cam.imageUrl
-            ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
-               /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
-            : `<div class="camera-thumb-placeholder">📷</div>`}
-          <div class="cam-id-tag">CAM-${camId}</div>
-          <div class="cam-status-dot ${online ? 'online' : 'offline'}"></div>
-          ${(() => {
-            const st = nearestStationSurface(cam.lat, cam.lon);
-            if (!st || !st.surface) return '';
-            const cls = surfaceClass(st.surface);
-            return `<span class="surface-badge ${cls}">${st.surface}</span>`;
-          })()}
-        </div>
-        <div class="camera-info">
-          <div class="camera-road">${cam.road}</div>
-          <div class="camera-location">${cam.location}</div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function proxyImage(url) {
-  if (!url) return '';
-  return `/api/image?url=${encodeURIComponent(url)}&t=${Date.now()}`;
-}
-
-// ─── Camera Detail ──────────────────────────────────────────────────
-function openCamera(filteredIdx) {
-  currentCameraIndex = filteredIdx;
-  loadDetail(filteredCameras[filteredIdx]);
-  showView('detail');
-  startAutoRefresh();
-}
-
-function loadDetail(cam) {
-  document.getElementById('detail-road').textContent = cam.road;
-  document.getElementById('detail-location').textContent = cam.location;
-  document.getElementById('meta-dir').textContent = cam.direction;
-  document.getElementById('meta-status').textContent =
-    cam.status === 'active' || cam.status === 'ok' ? '🟢 Online' :
-    cam.status === 'offline' ? '🔴 Offline' : '⚪ Unknown';
-
-  updateDetailImage(cam);
-}
-
-function updateDetailImage(cam) {
-  const img = document.getElementById('detail-img');
-  const overlay = document.getElementById('img-overlay');
-
-  if (!cam.imageUrl) {
-    overlay.classList.add('visible');
-    overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-sub">No feed URL available</div></div>';
-    return;
-  }
-
-  overlay.classList.add('visible');
-  overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
-
-  const src = `/api/image?url=${encodeURIComponent(cam.imageUrl)}&t=${Date.now()}`;
-  img.onload  = () => { overlay.classList.remove('visible'); updateMetaTime(); };
-  img.onerror = () => {
-    overlay.classList.add('visible');
-    overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-sub">Feed unavailable</div></div>';
-  };
-  img.src = src;
-}
-
-function updateMetaTime() {
-  document.getElementById('meta-time').textContent =
-    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-// ─── Auto Refresh ───────────────────────────────────────────────────
-function startAutoRefresh() {
-  clearDetailTimers();
-  const rate = parseInt(localStorage.getItem('refresh_rate') || '30');
-  refreshCountdown = rate;
-  updateRefreshBadge();
-
-  refreshTimer = setInterval(() => {
-    if (autoRefreshEnabled && currentCameraIndex >= 0) {
-      updateDetailImage(filteredCameras[currentCameraIndex]);
-    }
-  }, rate * 1000);
-
-  countdownTimer = setInterval(() => {
-    if (autoRefreshEnabled) {
-      refreshCountdown--;
-      if (refreshCountdown <= 0) {
-        refreshCountdown = parseInt(localStorage.getItem('refresh_rate') || '30');
-      }
-    }
-    updateRefreshBadge();
-  }, 1000);
-}
-
-function clearDetailTimers() {
-  if (refreshTimer)   { clearInterval(refreshTimer);   refreshTimer   = null; }
-  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-}
-
-function updateRefreshBadge() {
-  const badge = document.getElementById('refresh-badge');
-  badge.textContent = autoRefreshEnabled ? `⟳ ${refreshCountdown}s` : '⏸ Paused';
-  const info = document.getElementById('refresh-info');
-  info.textContent = autoRefreshEnabled ? `${refreshCountdown}s` : 'Paused';
-}
-
-function toggleAutoRefresh() {
-  autoRefreshEnabled = !autoRefreshEnabled;
-  document.getElementById('auto-label').textContent = `Auto: ${autoRefreshEnabled ? 'ON' : 'OFF'}`;
-  updateRefreshBadge();
-}
-
-function manualRefresh() {
-  if (currentCameraIndex >= 0) {
-    refreshCountdown = parseInt(localStorage.getItem('refresh_rate') || '30');
-    updateDetailImage(filteredCameras[currentCameraIndex]);
-    showToast('Refreshed');
-  }
-}
-
-// ─── Navigate Cameras ───────────────────────────────────────────────
-function navigateCamera(dir) {
-  const next = currentCameraIndex + dir;
-  if (next < 0 || next >= filteredCameras.length) return;
-  currentCameraIndex = next;
-  loadDetail(filteredCameras[currentCameraIndex]);
-  refreshCountdown = parseInt(localStorage.getItem('refresh_rate') || '30');
-}
-
-// ─── Search / Filter ────────────────────────────────────────────────
-function filterCameras() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  filteredCameras = cameras.filter(c => {
-    const textOk   = !q || c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q);
-    // Filter by selected FL county or IA region — other sources always pass through
-    const countyOk = !selectedFilter.source || c.source !== selectedFilter.source || c.county === selectedFilter.value;
-    return textOk && countyOk;
-  });
-  renderGrid(filteredCameras);
-}
-
-// ─── FL County / IA Region Filter Bar ───────────────────────────────
-function buildFlFilterBar() {
-  const bar    = document.getElementById('fl-filter-bar');
-  const flCams = cameras.filter(c => c.source === 'fl');
-  const iaCams = cameras.filter(c => c.source === 'ia');
-
-  if (!flCams.length && !iaCams.length) { bar.classList.add('hidden'); return; }
-
-  function chipsHtml(source, label, cams) {
-    const counts = {};
-    cams.forEach(c => { if (c.county) counts[c.county] = (counts[c.county] || 0) + 1; });
-    const keys = Object.keys(counts).sort();
-    const isActive = selectedFilter.source === source;
-    return (
-      `<span class="fl-bar-label">${label}</span>` +
-      `<button class="county-chip${!isActive ? ' active' : ''}" data-source="${source}" data-county="" onclick="selectCounty(this)">
-         All <span class="cc-count">${cams.length}</span>
-       </button>` +
-      keys.map(k =>
-        `<button class="county-chip${isActive && selectedFilter.value === k ? ' active' : ''}" data-source="${source}" data-county="${k.replace(/"/g,'&quot;')}" onclick="selectCounty(this)">
-           ${k} <span class="cc-count">${counts[k]}</span>
-         </button>`
-      ).join('')
-    );
-  }
-
-  bar.classList.remove('hidden');
-  bar.innerHTML =
-    (flCams.length ? chipsHtml('fl', 'FL', flCams) : '') +
-    (iaCams.length ? chipsHtml('ia', 'IA', iaCams) : '');
-}
-
-function selectCounty(btn) {
-  const source = btn.dataset.source;
-  const value  = btn.dataset.county || null;  // '' → null = All
-  // Tapping "All" for a source clears the filter entirely
-  selectedFilter = value ? { source, value } : { source: null, value: null };
-  buildFlFilterBar();
-  filterCameras();
-}
-
-// ─── Helpers ────────────────────────────────────────────────────────
-function setStatus(type, _spinner, text) {
-  const dot = document.getElementById('status-dot');
-  dot.className = 'status-dot' +
-    (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
-  if (text) document.getElementById('status-text').textContent = text;
-}
-
-function updateLiveBadge(count) {
-  document.getElementById('live-count').textContent =
-    count > 0 ? `${count} LIVE` : 'LIVE';
-}
-
-function showEmptyState(icon, title, sub, loading = false) {
-  const grid = document.getElementById('camera-grid');
-  if (loading) {
-    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><div class="spinner"></div><div class="empty-sub">Loading…</div></div></div>`;
-  } else {
-    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state">
-      <div class="empty-icon">${icon}</div>
-      <div class="empty-title">${title}</div>
-      <div class="empty-sub">${sub}</div>
-    </div></div>`;
-  }
-}
-
-function toggleView() {
-  gridView = !gridView;
-  const grid = document.getElementById('camera-grid');
-  grid.style.gridTemplateColumns = gridView ? '1fr 1fr' : '1fr';
-  document.getElementById('view-toggle-btn').textContent = gridView ? '⊞' : '☰';
-}
-
-function openOnGlasses() {
-  if (currentCameraIndex < 0) return;
-  const cam = filteredCameras[currentCameraIndex];
-  if (!cam.imageUrl && cam.source !== 'fl') { showToast("No feed URL"); return; }
-  const encoded = encodeURIComponent(cam.imageUrl);
-  const title   = encodeURIComponent(cam.road + " - " + cam.location);
-  let url = "/view?url=" + encoded + "&title=" + title;
-  // FL cameras: pass source + id so glasses view fetches fresh IMAGE url each cycle
-  if (cam.source === 'fl' && cam.id) {
-    url += "&source=fl&id=" + encodeURIComponent(cam.id);
-  }
-  window.open(url, "_blank");
-}
-
-function copyLocation() {
-  if (currentCameraIndex < 0) return;
-  const cam = filteredCameras[currentCameraIndex];
-  const text = `${cam.road} – ${cam.location} (${cam.lat}, ${cam.lon})`;
-  navigator.clipboard?.writeText(text).then(() => showToast('Copied!'));
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ─── Weather Stations ────────────────────────────────────────────────
-const WEATHER_STATES = new Set(['ak','ut','nv','wi','id','la','va','ne','nh','vt','ny','pa']);
-let weatherData = {}; // state → normalized stations array
-
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2
-    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function nearestStationSurface(lat, lon) {
-  if (!lat || !lon) return null;
-  let best = null, bestDist = 75; // km radius cutoff
-  for (const stations of Object.values(weatherData)) {
-    for (const s of stations) {
-      if (!s.lat || !s.lon) continue;
-      const d = haversineKm(lat, lon, s.lat, s.lon);
-      if (d < bestDist) { bestDist = d; best = s; }
-    }
-  }
-  return best;
-}
-
-function surfaceClass(status) {
-  if (!status) return 'other';
-  const s = status.toLowerCase();
-  if (s.includes('dry'))   return 'dry';
-  if (s.includes('wet'))   return 'wet';
-  if (s.includes('ice'))   return 'ice';
-  if (s.includes('snow') || s.includes('slush') || s.includes('frost')) return 'snow';
-  return 'other';
-}
-
-function windDeg2Dir(deg) {
-  if (deg === null || deg === undefined || deg === '') return '';
-  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
-  return dirs[Math.round(((+deg) % 360) / 45) % 8];
-}
-
-function normalizeWeatherStations(state, data) {
-  if (!Array.isArray(data)) return [];
-  return data.map(s => ({
-    id:          s.Id          || s.id          || '',
-    name:        s.StationName || s.stationName || s.Name || s.name || '—',
-    road:        s.Roadway     || s.roadway     || s.Route || s.route || '—',
-    lat:         parseFloat(s.Latitude   || s.latitude   || 0),
-    lon:         parseFloat(s.Longitude  || s.longitude  || 0),
-    surface:     s.SurfaceStatus    || s.surfaceStatus    || '',
-    airTemp:     s.AirTemperature   !== undefined ? s.AirTemperature   : (s.airTemperature   !== undefined ? s.airTemperature   : null),
-    surfaceTemp: s.SurfaceTemp      !== undefined ? s.SurfaceTemp      : (s.surfaceTemp      !== undefined ? s.surfaceTemp      : null),
-    windSpeed:   s.WindSpeed        !== undefined ? s.WindSpeed        : (s.windSpeed        !== undefined ? s.windSpeed        : null),
-    windDir:     s.WindDirection    !== undefined ? s.WindDirection    : (s.windDirection    !== undefined ? s.windDirection    : null),
-    humidity:    s.RelativeHumidity !== undefined ? s.RelativeHumidity : (s.relativeHumidity !== undefined ? s.relativeHumidity : null),
-    updated:     s.LastUpdated      || s.lastUpdated || '',
-    source:      state,
+/* ── Source Fetchers ──────────────────────────────── */
+async function fetchWSDOT() {
+  const r = await fetch('/api/cameras/wsdot');
+  if (!r.ok) throw new Error('WSDOT failed');
+  const data = await r.json();
+  return (data || []).map(c => ({
+    id: 'wa-' + c.CameraID,
+    title: c.Title || 'WA Camera',
+    road: c.RoadName || '',
+    location: c.Description || '',
+    lat: c.Latitude, lon: c.Longitude,
+    imageUrl: c.ImageURL,
+    state: 'wa', source: 'WSDOT',
+    isLive: true
   }));
 }
 
-async function loadWeatherForState(state) {
-  const key = localStorage.getItem(`apikey_${state}`);
-  if (!key) return;
-  try {
-    const res = await fetch(`/api/weather/${state}?key=${encodeURIComponent(key)}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    weatherData[state] = normalizeWeatherStations(state, data);
-  } catch (e) { /* silently skip */ }
+async function fetchFL() {
+  const r = await fetch('/api/cameras/fl');
+  if (!r.ok) throw new Error('FL failed');
+  const data = await r.json();
+  return (data || []).map(c => ({
+    id: 'fl-' + (c.id || c.cameraId || Math.random()),
+    title: c.label || c.name || 'FL Camera',
+    road: c.roadway || '',
+    location: c.location || '',
+    lat: c.latitude, lon: c.longitude,
+    imageUrl: c.imageUrl || c.url,
+    district: c.district || '',
+    state: 'fl', source: 'FL 511',
+    isLive: true
+  }));
 }
 
-function renderWeatherView() {
-  const allStations = Object.values(weatherData).flat();
-  const countEl = document.getElementById('weather-station-count');
-  if (countEl) countEl.textContent = allStations.length ? `${allStations.length} stations` : '';
+async function fetchIA() {
+  const r = await fetch('/api/cameras/ia');
+  if (!r.ok) throw new Error('IA failed');
+  const data = await r.json();
+  return (data || []).map(c => ({
+    id: 'ia-' + (c.id || Math.random()),
+    title: c.name || 'IA Camera',
+    road: c.roadway || '',
+    location: c.location || '',
+    lat: c.lat, lon: c.lon,
+    imageUrl: c.url,
+    state: 'ia', source: 'Iowa DOT',
+    isLive: true
+  }));
+}
 
-  const grid = document.getElementById('station-grid');
-  if (!allStations.length) {
-    grid.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">🌡</div>
-      <div class="empty-title">No Road Conditions</div>
-      <div class="empty-sub">Select a state with weather stations (NY, PA, AK, NV, UT, WI, ID, LA, VA, NE, NH, VT) and make sure your API key is saved in Settings.</div>
-    </div>`;
+async function fetchIBI511(state) {
+  if (!ibiKey) return [];
+  const r = await fetch(`/api/cameras/ibi511?state=${state}&key=${encodeURIComponent(ibiKey)}`);
+  if (!r.ok) throw new Error(`ibi511 ${state} failed`);
+  const data = await r.json();
+  return (data || []).map(c => ({
+    id: `${state}-` + (c.id || c.cameraId || Math.random()),
+    title: c.label || c.name || `${state.toUpperCase()} Camera`,
+    road: c.roadway || c.road || '',
+    location: c.location || c.city || '',
+    lat: c.latitude || c.lat,
+    lon: c.longitude || c.lon,
+    imageUrl: c.imageUrl || c.url,
+    state: state, source: 'ibi511',
+    isLive: true
+  }));
+}
+
+/* ── Filter & Render ───────────────────────────────── */
+function filterCameras() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  filteredCameras = allCameras.filter(c => {
+    if (flDistrict && c.state === 'fl' && c.district !== flDistrict) return false;
+    if (!q) return true;
+    return (c.title+c.road+c.location+c.state).toLowerCase().includes(q);
+  });
+  renderCameras();
+}
+
+function renderCameras() {
+  const grid = document.getElementById('camera-grid');
+  const badge = document.getElementById('count-badge');
+  badge.textContent = filteredCameras.length
+    ? `${filteredCameras.length} camera${filteredCameras.length>1?'s':''}`
+    : '';
+  if (!filteredCameras.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-msg">No cameras match your search</div></div>';
+    return;
+  }
+  grid.className = 'camera-grid' + (isGridMode ? ' grid' : '');
+  grid.innerHTML = filteredCameras.map((c, i) => `
+    <div class="camera-card" onclick="openCamera(${i})">
+      <div class="camera-thumb">
+        <img src="${c.imageUrl || ''}" alt="${esc(c.title)}"
+             loading="lazy" onerror="this.src=''">
+        <span class="surface-badge">${c.state.toUpperCase()}</span>
+      </div>
+      <div class="camera-info">
+        <div class="camera-source">${esc(c.source)}</div>
+        <div class="camera-road">${esc(c.road||c.title)}</div>
+        <div class="camera-location">${esc(c.location||c.title)}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── Detail View ───────────────────────────────────── */
+function openCamera(idx) {
+  currentIndex = idx;
+  currentCamera = filteredCameras[idx];
+  if (!currentCamera) return;
+  document.getElementById('tab-bar').classList.add('hidden');
+  document.getElementById('toast').classList.add('detail-mode');
+  showView('detail');
+  populateDetail(currentCamera);
+}
+
+function populateDetail(cam) {
+  document.getElementById('detail-title').textContent    = cam.title || 'Camera';
+  document.getElementById('detail-road').textContent     = cam.road || '';
+  document.getElementById('detail-location').textContent = cam.location || '';
+  const img = document.getElementById('detail-img');
+  img.src = cam.imageUrl || '';
+  img.onerror = () => img.src = '';
+  document.getElementById('refresh-badge').textContent   = cam.isLive ? 'Live' : 'Static';
+  document.getElementById('refresh-info').textContent    = 'Auto-refreshes every 60s';
+  const meta = document.getElementById('detail-meta');
+  meta.innerHTML = [
+    cam.state ? `<div class="meta-item"><div class="meta-label">State</div><div class="meta-value">${cam.state.toUpperCase()}</div></div>` : '',
+    cam.source ? `<div class="meta-item"><div class="meta-label">Source</div><div class="meta-value">${esc(cam.source)}</div></div>` : '',
+    cam.lat ? `<div class="meta-item"><div class="meta-label">Lat/Lon</div><div class="meta-value">${(+cam.lat).toFixed(4)}, ${(+cam.lon).toFixed(4)}</div></div>` : '',
+  ].join('');
+}
+
+function navigateCamera(dir) {
+  const next = currentIndex + dir;
+  if (next < 0 || next >= filteredCameras.length) return;
+  openCamera(next);
+}
+
+function refreshDetail() {
+  if (!currentCamera) return;
+  const img = document.getElementById('detail-img');
+  const sep = currentCamera.imageUrl?.includes('?') ? '&' : '?';
+  img.src = currentCamera.imageUrl + sep + '_t=' + Date.now();
+  showToast('Refreshed');
+}
+
+function openFullImage() {
+  if (currentCamera?.imageUrl) window.open(currentCamera.imageUrl, '_blank');
+}
+
+function copyDetailLink() {
+  const url = currentCamera?.imageUrl || location.href;
+  navigator.clipboard?.writeText(url).then(() => showToast('Link copied'));
+}
+
+/* ── Grid Toggle ───────────────────────────────────── */
+function toggleGridMode() {
+  isGridMode = !isGridMode;
+  try { localStorage.setItem('gridMode', isGridMode ? '1' : '0'); } catch(e){}
+  updateGridToggleUI();
+  renderCameras();
+}
+
+function toggleGridPref() {
+  isGridMode = !isGridMode;
+  try { localStorage.setItem('gridMode', isGridMode ? '1' : '0'); } catch(e){}
+  updateGridToggleUI();
+  renderCameras();
+}
+
+function updateGridToggleUI() {
+  const btn = document.getElementById('view-toggle-btn');
+  if (btn) btn.textContent = isGridMode ? '☰' : '⊞';
+  const tog = document.getElementById('grid-toggle');
+  if (tog) tog.classList.toggle('on', isGridMode);
+}
+
+/* ── Settings / Keys ──────────────────────────────── */
+function saveKeys() {
+  const val = document.getElementById('ibi-key-input')?.value?.trim() || '';
+  ibiKey = val;
+  try { localStorage.setItem('ibiKey', ibiKey); } catch(e){}
+  showToast('Settings saved');
+  showTab('list');
+  loadAllCameras();
+}
+
+function loadSettings() {
+  try {
+    ibiKey = localStorage.getItem('ibiKey') || '';
+    isGridMode = localStorage.getItem('gridMode') === '1';
+  } catch(e){ ibiKey = ''; isGridMode = false; }
+  const inp = document.getElementById('ibi-key-input');
+  if (inp) inp.value = ibiKey;
+  updateGridToggleUI();
+}
+
+/* ── Weather / Conditions ──────────────────────────── */
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function loadWeather() {
+  const wxStates = selectedStates.filter(s => WEATHER_STATES.includes(s));
+  if (!wxStates.length) return;
+  const grid = document.getElementById('weather-grid');
+  grid.innerHTML = '<div class="wx-no-data"><div class="spinner"></div></div>';
+  try {
+    const results = await Promise.allSettled(
+      wxStates.map(s => fetch(`/api/weather/${s}`).then(r => r.ok ? r.json() : null))
+    );
+    const stations = results
+      .filter(r => r.status === 'fulfilled' && r.value)
+      .flatMap(r => Array.isArray(r.value) ? r.value : [r.value]);
+    if (!stations.length) {
+      grid.innerHTML = '<div class="wx-no-data">No weather data available</div>';
+      return;
+    }
+    // Deduplicate by nearest camera (75 km radius)
+    const unique = stations.slice(0, 20);
+    grid.innerHTML = unique.map(s => `
+      <div class="wx-card">
+        <div class="wx-card-station">${esc(s.stationName || s.name || 'Station')}</div>
+        <div class="wx-card-temp">${s.tempF !== undefined ? Math.round(s.tempF) + '°F' : '--'}</div>
+        <div class="wx-card-desc">${esc(s.conditions || s.weather || '')}</div>
+        <div class="wx-card-wind">${s.windMph !== undefined ? '💨 ' + Math.round(s.windMph) + ' mph' : ''}</div>
+        <div class="wx-card-updated">${s.updated ? 'Updated ' + new Date(s.updated).toLocaleTimeString() : ''}</div>
+      </div>`).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="wx-no-data">Weather load failed</div>';
+  }
+}
+
+/* ── Toast ─────────────────────────────────────────── */
+function showToast(msg, duration = 2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ── Utilities ─────────────────────────────────────── */
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Close dropdown on outside click ──────────────── */
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('state-selector-wrap');
+  if (dropdownOpen && wrap && !wrap.contains(e.target)) {
+    document.getElementById('dropdown-panel').classList.add('hidden');
+    document.getElementById('state-trigger').classList.remove('has-states');
+    dropdownOpen = false;
+  }
+});
+
+/* ── Search input debounce ─────────────────────────── */
+let searchTimer = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const si = document.getElementById('search-input');
+  if (si) si.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(filterCameras, 200);
+  });
+});
+
+/* ── Auto-refresh detail image ─────────────────────── */
+setInterval(() => {
+  if (activeTab === 'detail' || document.getElementById('detail-view')?.classList.contains('active')) {
+    const cam = currentCamera;
+    if (!cam?.imageUrl) return;
+    const img = document.getElementById('detail-img');
+    const sep = cam.imageUrl.includes('?') ? '&' : '?';
+    img.src = cam.imageUrl + sep + '_t=' + Date.now();
+  }
+}, 60000);
+
+/* ── Init ──────────────────────────────────────────── */
+function init() {
+  // Load persisted settings
+  loadSettings();
+  selectedStates = loadSelectedStates();
+
+  // Restore ibi key input
+  const inp = document.getElementById('ibi-key-input');
+  if (inp && ibiKey) inp.value = ibiKey;
+
+  // Build chips for saved states
+  renderChips();
+
+  // Start on list tab
+  showTab('list');
+
+  // If no key and no selected states, show settings first
+  if (!ibiKey && !selectedStates.length) {
+    showTab('settings');
+    showToast('Add your API key to get started', 3000);
     return;
   }
 
-  const fmt = (v, unit) =>
-    (v !== null && v !== undefined && v !== '') ? `${(+v).toFixed(1)}${unit}` : '—';
-
-  grid.innerHTML = allStations.map(s => {
-    const cls       = surfaceClass(s.surface);
-    const surfLabel = s.surface || 'Unknown';
-    const airT      = fmt(s.airTemp, '°F');
-    const surfT     = fmt(s.surfaceTemp, '°F');
-    const wind      = (s.windSpeed !== null && s.windSpeed !== undefined && s.windSpeed !== '')
-      ? `${(+s.windSpeed).toFixed(0)} mph ${windDeg2Dir(s.windDir)}`
-      : '—';
-    const humid     = (s.humidity !== null && s.humidity !== undefined && s.humidity !== '')
-      ? `${(+s.humidity).toFixed(0)}%`
-      : '—';
-    let updatedStr = '—';
-    if (s.updated) {
-      try { updatedStr = new Date(s.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch(e) {}
-    }
-    return `
-      <div class="station-card border-${cls}">
-        <div style="min-width:0;">
-          <div class="station-state-tag">${s.source.toUpperCase()} · ${s.road}</div>
-          <div class="station-name">${s.name}</div>
-          <div class="station-metrics">
-            <div class="station-metric"><span class="sm-label">AIR</span><span class="sm-value">${airT}</span></div>
-            <div class="station-metric"><span class="sm-label">ROAD</span><span class="sm-value">${surfT}</span></div>
-            <div class="station-metric"><span class="sm-label">WIND</span><span class="sm-value">${wind}</span></div>
-            <div class="station-metric"><span class="sm-label">HUMID</span><span class="sm-value">${humid}</span></div>
-          </div>
-          <div class="station-updated">Updated ${updatedStr}</div>
-        </div>
-        <div><span class="condition-pill ${cls}">${surfLabel}</span></div>
-      </div>`;
-  }).join('');
+  // Load cameras for saved states
+  if (selectedStates.length) {
+    loadAllCameras();
+  } else {
+    document.getElementById('camera-grid').innerHTML =
+      '<div class="empty-state"><div class="empty-state-icon">📍</div><div class="empty-state-msg">Select one or more states to load cameras</div></div>';
+    document.getElementById('status-text').textContent = 'No states selected';
+  }
 }
 
-function showWeather() {
-  renderWeatherView();
-  showView('weather');
+// Boot when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
 }
 </script>
 </body>
