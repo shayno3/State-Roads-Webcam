@@ -286,6 +286,7 @@ roadcams-glasses/
 - [x] Ohio (OH) — OHGo API (`publicapi.ohgo.com`) — free key registration; camera_views[] format (v1.3.4)
 - [x] Washington (WA) — WSDOT Traveler Info API — AccessCode stored server-side as `WSDOT_KEY` (v1.3.3)
 - [x] California (CA) — Caltrans CWWP2 — ~3,343 cameras, no key, 12-district parallel fetch (v1.3.5)
+- [x] Hawaii (HI) — HDOT GoAkamai ArcGIS FeatureServer — ~168 cameras, no key, geometry lat/lon, camerastill image field (e463bb1)
 - [ ] GA key — awaiting developer key from 511ga.org (~4,000 cameras)
 - [ ] IA region filter bar — extend FL county bar to show IA REGION chips
 - [ ] Map view (Leaflet.js) showing camera pins by GPS coordinates
