@@ -1881,10 +1881,11 @@ function normalizeCameras(state, data) {
   // Fields: cctv_id, route, location_description, url (snapshot JPG), dir, county, geometry.x=lon, geometry.y=lat
   if (state === 'ga' && data && data.features) {
     return data.features
-      .filter(f => f.attributes?.url || f.attributes?.URL)
+      .filter(f => f.attributes?.cctv_id || f.attributes?.OBJECTID)
       .map((f, i) => {
         const a   = f.attributes || {};
         const geo = f.geometry   || {};
+        // navigator-c2c.dot.ga.gov is IP-restricted from Railway proxy — imageUrl cleared to avoid 10s hang
         return {
           id:       a.cctv_id || a.OBJECTID || i,
           road:     a.route || '—',
@@ -1892,7 +1893,7 @@ function normalizeCameras(state, data) {
           direction:a.dir || '—',
           lat:      geo.y || 0,
           lon:      geo.x || 0,
-          imageUrl: a.url || '',
+          imageUrl: '',
           county:   a.county || '',
           status:   'active',
           source:   'ga',
@@ -1904,7 +1905,6 @@ function normalizeCameras(state, data) {
   // Fields: OBJECTID, CameraLocation, CameraDirection, SnapShot, x (lon), y (lat)
   if (state === 'il' && data && data.features) {
     return data.features
-      .filter(f => !f.attributes?.TooOld)
       .map((f, i) => {
         const a = f.attributes || {};
         return {
