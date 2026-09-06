@@ -1092,6 +1092,8 @@
     .tab-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
 
   </style>
+  <!-- HLS.js for playing .m3u8 streams in Chrome/Android (Safari uses native HLS) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -1454,7 +1456,7 @@ const STATE_CONFIGS = {
   ks: { label: 'Kansas',        endpoint: '/api/cameras/ks', keyParam: 'key' },
   vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', keyParam: 'key' },
   nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', keyParam: 'key' },
-  md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key' },
+  md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key', noKey: true },  // CHART public ArcGIS – HLS streams
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
   nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
@@ -1941,6 +1943,29 @@ function normalizeCameras(state, data) {
       }));
   }
 
+  // Maryland CHART ArcGIS — fields: ID, location, hlsurl, CCTVPublicURL, Latitude, Longitude
+  // imageUrl stores hlsurl (.m3u8); card template and detail view handle HLS playback
+  if (state === 'md' && data && data.features) {
+    return data.features
+      .filter(f => f.attributes?.hlsurl)
+      .map((f, i) => {
+        const a = f.attributes || {};
+        const geo = f.geometry   || {};
+        return {
+          id:       a.ID || a.OBJECTID || i,
+          road:     a.location ? a.location.split(' ')[0] : '—',
+          location: a.location || '—',
+          direction:'—',
+          lat:      geo.y || a.Latitude  || 0,
+          lon:      geo.x || a.Longitude || 0,
+          imageUrl: a.hlsurl || '',
+          county:   '',
+          status:   'active',
+          source:   'md',
+        };
+      });
+  }
+
   // Iowa DOT ArcGIS FeatureServer format
   if (state === 'ia' && data && data.features) {
     return data.features.map((f, i) => {
@@ -2016,10 +2041,12 @@ function renderGrid(cams) {
     return `
       <div class="camera-card" onclick="openCamera(${idx})">
         <div class="camera-thumb-wrap">
-          ${cam.imageUrl
+          ${cam.imageUrl && !cam.imageUrl.endsWith('.m3u8')
             ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
                /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
+            : cam.imageUrl
+            ? `<div class="camera-thumb-placeholder">📹</div>`
             : `<div class="camera-thumb-placeholder">📷</div>`}
           <div class="cam-id-tag">CAM-${camId}</div>
           <div class="cam-status-dot ${online ? 'online' : 'offline'}"></div>
@@ -2063,8 +2090,17 @@ function loadDetail(cam) {
 }
 
 function updateDetailImage(cam) {
-  const img = document.getElementById('detail-img');
+  const img     = document.getElementById('detail-img');
   const overlay = document.getElementById('img-overlay');
+  const wrap    = document.getElementById('detail-image-wrap') || img.parentElement;
+
+  // Remove any existing HLS video element
+  const oldVid = document.getElementById('detail-video');
+  if (oldVid) {
+    if (oldVid._hls) { oldVid._hls.destroy(); oldVid._hls = null; }
+    oldVid.remove();
+  }
+  img.style.display = '';
 
   if (!cam.imageUrl) {
     overlay.classList.add('visible');
@@ -2072,6 +2108,44 @@ function updateDetailImage(cam) {
     return;
   }
 
+  // HLS stream (.m3u8) — render <video> instead of <img>
+  if (cam.imageUrl.endsWith('.m3u8')) {
+    img.style.display = 'none';
+    overlay.classList.add('visible');
+    overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+    const vid = document.createElement('video');
+    vid.id = 'detail-video';
+    vid.autoplay = true;
+    vid.muted = true;
+    vid.setAttribute('playsinline', '');
+    vid.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;';
+
+    vid.oncanplay = () => { overlay.classList.remove('visible'); updateMetaTime(); };
+    vid.onerror   = () => {
+      overlay.classList.add('visible');
+      overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-sub">Stream unavailable</div></div>';
+    };
+
+    const imgWrap = img.closest('.detail-image-wrap') || img.parentElement;
+    imgWrap.insertBefore(vid, img);
+
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      const hls = new Hls({ lowLatencyMode: true });
+      hls.loadSource(cam.imageUrl);
+      hls.attachMedia(vid);
+      vid._hls = hls;
+    } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari native HLS
+      vid.src = cam.imageUrl;
+    } else {
+      overlay.classList.add('visible');
+      overlay.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-sub">HLS not supported</div></div>';
+    }
+    return;
+  }
+
+  // Standard JPEG/image feed
   overlay.classList.add('visible');
   overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
 
@@ -2116,6 +2190,12 @@ function startAutoRefresh() {
 function clearDetailTimers() {
   if (refreshTimer)   { clearInterval(refreshTimer);   refreshTimer   = null; }
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  // Destroy any active HLS video when leaving detail view
+  const vid = document.getElementById('detail-video');
+  if (vid) {
+    if (vid._hls) { vid._hls.destroy(); vid._hls = null; }
+    vid.remove();
+  }
 }
 
 function updateRefreshBadge() {

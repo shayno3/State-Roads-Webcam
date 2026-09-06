@@ -51,7 +51,7 @@ const STATE_ENDPOINTS = {
   ks: 'https://www.kandrive.gov/api/v2/get/cameras',
   vt: 'https://www.511vt.org/api/v2/get/cameras',
   nh: 'https://www.511nh.com/api/v2/get/cameras',
-  md: 'https://md511.org/api/v2/get/cameras',
+  md: 'https://chartimap1.sha.maryland.gov/arcgis/rest/services/CHART/Cameras/MapServer/0/query', // CHART public ArcGIS – no key needed
   al: 'https://www.al511.com/api/v2/get/cameras',
   nm: 'https://nmroads.com/api/v2/get/cameras',
   mi: 'https://www.mi511.org/api/v2/get/cameras',
@@ -137,6 +137,9 @@ app.get('/api/cameras/:state', async (req, res) => {
     }
   } else if (state === 'fl' || state === 'ia' || state === 'hi') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
+  } else if (state === 'md') {
+    // Maryland CHART public ArcGIS — no key needed; outSR=4326 returns WGS84 coords directly
+    upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&outSR=4326&resultRecordCount=1000`;
   } else if (state === 'nv') {
     // Nevada nvroads.com — key stored server-side as NV_KEY env var
     const nvKey = process.env.NV_KEY;
