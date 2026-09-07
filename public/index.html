@@ -1978,7 +1978,7 @@ function normalizeCameras(state, data) {
         direction:'—',
         lat:      geo.y || 0,
         lon:      geo.x || 0,
-        imageUrl: a.camerastill || a.URL || '',
+        imageUrl: a.URL ? a.URL.replace('http://', 'https://') : '',
         county:   a.Island || '',
         status:   'active',
         source:   'hi',
