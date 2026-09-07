@@ -168,6 +168,13 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'OH_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?api-key=${encodeURIComponent(ohKey)}`;
+  } else if (state === 'wi') {
+    // Wisconsin 511WI — key stored server-side as WI_KEY env var
+    const wiKey = process.env.WI_KEY;
+    if (!wiKey) {
+      return res.status(500).json({ error: 'WI_KEY environment variable not set on server' });
+    }
+    upstreamUrl = `${baseUrl}?key=${encodeURIComponent(wiKey)}`;
   } else if (state === 'sf') {
     // SF Bay Area — 511.org only offers events/toll/WZDx; no cameras endpoint exists.
     // Bay Area freeway cameras are covered by CA (Caltrans D4).
