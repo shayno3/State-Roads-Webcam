@@ -6,27 +6,29 @@
   <title>StateRoad.fyi — Live Road Cameras</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* ─── Reset & Base ────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0A0C12;
-      --surface:   #141720;
-      --surface2:  #1C2030;
-      --border:    #252A3A;
-      --text:      #DDE1EC;
-      --muted:     #5C6278;
-      --accent:    #F5C318;
-      --accent-dim:rgba(245,195,24,0.10);
-      --live:      #3CB878;
-      --live-dim:  rgba(60,184,120,0.12);
-      --offline:   #E04545;
-      --font-ui:   'Inter', system-ui, sans-serif;
-      --font-head: 'Barlow Condensed', sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      --tab-h:     54px;
+      --bg:          #060011;
+      --surface:     #0D0921;
+      --surface2:    #14103A;
+      --border:      #2A1F5A;
+      --text:        #E8E4FF;
+      --muted:       #6B5C9A;
+      --accent:      #FF006E;
+      --accent2:     #7B2FFF;
+      --accent3:     #00F5FF;
+      --accent-dim:  rgba(255,0,110,0.10);
+      --accent2-dim: rgba(123,47,255,0.12);
+      --live:        #00F5FF;
+      --live-dim:    rgba(0,245,255,0.12);
+      --offline:     #FF006E;
+      --font-ui:     'Inter', system-ui, sans-serif;
+      --font-head:   'Exo 2', sans-serif;
+      --font-mono:   'JetBrains Mono', monospace;
+      --tab-h:       54px;
     }
 
     html, body {
@@ -45,6 +47,22 @@
       height: 100vh;
       max-width: 480px;
       margin: 0 auto;
+      position: relative;
+    }
+
+    /* Perspective grid background */
+    #app::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background-image:
+        linear-gradient(rgba(123,47,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123,47,255,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* ─── Header ────────────────────────────────────────────────── */
@@ -53,10 +71,13 @@
       align-items: center;
       justify-content: space-between;
       padding: 10px 14px;
-      background: var(--surface);
+      background: rgba(13,9,33,0.95);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
       gap: 10px;
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(10px);
     }
 
     .logo {
@@ -77,13 +98,12 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(255,0,110,0.5);
     }
 
     .logo-mark svg { display: block; }
 
-    .logo-text {
-      line-height: 1;
-    }
+    .logo-text { line-height: 1; }
 
     .logo-name {
       font-family: var(--font-head);
@@ -94,16 +114,14 @@
       text-transform: uppercase;
     }
 
-    .logo-tld {
-      color: var(--accent);
-    }
+    .logo-tld { color: var(--accent); }
 
     .live-badge {
       display: flex;
       align-items: center;
       gap: 5px;
       background: var(--live-dim);
-      border: 1px solid rgba(60,184,120,0.25);
+      border: 1px solid rgba(0,245,255,0.25);
       border-radius: 20px;
       padding: 2px 7px;
       font-family: var(--font-mono);
@@ -139,214 +157,117 @@
       align-items: center;
       justify-content: center;
       font-size: 15px;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
     }
 
     .icon-btn:hover, .icon-btn.active {
-      background: var(--accent);
-      color: #000;
-      border-color: var(--accent);
-    }
-
-    /* ─── State Selector Dropdown ───────────────────────────────────── */
-    #state-selector-wrap {
-      position: relative;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      z-index: 100;
-    }
-    .state-selector-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .state-selector-row::-webkit-scrollbar { display: none; }
-
-    #state-trigger {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 1px;
-      padding: 5px 12px;
-      border-radius: 4px;
-      border: 1px solid var(--accent);
       background: var(--accent-dim);
       color: var(--accent);
-      cursor: pointer;
-      white-space: nowrap;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(255,0,110,0.3);
+    }
+
+    /* ─── HIDDEN original dropdown (kept for JS compatibility) ──── */
+    #state-selector-wrap { display: none; }
+
+    /* ─── New Neon Drive Filter Bar ─────────────────────────────── */
+    #filter-bar-wrap {
+      background: rgba(13,9,33,0.95);
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    #filter-tabs {
       display: flex;
-      align-items: center;
+      gap: 0;
+      padding: 8px 12px;
       gap: 6px;
-      transition: background 0.15s, color 0.15s;
     }
-    #state-trigger:hover, #state-trigger.open {
-      background: var(--accent);
-      color: #000;
-    }
-    #state-count-badge {
-      background: var(--surface);
-      color: var(--accent);
-      border-radius: 10px;
-      padding: 1px 6px;
-      font-size: 11px;
-      font-weight: 700;
-      min-width: 18px;
-      text-align: center;
-    }
-    #state-trigger.open #state-count-badge,
-    #state-trigger:hover #state-count-badge {
-      background: rgba(0,0,0,0.2);
-      color: #000;
-    }
-    .active-chips {
-      display: flex;
-      gap: 5px;
-      flex-shrink: 0;
-    }
-    .chip {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-      padding: 3px 7px 3px 9px;
-      border-radius: 3px;
-      background: var(--accent);
-      color: #000;
-      white-space: nowrap;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: opacity 0.12s;
-    }
-    .chip:hover { opacity: 0.75; }
-    .chip-x { font-size: 10px; opacity: 0.7; font-weight: 900; }
 
-    .dropdown-panel {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-bottom: 2px solid var(--accent);
-      max-height: 340px;
-      overflow-y: auto;
-      z-index: 200;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-    .dropdown-panel.hidden { display: none; }
-
-    .dropdown-header {
-      padding: 10px 14px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      position: sticky;
-      top: 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      z-index: 1;
-    }
-    #dd-search {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 13px;
-      padding: 7px 10px;
-      outline: none;
-    }
-    #dd-search:focus { border-color: var(--accent); }
-    #dd-search::placeholder { color: var(--muted); }
-
-    .dd-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .dd-actions button {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-      padding: 3px 10px;
-      border-radius: 3px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--muted);
-      cursor: pointer;
-      transition: border-color 0.12s, color 0.12s;
-    }
-    .dd-actions button:hover { border-color: var(--accent); color: var(--accent); }
-
-    .region-group { padding: 8px 14px 4px; }
-    .region-label {
-      font-family: var(--font-head);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 2px;
-    }
-    .state-check-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      gap: 8px;
-      transition: opacity 0.1s;
-    }
-    .state-check-row:last-child { border-bottom: none; }
-    .state-check-row:hover { opacity: 0.85; }
-    .scr-left { display: flex; align-items: center; gap: 10px; }
-    .scr-code {
-      font-family: var(--font-head);
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-      color: var(--text);
-      width: 40px;
-    }
-    .scr-label { font-size: 13px; color: var(--muted); }
-    .scr-count {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted);
-    }
-    .scr-box {
-      width: 18px;
-      height: 18px;
-      border-radius: 3px;
-      border: 1.5px solid var(--border);
-      background: var(--surface2);
+    .ftab {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 5px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .ftab:hover {
+      border-color: var(--accent2);
+      color: var(--text);
+    }
+
+    .ftab.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+      box-shadow: 0 0 10px rgba(255,0,110,0.2);
+    }
+
+    .ftab-count {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      padding: 0 5px;
+      font-size: 9px;
+      font-weight: 800;
+      min-width: 16px;
+      text-align: center;
+      display: none;
+    }
+    .ftab-count.show { display: inline-block; }
+
+    /* State chips row under filter tabs */
+    #state-chips-row {
+      display: flex;
+      gap: 5px;
+      padding: 0 12px 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-wrap: nowrap;
+    }
+    #state-chips-row::-webkit-scrollbar { display: none; }
+    #state-chips-row.hidden { display: none; }
+
+    .state-chip {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
       flex-shrink: 0;
       transition: all 0.12s;
     }
-    .scr-box.checked {
-      background: var(--accent);
+
+    .state-chip.active {
+      background: var(--accent-dim);
       border-color: var(--accent);
-    }
-    .scr-box.checked::after {
-      content: '✓';
-      font-size: 11px;
-      color: #000;
-      font-weight: 900;
+      color: var(--accent);
+      box-shadow: 0 0 6px rgba(255,0,110,0.2);
     }
 
-    /* ─── FL County Filter Bar ─────────────────────────────────────── */
+    /* ─── FL County Filter Bar ─────────────────────────────────── */
     #fl-filter-bar {
       display: flex;
       gap: 6px;
@@ -358,6 +279,8 @@
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
       align-items: center;
+      position: relative;
+      z-index: 9;
     }
     #fl-filter-bar::-webkit-scrollbar { display: none; }
     #fl-filter-bar.hidden { display: none; }
@@ -391,21 +314,23 @@
       gap: 4px;
     }
     .county-chip:hover { border-color: var(--accent); color: var(--accent); }
-    .county-chip.active { background: var(--accent); border-color: var(--accent); color: #000; }
+    .county-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
     .county-chip .cc-count { font-size: 9px; opacity: 0.65; }
 
     /* ─── Status bar ────────────────────────────────────────────── */
     #status-bar {
-      padding: 5px 14px;
+      padding: 4px 14px;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
       display: flex;
       align-items: center;
       gap: 8px;
       flex-shrink: 0;
+      position: relative;
+      z-index: 9;
     }
 
     .status-dot {
@@ -416,7 +341,6 @@
       animation: pulse 2s infinite;
       flex-shrink: 0;
     }
-
     .status-dot.loading { background: var(--accent); }
     .status-dot.error   { background: var(--offline); animation: none; }
 
@@ -430,16 +354,15 @@
       flex: 1;
       overflow: hidden;
       position: relative;
+      z-index: 1;
     }
 
-    /* ─── Views ─────────────────────────────────────────────────── */
     .view {
       position: absolute;
       inset: 0;
       overflow-y: auto;
       display: none;
     }
-
     .view.active { display: block; }
 
     /* ─── Camera List View ──────────────────────────────────────── */
@@ -459,11 +382,15 @@
       color: var(--text);
       font-family: var(--font-ui);
       font-size: 13px;
-      padding: 7px 12px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-
     #search-input::placeholder { color: var(--muted); }
-    #search-input:focus { outline: none; border-color: var(--accent); }
+    #search-input:focus {
+      border-color: var(--accent3);
+      box-shadow: 0 0 8px rgba(0,245,255,0.15);
+    }
 
     .count-badge {
       font-family: var(--font-mono);
@@ -484,15 +411,16 @@
     .camera-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
-      transition: border-color 0.15s, transform 0.1s;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
       position: relative;
     }
 
     .camera-card:hover {
       border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(255,0,110,0.25);
       transform: scale(1.01);
     }
 
@@ -504,6 +432,7 @@
       overflow: hidden;
     }
 
+    /* Scanlines overlay */
     .camera-thumb-wrap::after {
       content: '';
       position: absolute;
@@ -524,7 +453,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      filter: contrast(1.05);
+      filter: contrast(1.05) saturate(0.95);
     }
 
     .camera-thumb-placeholder {
@@ -543,8 +472,8 @@
       left: 5px;
       font-family: var(--font-mono);
       font-size: 8px;
-      color: rgba(255,255,255,0.55);
-      background: rgba(0,0,0,0.5);
+      color: rgba(0,245,255,0.6);
+      background: rgba(6,0,17,0.7);
       padding: 1px 4px;
       border-radius: 2px;
       z-index: 3;
@@ -561,13 +490,14 @@
       background: var(--live);
       border: 1.5px solid rgba(0,0,0,0.6);
       z-index: 3;
+      box-shadow: 0 0 4px rgba(0,245,255,0.6);
     }
-
-    .cam-status-dot.offline { background: var(--offline); }
+    .cam-status-dot.offline { background: var(--offline); box-shadow: 0 0 4px rgba(255,0,110,0.5); }
     .cam-status-dot.online  { animation: pulse 2s infinite; }
 
     .camera-info {
       padding: 6px 8px 7px;
+      background: var(--surface);
     }
 
     .camera-road {
@@ -586,6 +516,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      opacity: 0.8;
     }
 
     /* ─── Camera Detail View ────────────────────────────────────── */
@@ -593,7 +524,6 @@
       background: #000;
       flex-direction: column;
     }
-
     #detail-view.active { display: flex; }
 
     .detail-header {
@@ -601,7 +531,7 @@
       align-items: center;
       gap: 10px;
       padding: 10px 14px;
-      background: rgba(10,12,18,0.95);
+      background: rgba(6,0,17,0.95);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
@@ -619,7 +549,9 @@
       align-items: center;
       justify-content: center;
       font-size: 14px;
+      transition: border-color 0.15s;
     }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     .detail-title { flex: 1; min-width: 0; }
 
@@ -634,10 +566,11 @@
 
     .detail-location {
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--text);
     }
 
     .refresh-info {
@@ -687,25 +620,24 @@
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.75);
+      background: rgba(6,0,17,0.8);
       font-size: 13px;
       color: var(--muted);
       z-index: 10;
     }
-
     .img-overlay.visible { display: flex; }
 
     .refresh-badge {
       position: absolute;
       bottom: 10px;
       right: 10px;
-      background: rgba(10,12,18,0.85);
+      background: rgba(6,0,17,0.85);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 3px 9px;
       font-family: var(--font-mono);
       font-size: 9px;
-      color: var(--muted);
+      color: var(--accent3);
       backdrop-filter: blur(4px);
       z-index: 5;
     }
@@ -721,7 +653,6 @@
     }
 
     .meta-item { text-align: center; }
-
     .meta-label {
       font-family: var(--font-mono);
       font-size: 8px;
@@ -730,7 +661,6 @@
       color: var(--muted);
       margin-bottom: 3px;
     }
-
     .meta-value {
       font-size: 12px;
       font-weight: 600;
@@ -752,20 +682,20 @@
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--text);
-      font-family: var(--font-ui);
+      font-family: var(--font-head);
       font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
       text-align: center;
-      transition: background 0.15s, border-color 0.15s;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
     }
-
     .ctrl-btn.primary {
       background: var(--accent);
       border-color: var(--accent);
-      color: #000;
-      font-weight: 600;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255,0,110,0.3);
     }
-
     .ctrl-btn:hover { opacity: 0.85; }
 
     .detail-nav {
@@ -775,7 +705,7 @@
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(10,12,18,0.82);
+      background: rgba(6,0,17,0.82);
       border: 1px solid var(--border);
       color: var(--text);
       cursor: pointer;
@@ -785,20 +715,16 @@
       font-size: 16px;
       z-index: 10;
       backdrop-filter: blur(4px);
+      transition: border-color 0.15s;
     }
-
+    .detail-nav:hover { border-color: var(--accent); color: var(--accent); }
     #nav-prev { left: 10px; }
     #nav-next { right: 10px; }
 
     /* ─── Settings View ─────────────────────────────────────────── */
-    #settings-view {
-      padding: 14px;
-      overflow-y: auto;
-    }
+    #settings-view { padding: 14px; overflow-y: auto; }
 
-    .settings-section {
-      margin-bottom: 20px;
-    }
+    .settings-section { margin-bottom: 20px; }
 
     .settings-title {
       font-family: var(--font-mono);
@@ -823,9 +749,7 @@
       gap: 10px;
       border-bottom: 1px solid var(--border);
     }
-
     .settings-row:last-child { border-bottom: none; }
-
     .settings-row label {
       font-family: var(--font-head);
       font-weight: 700;
@@ -835,7 +759,6 @@
       flex-shrink: 0;
       letter-spacing: 0.5px;
     }
-
     .settings-row input {
       flex: 1;
       background: var(--surface2);
@@ -845,9 +768,9 @@
       font-family: var(--font-mono);
       font-size: 11px;
       padding: 5px 8px;
+      outline: none;
     }
-
-    .settings-row input:focus { outline: none; border-color: var(--accent); }
+    .settings-row input:focus { border-color: var(--accent3); }
     .settings-row input::placeholder { color: var(--muted); }
 
     .save-btn {
@@ -856,7 +779,7 @@
       background: var(--accent);
       border: none;
       border-radius: 7px;
-      color: #000;
+      color: #fff;
       font-family: var(--font-head);
       font-weight: 800;
       font-size: 15px;
@@ -864,8 +787,9 @@
       text-transform: uppercase;
       cursor: pointer;
       margin-top: 6px;
+      box-shadow: 0 0 14px rgba(255,0,110,0.3);
+      transition: opacity 0.15s;
     }
-
     .save-btn:hover { opacity: 0.88; }
 
     .settings-note {
@@ -878,8 +802,7 @@
       border: 1px solid var(--border);
       border-radius: 7px;
     }
-
-    .settings-note a { color: var(--accent); text-decoration: none; }
+    .settings-note a { color: var(--accent3); text-decoration: none; }
 
     /* ─── Empty / Loading States ────────────────────────────────── */
     .empty-state {
@@ -905,7 +828,6 @@
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ─── Toast ─────────────────────────────────────────────────── */
@@ -915,18 +837,18 @@
       left: 50%;
       transform: translateX(-50%) translateY(60px);
       background: var(--surface2);
-      border: 1px solid var(--border);
+      border: 1px solid var(--accent);
       border-radius: 20px;
       padding: 7px 16px;
       font-family: var(--font-mono);
       font-size: 11px;
-      color: var(--text);
-      z-index: 1000;
+      color: var(--accent);
+      z-index: 9999;
       transition: transform 0.25s;
       white-space: nowrap;
       pointer-events: none;
+      box-shadow: 0 0 14px rgba(255,0,110,0.3);
     }
-
     #toast.show { transform: translateX(-50%) translateY(0); }
 
     /* ─── Scrollbar ─────────────────────────────────────────────── */
@@ -934,139 +856,141 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  /* ─── Surface Condition Badge (on camera cards) ──────────────── */
-  .surface-badge {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    font-family: var(--font-mono);
-    font-size: 7.5px;
-    font-weight: 500;
-    letter-spacing: 0.4px;
-    padding: 1px 5px;
-    border-radius: 2px;
-    z-index: 4;
-    text-transform: uppercase;
-    line-height: 1.7;
-    pointer-events: none;
-  }
-  .surface-badge.dry   { background: rgba(60,184,120,0.88);  color: #000; }
-  .surface-badge.wet   { background: rgba(74,158,232,0.90);  color: #000; }
-  .surface-badge.ice   { background: rgba(0,212,240,0.90);   color: #000; }
-  .surface-badge.snow  { background: rgba(200,220,255,0.90); color: #111; }
-  .surface-badge.other { background: rgba(92,98,120,0.85);   color: #fff; }
+    /* ─── Surface Condition Badge ────────────────────────────────── */
+    .surface-badge {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      font-family: var(--font-mono);
+      font-size: 7.5px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      padding: 1px 5px;
+      border-radius: 2px;
+      z-index: 4;
+      text-transform: uppercase;
+      line-height: 1.7;
+      pointer-events: none;
+    }
+    .surface-badge.dry   { background: rgba(0,245,255,0.85);  color: #000; }
+    .surface-badge.wet   { background: rgba(74,158,232,0.90); color: #000; }
+    .surface-badge.ice   { background: rgba(0,212,240,0.90);  color: #000; }
+    .surface-badge.snow  { background: rgba(200,220,255,0.90);color: #111; }
+    .surface-badge.other { background: rgba(92,98,120,0.85);  color: #fff; }
 
-  /* ─── Weather / Road Conditions View ────────────────────────── */
-  #weather-view { padding: 10px; }
+    /* ─── Weather View ────────────────────────────────────────── */
+    #weather-view { padding: 10px; }
 
-  .weather-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    gap: 8px;
-  }
-  .weather-header-left { display: flex; align-items: center; gap: 8px; }
-  .weather-title {
-    font-family: var(--font-head);
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--text);
-    letter-spacing: 0.5px;
-  }
-  .weather-count {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
+    .weather-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    .weather-header-left { display: flex; align-items: center; gap: 8px; }
+    .weather-title {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+      letter-spacing: 0.5px;
+    }
+    .weather-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
 
-  .station-grid { display: flex; flex-direction: column; gap: 7px; }
+    .station-grid { display: flex; flex-direction: column; gap: 7px; }
 
-  .station-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 10px 12px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: start;
-  }
-  .station-card.border-dry   { border-left: 3px solid #3CB878; }
-  .station-card.border-wet   { border-left: 3px solid #4A9EE8; }
-  .station-card.border-ice   { border-left: 3px solid #00D4F0; }
-  .station-card.border-snow  { border-left: 3px solid #B8CCE4; }
-  .station-card.border-other { border-left: 3px solid var(--muted); }
+    .station-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+    .station-card.border-dry   { border-left: 3px solid var(--live); }
+    .station-card.border-wet   { border-left: 3px solid #4A9EE8; }
+    .station-card.border-ice   { border-left: 3px solid #00D4F0; }
+    .station-card.border-snow  { border-left: 3px solid #B8CCE4; }
+    .station-card.border-other { border-left: 3px solid var(--muted); }
 
-  .station-state-tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-  .station-name {
-    font-family: var(--font-head);
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.3px;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    .station-state-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .station-name {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .condition-pill {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .condition-pill.dry   { background: rgba(0,245,255,0.12);  color: var(--live); border: 1px solid rgba(0,245,255,0.3); }
+    .condition-pill.wet   { background: rgba(74,158,232,0.15);  color: #4A9EE8; border: 1px solid rgba(74,158,232,0.3); }
+    .condition-pill.ice   { background: rgba(0,212,240,0.15);   color: #00D4F0; border: 1px solid rgba(0,212,240,0.3); }
+    .condition-pill.snow  { background: rgba(184,204,228,0.15); color: #B8CCE4; border: 1px solid rgba(184,204,228,0.3); }
+    .condition-pill.other { background: rgba(92,98,120,0.15);   color: var(--muted); border: 1px solid var(--border); }
 
-  .condition-pill {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .condition-pill.dry   { background: rgba(60,184,120,0.15);  color: #3CB878; border: 1px solid rgba(60,184,120,0.3); }
-  .condition-pill.wet   { background: rgba(74,158,232,0.15);  color: #4A9EE8; border: 1px solid rgba(74,158,232,0.3); }
-  .condition-pill.ice   { background: rgba(0,212,240,0.15);   color: #00D4F0; border: 1px solid rgba(0,212,240,0.3); }
-  .condition-pill.snow  { background: rgba(184,204,228,0.15); color: #B8CCE4; border: 1px solid rgba(184,204,228,0.3); }
-  .condition-pill.other { background: rgba(92,98,120,0.15);   color: var(--muted); border: 1px solid var(--border); }
+    .station-metrics {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .station-metric { display: flex; flex-direction: column; gap: 1px; }
+    .sm-label {
+      font-family: var(--font-mono);
+      font-size: 7.5px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .sm-value {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .station-updated {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
 
-  .station-metrics {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-  .station-metric { display: flex; flex-direction: column; gap: 1px; }
-  .sm-label {
-    font-family: var(--font-mono);
-    font-size: 7.5px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .sm-value {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .station-updated {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
     /* ─── Bottom Tab Bar ────────────────────────────────────────── */
     .tab-bar {
       display: flex;
       height: var(--tab-h);
-      background: var(--surface);
+      background: rgba(13,9,33,0.97);
       border-top: 1px solid var(--border);
       flex-shrink: 0;
+      position: relative;
+      z-index: 10;
     }
 
     .tab-btn {
@@ -1084,15 +1008,204 @@
       transition: color 0.15s;
       padding: 0;
     }
-
     .tab-btn.active { color: var(--accent); }
     .tab-btn:hover  { color: var(--text); }
-
     .tab-icon  { font-size: 18px; line-height: 1; }
     .tab-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
 
+    /* ─── Region Bottom Sheet ───────────────────────────────────── */
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,0,17,0.75);
+      z-index: 500;
+      display: flex;
+      align-items: flex-end;
+      backdrop-filter: blur(4px);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .sheet-overlay.hidden { display: none; }
+
+    .sheet {
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 10px auto 0;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 8px;
+    }
+
+    .sheet-title {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      color: var(--text);
+    }
+
+    .sheet-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .sheet-close:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Region tiles grid */
+    .region-tiles-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 8px 16px 20px;
+    }
+
+    .region-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 16px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .region-tile:hover {
+      border-color: var(--accent2);
+      background: var(--accent2-dim);
+    }
+    .region-tile.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 12px rgba(255,0,110,0.2);
+    }
+
+    .region-tile-icon { font-size: 24px; }
+    .region-tile-label {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      color: var(--text);
+    }
+    .region-tile-count {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    /* ─── City Bottom Sheet ─────────────────────────────────────── */
+    .city-search-wrap {
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #city-search {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #city-search:focus { border-color: var(--accent3); }
+    #city-search::placeholder { color: var(--muted); }
+
+    .city-list {
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 8px 16px 16px;
+    }
+
+    .city-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      background: none;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      color: var(--text);
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      transition: color 0.12s;
+    }
+    .city-item:last-child { border-bottom: none; }
+    .city-item:hover .city-item-name { color: var(--accent); }
+    .city-item-name { font-weight: 500; }
+    .city-item-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 1px 6px;
+    }
+    .city-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 20px;
+      font-family: var(--font-mono);
+    }
+
+    /* ─── Chip styles from old dropdown (kept for renderChips compat) */
+    .active-chips { display: flex; gap: 5px; flex-shrink: 0; }
+    .chip {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 3px 7px 3px 9px;
+      border-radius: 3px;
+      background: var(--accent);
+      color: #fff;
+      white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chip-x { font-size: 10px; opacity: 0.7; font-weight: 900; }
   </style>
-  <!-- HLS.js for playing .m3u8 streams in Chrome/Android (Safari uses native HLS) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
 </head>
 <body>
@@ -1102,9 +1215,9 @@
   <header>
     <div class="logo" onclick="showTab('list')">
       <div class="logo-mark">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 14 L9 4 L16 14" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 4 L9 14" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M2 14 L9 4 L16 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 4 L9 14" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
         </svg>
       </div>
       <div class="logo-text">
@@ -1122,8 +1235,8 @@
     </div>
   </header>
 
-  <!-- State Selector Dropdown -->
-  <div id="state-selector-wrap">
+  <!-- HIDDEN original state selector — kept for JS compatibility (buildDropdown, toggleStateCheck, renderChips) -->
+  <div id="state-selector-wrap" style="display:none">
     <div class="state-selector-row">
       <button id="state-trigger" onclick="toggleDropdown()">
         <span id="state-trigger-label">🗺 States</span><span id="state-count-badge">0</span>
@@ -1132,7 +1245,7 @@
     </div>
     <div id="dropdown-panel" class="dropdown-panel hidden">
       <div class="dropdown-header">
-        <input id="dd-search" type="text" placeholder="🔍  Search states…" oninput="filterDropdown()" autocomplete="off">
+        <input id="dd-search" type="text" placeholder="Search states…" oninput="filterDropdown()" autocomplete="off">
         <div class="dd-actions">
           <button onclick="selectAll()">Select All</button>
           <button onclick="clearAll()">Clear All</button>
@@ -1142,7 +1255,24 @@
     </div>
   </div>
 
-  <!-- FL County/Highway Filter Bar (shown when FL cameras are loaded) -->
+  <!-- Neon Drive 3-Tab Filter Bar -->
+  <div id="filter-bar-wrap">
+    <div id="filter-tabs">
+      <button class="ftab active" id="ftab-all" onclick="filterTabAll()">
+        ALL STATES
+        <span class="ftab-count" id="ftab-all-count"></span>
+      </button>
+      <button class="ftab" id="ftab-region" onclick="showRegionSheet()">
+        <span id="ftab-region-label">REGION</span> ▾
+      </button>
+      <button class="ftab" id="ftab-city" onclick="showCitySheet()">
+        <span id="ftab-city-label">CITY</span> ▾
+      </button>
+    </div>
+    <div id="state-chips-row" class="hidden"></div>
+  </div>
+
+  <!-- FL County/Highway Filter Bar -->
   <div id="fl-filter-bar" class="hidden"></div>
 
   <!-- Status bar -->
@@ -1154,7 +1284,7 @@
   <!-- Content -->
   <div id="content">
 
-    <!-- ── LIST VIEW ── -->
+    <!-- LIST VIEW -->
     <div id="list-view" class="view active">
       <div style="padding: 10px;">
         <div class="search-row">
@@ -1166,14 +1296,14 @@
             <div class="empty-state">
               <div class="empty-icon">🛣️</div>
               <div class="empty-title">No State Selected</div>
-              <div class="empty-sub">Tap a state above to browse live road cameras.</div>
+              <div class="empty-sub">Tap REGION to browse by area, or ALL STATES to load everything.</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── DETAIL VIEW ── -->
+    <!-- DETAIL VIEW -->
     <div id="detail-view" class="view">
       <div class="detail-header">
         <button class="back-btn" onclick="showTab('list')">‹</button>
@@ -1183,7 +1313,6 @@
         </div>
         <div class="refresh-info" id="refresh-info">—</div>
       </div>
-
       <div class="detail-image-wrap">
         <img id="detail-img" alt="Camera feed" />
         <div class="img-overlay" id="img-overlay">
@@ -1196,7 +1325,6 @@
         <button class="detail-nav" id="nav-prev" onclick="navigateCamera(-1)">‹</button>
         <button class="detail-nav" id="nav-next" onclick="navigateCamera(1)">›</button>
       </div>
-
       <div class="detail-meta">
         <div class="meta-item">
           <div class="meta-label">Direction</div>
@@ -1211,7 +1339,6 @@
           <div class="meta-value" id="meta-status">—</div>
         </div>
       </div>
-
       <div class="detail-controls">
         <button class="ctrl-btn" onclick="toggleAutoRefresh()">⟳ <span id="auto-label">Auto: ON</span></button>
         <button class="ctrl-btn primary" onclick="openOnGlasses()">🕶 Glasses</button>
@@ -1219,119 +1346,38 @@
       </div>
     </div>
 
-    <!-- ── SETTINGS VIEW ── -->
+    <!-- SETTINGS VIEW -->
     <div id="settings-view" class="view">
       <div class="settings-section">
         <div class="settings-title">API Keys — free at each state's 511 portal</div>
         <div class="settings-card">
-          <div class="settings-row">
-            <label>NY</label>
-            <input type="text" id="key-ny" placeholder="511NY developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NC</label>
-            <input type="text" id="key-nc" placeholder="DriveNC developer key" />
-          </div>
-          <div class="settings-row">
-            <label>PA</label>
-            <input type="text" id="key-pa" placeholder="511PA developer key" />
-          </div>
-          <div class="settings-row">
-            <label>GA</label>
-            <input type="text" id="key-ga" placeholder="511GA developer key" />
-          </div>
-          <div class="settings-row">
-            <label>FL</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
-          </div>
-          <div class="settings-row">
-            <label>IA</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
-          </div>
-          <div class="settings-row">
-            <label>WA</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span>
-          </div>
-          <div class="settings-row">
-            <label>CA</label>
-            <span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span>
-          </div>
-          <div class="settings-row">
-            <label>OH</label>
-            <input type="text" id="key-oh" placeholder="OHGo developer key" />
-          </div>
-          <div class="settings-row">
-            <label>AZ</label>
-            <input type="text" id="key-az" placeholder="AZ511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NV</label>
-            <input type="text" id="key-nv" placeholder="NVRoads developer key" />
-          </div>
-          <div class="settings-row">
-            <label>AK</label>
-            <input type="text" id="key-ak" placeholder="511 Alaska developer key" />
-          </div>
-          <div class="settings-row">
-            <label>WI</label>
-            <input type="text" id="key-wi" placeholder="511WI developer key" />
-          </div>
-          <div class="settings-row">
-            <label>UT</label>
-            <input type="text" id="key-ut" placeholder="UDOT Traffic developer key" />
-          </div>
-          <div class="settings-row">
-            <label>LA</label>
-            <input type="text" id="key-la" placeholder="511LA developer key" />
-          </div>
-          <div class="settings-row">
-            <label>ID</label>
-            <input type="text" id="key-id" placeholder="511 Idaho developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NJ</label>
-            <input type="text" id="key-nj" placeholder="511NJ developer key" />
-          </div>
-          <div class="settings-row">
-            <label>VA</label>
-            <input type="text" id="key-va" placeholder="511 Virginia developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NE</label>
-            <input type="text" id="key-ne" placeholder="511 Nebraska developer key" />
-          </div>
-          <div class="settings-row">
-            <label>KS</label>
-            <input type="text" id="key-ks" placeholder="KanDrive developer key" />
-          </div>
-          <div class="settings-row">
-            <label>VT</label>
-            <input type="text" id="key-vt" placeholder="511VT developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NH</label>
-            <input type="text" id="key-nh" placeholder="511NH developer key" />
-          </div>
-          <div class="settings-row">
-            <label>MD</label>
-            <input type="text" id="key-md" placeholder="MD511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>AL</label>
-            <input type="text" id="key-al" placeholder="AL511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>NM</label>
-            <input type="text" id="key-nm" placeholder="NMRoads developer key" />
-          </div>
-          <div class="settings-row">
-            <label>MI</label>
-            <input type="text" id="key-mi" placeholder="MI511 developer key" />
-          </div>
-          <div class="settings-row">
-            <label>SF</label>
-            <input type="text" id="key-sf" placeholder="511 SF Bay api_key" />
-          </div>
+          <div class="settings-row"><label>NY</label><input type="text" id="key-ny" placeholder="511NY developer key" /></div>
+          <div class="settings-row"><label>NC</label><input type="text" id="key-nc" placeholder="DriveNC developer key" /></div>
+          <div class="settings-row"><label>PA</label><input type="text" id="key-pa" placeholder="511PA developer key" /></div>
+          <div class="settings-row"><label>GA</label><input type="text" id="key-ga" placeholder="511GA developer key" /></div>
+          <div class="settings-row"><label>FL</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>IA</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>WA</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span></div>
+          <div class="settings-row"><label>CA</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>OH</label><input type="text" id="key-oh" placeholder="OHGo developer key" /></div>
+          <div class="settings-row"><label>AZ</label><input type="text" id="key-az" placeholder="AZ511 developer key" /></div>
+          <div class="settings-row"><label>NV</label><input type="text" id="key-nv" placeholder="NVRoads developer key" /></div>
+          <div class="settings-row"><label>AK</label><input type="text" id="key-ak" placeholder="511 Alaska developer key" /></div>
+          <div class="settings-row"><label>WI</label><input type="text" id="key-wi" placeholder="511WI developer key" /></div>
+          <div class="settings-row"><label>UT</label><input type="text" id="key-ut" placeholder="UDOT Traffic developer key" /></div>
+          <div class="settings-row"><label>LA</label><input type="text" id="key-la" placeholder="511LA developer key" /></div>
+          <div class="settings-row"><label>ID</label><input type="text" id="key-id" placeholder="511 Idaho developer key" /></div>
+          <div class="settings-row"><label>NJ</label><input type="text" id="key-nj" placeholder="511NJ developer key" /></div>
+          <div class="settings-row"><label>VA</label><input type="text" id="key-va" placeholder="511 Virginia developer key" /></div>
+          <div class="settings-row"><label>NE</label><input type="text" id="key-ne" placeholder="511 Nebraska developer key" /></div>
+          <div class="settings-row"><label>KS</label><input type="text" id="key-ks" placeholder="KanDrive developer key" /></div>
+          <div class="settings-row"><label>VT</label><input type="text" id="key-vt" placeholder="511VT developer key" /></div>
+          <div class="settings-row"><label>NH</label><input type="text" id="key-nh" placeholder="511NH developer key" /></div>
+          <div class="settings-row"><label>MD</label><input type="text" id="key-md" placeholder="MD511 developer key" /></div>
+          <div class="settings-row"><label>AL</label><input type="text" id="key-al" placeholder="AL511 developer key" /></div>
+          <div class="settings-row"><label>NM</label><input type="text" id="key-nm" placeholder="NMRoads developer key" /></div>
+          <div class="settings-row"><label>MI</label><input type="text" id="key-mi" placeholder="MI511 developer key" /></div>
+          <div class="settings-row"><label>SF</label><input type="text" id="key-sf" placeholder="511 SF Bay api_key" /></div>
         </div>
         <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
         <div class="settings-note">
@@ -1361,7 +1407,6 @@
           OH → <a href="https://publicapi.ohgo.com/docs/registration" target="_blank">publicapi.ohgo.com</a>
         </div>
       </div>
-
       <div class="settings-section">
         <div class="settings-title">Refresh Rate</div>
         <div class="settings-card">
@@ -1376,19 +1421,18 @@
           </div>
         </div>
       </div>
-
       <div class="settings-section">
         <div class="settings-title">About</div>
         <div class="settings-note">
           StateRoad.fyi — Meta Ray-Ban Display web app.<br>
           Live traffic cameras from 25 state DOT APIs.<br>
           Optimized for glasses display via Meta Wearables Toolkit.<br><br>
-          Version 1.2.0 · stateroad.fyi
+          Version 2.0.0 · stateroad.fyi
         </div>
       </div>
     </div>
 
-    <!-- ── WEATHER / ROAD CONDITIONS VIEW ── -->
+    <!-- WEATHER / ROAD CONDITIONS VIEW -->
     <div id="weather-view" class="view">
       <div style="padding:10px;">
         <div class="weather-header">
@@ -1410,7 +1454,7 @@
 
   </div><!-- /content -->
 
-  <!-- ── Bottom Tab Bar ─────────────────────────────────────────── -->
+  <!-- Bottom Tab Bar -->
   <nav class="tab-bar" id="tab-bar">
     <button class="tab-btn active" id="tab-cameras" onclick="showTab('list')">
       <span class="tab-icon">📷</span>
@@ -1428,6 +1472,33 @@
 
 </div><!-- /app -->
 
+<!-- Region Bottom Sheet -->
+<div id="region-sheet" class="sheet-overlay hidden" onclick="if(event.target===this)hideRegionSheet()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Select Region</span>
+      <button class="sheet-close" onclick="hideRegionSheet()">✕</button>
+    </div>
+    <div id="region-tiles" class="region-tiles-grid"></div>
+  </div>
+</div>
+
+<!-- City Bottom Sheet -->
+<div id="city-sheet" class="sheet-overlay hidden" onclick="if(event.target===this)hideCitySheet()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Search City / Area</span>
+      <button class="sheet-close" onclick="hideCitySheet()">✕</button>
+    </div>
+    <div class="city-search-wrap">
+      <input id="city-search" type="text" placeholder="🔍  Search city, county, area…" oninput="filterByCitySearch()" autocomplete="off">
+    </div>
+    <div id="city-list" class="city-list"></div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -1436,31 +1507,31 @@ const STATE_CONFIGS = {
   ny: { label: 'New York',      endpoint: '/api/cameras/ny', keyParam: 'key' },
   nc: { label: 'N. Carolina',   endpoint: '/api/cameras/nc', keyParam: 'key' },
   pa: { label: 'Pennsylvania',  endpoint: '/api/cameras/pa', keyParam: 'key' },
-  ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key', noKey: true },  // GDOT public ArcGIS
+  ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key', noKey: true },
   fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
   ia: { label: 'Iowa',          endpoint: '/api/cameras/ia', keyParam: 'key', noKey: true },
-  wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },  // WSDOT key stored server-side
-  ca: { label: 'California',    endpoint: '/api/cameras/ca', keyParam: 'key', noKey: true },  // Caltrans CWWP2 – no key, 12 districts
+  wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },
+  ca: { label: 'California',    endpoint: '/api/cameras/ca', keyParam: 'key', noKey: true },
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key' },
-  nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key', noKey: true },  // nvroads.com — key server-side NV_KEY
-  ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key', noKey: true },  // AK_KEY stored server-side
-  sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key', noKey: true },  // 511.org — api_key stored server-side as SF_KEY
-  oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', keyParam: 'key' },  // OHGo — api-key param, key in localStorage
+  nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key', noKey: true },
+  ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key', noKey: true },
+  sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key', noKey: true },
+  oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', keyParam: 'key' },
   wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key' },
   ut: { label: 'Utah',          endpoint: '/api/cameras/ut', keyParam: 'key' },
   la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
   id: { label: 'Idaho',         endpoint: '/api/cameras/id', keyParam: 'key' },
   nj: { label: 'New Jersey',    endpoint: '/api/cameras/nj', keyParam: 'key' },
-  va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key', noKey: true },  // VDOT public GeoJSON
+  va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key', noKey: true },
   ne: { label: 'Nebraska',      endpoint: '/api/cameras/ne', keyParam: 'key' },
   ks: { label: 'Kansas',        endpoint: '/api/cameras/ks', keyParam: 'key' },
   vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', keyParam: 'key' },
   nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', keyParam: 'key' },
-  md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key', noKey: true },  // CHART public ArcGIS – HLS streams
+  md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key', noKey: true },
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
   nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
-  il: { label: 'Illinois',      endpoint: '/api/cameras/il', keyParam: 'key', noKey: true },  // IDOT public ArcGIS
+  il: { label: 'Illinois',      endpoint: '/api/cameras/il', keyParam: 'key', noKey: true },
   hi: { label: 'Hawaii',        endpoint: '/api/cameras/hi', keyParam: 'key', noKey: true },
 };
 
@@ -1471,7 +1542,7 @@ let filteredCameras = [];
 const BATCH_SIZE = 100;
 let displayedCount = BATCH_SIZE;
 let selectedStates = new Set();
-let selectedFilter = { source: null, value: null }; // { source:'fl'|'ia', value:'COUNTY/REGION' }
+let selectedFilter = { source: null, value: null };
 let currentCameraIndex = -1;
 let autoRefreshEnabled = true;
 let refreshTimer = null;
@@ -1483,7 +1554,6 @@ let gridView = true;
 window.addEventListener('DOMContentLoaded', () => {
   buildDropdown();
   loadSettings();
-  // close dropdown when clicking outside
   document.addEventListener('click', e => {
     if (ddOpen && !document.getElementById('state-selector-wrap').contains(e.target)) closeDropdown();
   });
@@ -1513,7 +1583,7 @@ function saveKeys() {
   showTab('list');
 }
 
-// ─── State Selector Dropdown ────────────────────────────────────────
+// ─── State Selector (kept for JS compatibility) ─────────────────────
 const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
@@ -1660,19 +1730,17 @@ function showTab(name) {
 async function loadSelectedStates() {
   const states = [...selectedStates];
   if (states.length === 0) {
-    showEmptyState('🗺', 'No States Selected', 'Tap "🗺 States" to choose which states to load.');
+    showEmptyState('🛣️', 'No States Selected', 'Tap REGION to browse by area, or ALL STATES to load everything.');
     setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
     updateLiveBadge(0);
     return;
   }
 
-  // noKey states (e.g. FL public ArcGIS) are always ready; others need a stored key
   const noKeyStates   = states.filter(s => STATE_CONFIGS[s]?.noKey);
   const keyedStates   = states.filter(s => !STATE_CONFIGS[s]?.noKey);
   const statesWithKeys = keyedStates.filter(s => localStorage.getItem(`apikey_${s}`));
   const statesNoKey    = keyedStates.filter(s => !localStorage.getItem(`apikey_${s}`));
 
-  // States we can actually load = noKey states + keyed states that have a key
   const loadable = [...noKeyStates, ...statesWithKeys];
 
   if (loadable.length === 0) {
@@ -1696,7 +1764,6 @@ async function loadSelectedStates() {
       const endpoint = STATE_CONFIGS[state].endpoint;
       let url;
       if (STATE_CONFIGS[state].noKey) {
-        // Public endpoint — server handles params, no key forwarded
         url = endpoint;
       } else {
         const apiKey = localStorage.getItem(`apikey_${state}`);
@@ -1718,20 +1785,18 @@ async function loadSelectedStates() {
   });
 
   cameras = allCams;
-  selectedFilter = { source: null, value: null }; // reset filter on each fresh load
-  displayedCount = BATCH_SIZE; // reset pagination on each fresh load
+  selectedFilter = { source: null, value: null };
+  displayedCount = BATCH_SIZE;
   buildFlFilterBar();
   filteredCameras = cameras;
   const filterQ = document.getElementById('search-input').value;
   if (filterQ) filterCameras(); else renderGrid(filteredCameras);
 
-  // Fire weather stations fetch async — badges appear once data returns
   weatherData = {};
   (async () => {
     const wStates = loadable.filter(s => WEATHER_STATES.has(s));
     if (!wStates.length) return;
     await Promise.allSettled(wStates.map(s => loadWeatherForState(s)));
-    // Re-render grid to show surface badges, and populate weather view
     const q = document.getElementById('search-input').value;
     q ? filterCameras() : renderGrid(filteredCameras);
     renderWeatherView();
@@ -1745,17 +1810,14 @@ async function loadSelectedStates() {
   updateLiveBadge(allCams.length);
 }
 
-// legacy alias kept for any inline callers
 function loadCameras(state) { loadSelectedStates(); }
 
 // ─── Normalize 511 camera data ──────────────────────────────────────
 function normalizeCameras(state, data) {
-  // Washington — WSDOT GetCamerasAsJson format (direct array with WSDOT field names)
   if (state === 'wa' && Array.isArray(data)) {
     return data
       .filter(cam => cam.IsActive !== false)
       .filter(cam => {
-        // Strip WSDOT Aviation airport cameras — not road cameras
         const roadName = (cam.CameraLocation && cam.CameraLocation.RoadName) || '';
         return roadName.toLowerCase() !== 'airports';
       })
@@ -1776,7 +1838,6 @@ function normalizeCameras(state, data) {
       });
   }
 
-  // Ohio — OHGo API format: { results: [ { id, location, description, latitude, longitude, cameraViews: [{direction, largeUrl, smallUrl, mainRoute}] } ] }
   if (state === 'oh' && data && data.results) {
     return data.results.flatMap((cam, i) => {
       const views = cam.cameraViews || cam.camera_views || [];
@@ -1796,7 +1857,6 @@ function normalizeCameras(state, data) {
     });
   }
 
-  // California — Caltrans CWWP2: { data: [{ cctv: { location, inService, imageData.static.currentImageURL } }] }
   if (state === 'ca' && data && data.data) {
     return data.data
       .filter(item => item.cctv && item.cctv.inService === 'true')
@@ -1804,7 +1864,6 @@ function normalizeCameras(state, data) {
         const cam = item.cctv;
         const loc = cam.location || {};
         const staticImg = (cam.imageData && cam.imageData.static) || {};
-        // locationName like "TV102 -- I-580 : West of SR-24"
         const parts = (loc.locationName || '').split(' -- ');
         return {
           id:        `ca-d${loc.district || 0}-${i}`,
@@ -1839,7 +1898,6 @@ function normalizeCameras(state, data) {
     });
   }
 
-  // Virginia VDOT public GeoJSON FeatureCollection (coordinates=[lon,lat], properties.*)
   if (state === 'va' && data && data.features) {
     return data.features
       .filter(f => f.properties?.active !== false)
@@ -1861,7 +1919,6 @@ function normalizeCameras(state, data) {
       });
   }
 
-  // Hawaii DOT ArcGIS FeatureServer format (OBJECTID, Camera_Description, camerastill, geometry)
   if (state === 'hi' && data && data.features) {
     return data.features.map((f, i) => {
       const a   = f.attributes || {};
@@ -1881,16 +1938,12 @@ function normalizeCameras(state, data) {
     });
   }
 
-
-  // Georgia GDOT public ArcGIS (geometry already converted to WGS84 by server)
-  // Fields: cctv_id, route, location_description, url (snapshot JPG), dir, county, geometry.x=lon, geometry.y=lat
   if (state === 'ga' && data && data.features) {
     return data.features
       .filter(f => f.attributes?.cctv_id || f.attributes?.OBJECTID)
       .map((f, i) => {
         const a   = f.attributes || {};
         const geo = f.geometry   || {};
-        // navigator-c2c.dot.ga.gov is IP-restricted from Railway — load image directly from browser (HTTPS, no proxy)
         return {
           id:       a.cctv_id || a.OBJECTID || i,
           road:     a.route || '—',
@@ -1907,8 +1960,6 @@ function normalizeCameras(state, data) {
       });
   }
 
-  // Illinois IDOT public ArcGIS (x=lon, y=lat already WGS84)
-  // Fields: OBJECTID, CameraLocation, CameraDirection, SnapShot, x (lon), y (lat)
   if (state === 'il' && data && data.features) {
     return data.features
       .map((f, i) => {
@@ -1928,8 +1979,6 @@ function normalizeCameras(state, data) {
       });
   }
 
-  // Nevada nvroads.com — JSON array, Views[0].Url is the public snapshot image
-  // Fields: Id, Roadway, Direction, Latitude, Longitude, Views[{Id,Url,Status,Description,VideoUrl}]
   if (state === 'nv' && Array.isArray(data)) {
     return data
       .filter(c => c.Views?.[0]?.Status === 'Enabled')
@@ -1947,8 +1996,6 @@ function normalizeCameras(state, data) {
       }));
   }
 
-  // Maryland CHART ArcGIS — fields: ID, location, hlsurl, CCTVPublicURL, Latitude, Longitude
-  // imageUrl stores hlsurl (.m3u8); card template and detail view handle HLS playback
   if (state === 'md' && data && data.features) {
     return data.features
       .filter(f => f.attributes?.hlsurl)
@@ -1970,7 +2017,6 @@ function normalizeCameras(state, data) {
       });
   }
 
-  // Iowa DOT ArcGIS FeatureServer format
   if (state === 'ia' && data && data.features) {
     return data.features.map((f, i) => {
       const a = f.attributes || {};
@@ -1989,7 +2035,6 @@ function normalizeCameras(state, data) {
     });
   }
 
-  // FL ArcGIS FeatureServer format
   if (data && data.features) {
     return data.features.map((f, i) => {
       const a = f.attributes || {};
@@ -2008,7 +2053,6 @@ function normalizeCameras(state, data) {
     });
   }
 
-  // SF Bay 511 format
   if (data && data.CCTV) {
     return data.CCTV.map((cam, i) => ({
       id: cam['@id'] || i,
@@ -2032,7 +2076,6 @@ function renderGrid(cams) {
   const badge = document.getElementById('count-badge');
 
   if (!cams.length) {
-    // SF Bay specific: 511.org has no cameras endpoint; point user to CA
     const sfOnly = selectedStates.size === 1 && selectedStates.has('sf');
     if (sfOnly) {
       showEmptyState('🌉', 'SF Bay Area — No Camera Feed', 'The 511 SF Bay API has no cameras endpoint. Bay Area freeway cameras are included in the CA (California) state feed.');
@@ -2084,7 +2127,7 @@ function renderGrid(cams) {
   if (remaining > 0) {
     grid.insertAdjacentHTML('beforeend', `
       <div style="grid-column:1/-1;text-align:center;padding:20px 0 8px">
-        <button onclick="loadMoreCameras()" style="background:#F5C318;color:#111;border:none;border-radius:6px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em">
+        <button onclick="loadMoreCameras()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em;box-shadow:0 0 12px rgba(255,0,110,0.3)">
           Load ${Math.min(BATCH_SIZE, remaining)} more &nbsp;&#8250;&nbsp; ${remaining} remaining
         </button>
       </div>`);
@@ -2125,7 +2168,6 @@ function updateDetailImage(cam) {
   const overlay = document.getElementById('img-overlay');
   const wrap    = document.getElementById('detail-image-wrap') || img.parentElement;
 
-  // Remove any existing HLS video element
   const oldVid = document.getElementById('detail-video');
   if (oldVid) {
     if (oldVid._hls) { oldVid._hls.destroy(); oldVid._hls = null; }
@@ -2139,7 +2181,6 @@ function updateDetailImage(cam) {
     return;
   }
 
-  // HLS stream (.m3u8) — render <video> instead of <img>
   if (cam.imageUrl.endsWith('.m3u8')) {
     img.style.display = 'none';
     overlay.classList.add('visible');
@@ -2165,20 +2206,19 @@ function updateDetailImage(cam) {
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       const hls = new Hls({
         lowLatencyMode: true,
-        startPosition: -1,          // jump straight to live edge
-        maxBufferLength: 10,        // buffer only 10 s (less wait before play)
+        startPosition: -1,
+        maxBufferLength: 10,
         maxMaxBufferLength: 20,
         manifestLoadingTimeOut: 5000,
         levelLoadingTimeOut: 5000,
         fragLoadingTimeOut: 15000,
-        liveSyncDurationCount: 2,   // stay close to live (2 segments behind)
+        liveSyncDurationCount: 2,
         liveMaxLatencyDurationCount: 5,
       });
       hls.loadSource(hlsProxied);
       hls.attachMedia(vid);
       vid._hls = hls;
     } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS — also proxy for CORS
       vid.src = hlsProxied;
     } else {
       overlay.classList.add('visible');
@@ -2187,7 +2227,6 @@ function updateDetailImage(cam) {
     return;
   }
 
-  // Standard JPEG/image feed
   overlay.classList.add('visible');
   overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
 
@@ -2234,7 +2273,6 @@ function startAutoRefresh() {
 function clearDetailTimers() {
   if (refreshTimer)   { clearInterval(refreshTimer);   refreshTimer   = null; }
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-  // Destroy any active HLS video when leaving detail view
   const vid = document.getElementById('detail-video');
   if (vid) {
     if (vid._hls) { vid._hls.destroy(); vid._hls = null; }
@@ -2277,7 +2315,6 @@ function filterCameras() {
   const q = document.getElementById('search-input').value.toLowerCase();
   filteredCameras = cameras.filter(c => {
     const textOk   = !q || c.road.toLowerCase().includes(q) || c.location.toLowerCase().includes(q);
-    // Filter by selected FL county or IA region — other sources always pass through
     const countyOk = !selectedFilter.source || c.source !== selectedFilter.source || c.county === selectedFilter.value;
     return textOk && countyOk;
   });
@@ -2318,8 +2355,7 @@ function buildFlFilterBar() {
 
 function selectCounty(btn) {
   const source = btn.dataset.source;
-  const value  = btn.dataset.county || null;  // '' → null = All
-  // Tapping "All" for a source clears the filter entirely
+  const value  = btn.dataset.county || null;
   selectedFilter = value ? { source, value } : { source: null, value: null };
   buildFlFilterBar();
   filterCameras();
@@ -2365,7 +2401,6 @@ function openOnGlasses() {
   const encoded = encodeURIComponent(cam.imageUrl);
   const title   = encodeURIComponent(cam.road + " - " + cam.location);
   let url = "/view?url=" + encoded + "&title=" + title;
-  // FL/HI cameras: pass source + id so glasses view fetches fresh IMAGE url each cycle
   if (cam.source === 'fl' && cam.id) {
     url += "&source=fl&id=" + encodeURIComponent(cam.id);
   }
@@ -2391,7 +2426,7 @@ function showToast(msg) {
 
 // ─── Weather Stations ────────────────────────────────────────────────
 const WEATHER_STATES = new Set(['ak','ut','nv','wi','id','la','va','ne','nh','vt','ny','pa']);
-let weatherData = {}; // state → normalized stations array
+let weatherData = {};
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -2404,7 +2439,7 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 
 function nearestStationSurface(lat, lon) {
   if (!lat || !lon) return null;
-  let best = null, bestDist = 75; // km radius cutoff
+  let best = null, bestDist = 75;
   for (const stations of Object.values(weatherData)) {
     for (const s of stations) {
       if (!s.lat || !s.lon) continue;
@@ -2515,6 +2550,161 @@ function renderWeatherView() {
 function showWeather() {
   renderWeatherView();
   showTab('weather');
+}
+
+// ─── Neon Drive Filter UI ────────────────────────────────────────────
+let activeRegion = null;
+
+function filterTabAll() {
+  activeRegion = null;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.getElementById('ftab-all').classList.add('active');
+  document.getElementById('ftab-region-label').textContent = 'REGION';
+  document.getElementById('ftab-city-label').textContent = 'CITY';
+  const chipsRow = document.getElementById('state-chips-row');
+  chipsRow.classList.add('hidden');
+  chipsRow.innerHTML = '';
+  // Clear and reload all available states
+  selectedStates.clear();
+  ALL_KEYS.forEach(k => {
+    selectedStates.add(k);
+    document.getElementById('box-' + k)?.classList.add('checked');
+  });
+  renderChips();
+  loadSelectedStates();
+}
+
+function showRegionSheet() {
+  buildRegionSheet();
+  document.getElementById('region-sheet').classList.remove('hidden');
+}
+
+function hideRegionSheet() {
+  document.getElementById('region-sheet').classList.add('hidden');
+}
+
+function buildRegionSheet() {
+  const container = document.getElementById('region-tiles');
+  const regionIcons = {
+    'Northeast': '🏙',
+    'Southeast': '🌴',
+    'Midwest':   '🌾',
+    'West':      '🏔',
+    'Special':   '🌉',
+  };
+  container.innerHTML = REGIONS.map(r => {
+    const icon = regionIcons[r.label] || '📍';
+    const isActive = activeRegion === r.label;
+    return `
+      <button class="region-tile${isActive ? ' active' : ''}" onclick="selectRegion('${r.label}')">
+        <span class="region-tile-icon">${icon}</span>
+        <span class="region-tile-label">${r.label}</span>
+        <span class="region-tile-count">${r.keys.length} states</span>
+      </button>`;
+  }).join('');
+}
+
+function selectRegion(regionLabel) {
+  activeRegion = regionLabel;
+  hideRegionSheet();
+
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.getElementById('ftab-region').classList.add('active');
+  document.getElementById('ftab-region-label').textContent = regionLabel;
+
+  const region = REGIONS.find(r => r.label === regionLabel);
+  if (!region) return;
+
+  // Select all states in this region
+  selectedStates.clear();
+  ALL_KEYS.forEach(k => document.getElementById('box-' + k)?.classList.remove('checked'));
+  region.keys.forEach(k => {
+    selectedStates.add(k);
+    document.getElementById('box-' + k)?.classList.add('checked');
+  });
+  renderChips();
+
+  // Show state chips row for toggling individual states
+  const chipsRow = document.getElementById('state-chips-row');
+  chipsRow.classList.remove('hidden');
+  chipsRow.innerHTML = region.keys.map(k =>
+    `<button class="state-chip active" onclick="toggleRegionStateChip('${k}')" id="state-chip-${k}">
+      ${STATE_ABBR[k] || k.toUpperCase()}
+    </button>`
+  ).join('');
+
+  loadSelectedStates();
+}
+
+function toggleRegionStateChip(key) {
+  toggleStateCheck(key);
+  const chip = document.getElementById(`state-chip-${key}`);
+  if (chip) chip.classList.toggle('active', selectedStates.has(key));
+}
+
+// City sheet
+function showCitySheet() {
+  buildCityList();
+  document.getElementById('city-sheet').classList.remove('hidden');
+  document.getElementById('city-search').value = '';
+  document.querySelectorAll('.city-item').forEach(i => i.hidden = false);
+  setTimeout(() => document.getElementById('city-search')?.focus(), 150);
+}
+
+function hideCitySheet() {
+  document.getElementById('city-sheet').classList.add('hidden');
+}
+
+function buildCityList() {
+  const listEl = document.getElementById('city-list');
+  if (!cameras.length) {
+    listEl.innerHTML = '<div class="city-empty">Load cameras first by selecting a region or ALL STATES</div>';
+    return;
+  }
+
+  const counts = {};
+  cameras.forEach(c => {
+    const city = (c.county || '').trim();
+    if (city) counts[city] = (counts[city] || 0) + 1;
+  });
+
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  if (!sorted.length) {
+    listEl.innerHTML = '<div class="city-empty">No area data available for loaded cameras</div>';
+    return;
+  }
+
+  listEl.innerHTML = sorted.map(([city, count]) =>
+    `<button class="city-item" onclick="selectCityFilter(${JSON.stringify(city)})">
+      <span class="city-item-name">${city}</span>
+      <span class="city-item-count">${count}</span>
+    </button>`
+  ).join('');
+}
+
+function filterByCitySearch() {
+  const q = document.getElementById('city-search').value.toLowerCase();
+  document.querySelectorAll('.city-item').forEach(item => {
+    const name = item.querySelector('.city-item-name')?.textContent.toLowerCase() || '';
+    item.hidden = !!(q && !name.includes(q));
+  });
+}
+
+function selectCityFilter(city) {
+  hideCitySheet();
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.getElementById('ftab-city').classList.add('active');
+  document.getElementById('ftab-city-label').textContent = city.length > 14 ? city.slice(0, 13) + '…' : city;
+
+  // Hide region chips row when using city filter
+  document.getElementById('state-chips-row').classList.add('hidden');
+
+  filteredCameras = cameras.filter(c => (c.county || '').trim() === city);
+  displayedCount = BATCH_SIZE;
+  renderGrid(filteredCameras);
+  const count = filteredCameras.length;
+  setStatus('ok', false, `${count} CAMERAS · ${city.toUpperCase()}`);
 }
 </script>
 </body>
