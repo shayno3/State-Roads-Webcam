@@ -395,6 +395,12 @@
       margin-bottom: 8px;
     }
 
+    .search-field-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
     #search-input {
       flex: 1;
       background: var(--surface);
@@ -403,14 +409,40 @@
       color: var(--text);
       font-family: var(--font-ui);
       font-size: 13px;
-      padding: 8px 12px;
+      padding: 8px 72px 8px 12px;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
     }
     #search-input::placeholder { color: var(--muted); }
     #search-input:focus {
       border-color: var(--accent3);
       box-shadow: 0 0 8px rgba(0,245,255,0.15);
+    }
+    .search-icon-btn {
+      position: absolute;
+      right: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      color: var(--muted);
+    }
+    .search-icon-btn:hover { color: var(--accent); background: var(--accent-dim); }
+    #voice-btn { right: 34px; }
+    #search-submit-btn { right: 4px; font-size: 15px; font-weight: 700; }
+    #voice-btn.listening {
+      color: var(--accent);
+      animation: mic-pulse 1s ease-in-out infinite;
+    }
+    @keyframes mic-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.2); }
     }
 
     .count-badge {
@@ -1355,7 +1387,18 @@
     <div id="list-view" class="view active">
       <div style="padding: 10px;">
         <div class="search-row">
-          <input type="text" id="search-input" placeholder="🔍  Search road or location…" oninput="filterCameras()" />
+          <div class="search-field-wrap">
+            <input type="text" id="search-input" placeholder="🔍  State, city, or road…" oninput="filterCameras()" onkeydown="if(event.key==='Enter')submitSearch()" />
+            <button id="voice-btn" class="search-icon-btn" onclick="startVoiceSearch()" title="Voice search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="2" width="6" height="11" rx="3"/>
+                <path d="M5 10a7 7 0 0 0 14 0"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+                <line x1="9" y1="22" x2="15" y2="22"/>
+              </svg>
+            </button>
+            <button id="search-submit-btn" class="search-icon-btn" onclick="submitSearch()" title="Go">›</button>
+          </div>
         </div>
         <div class="count-badge" id="count-badge"></div>
         <div class="camera-grid" id="camera-grid">
@@ -2816,6 +2859,98 @@ function selectCityFilter(city) {
   const count = filteredCameras.length;
   setStatus('ok', false, `${count} CAMERAS · ${city.toUpperCase()}`);
 }
+
+// ── Voice Search ──────────────────────────────────────────────────────────
+function submitSearch() {
+  const q = (document.getElementById('search-input').value || '').trim();
+  if (q) handleVoiceResult(q);
+}
+
+function startVoiceSearch() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) { showToast('Voice search not supported in this browser'); return; }
+  const btn = document.getElementById('voice-btn');
+  const input = document.getElementById('search-input');
+  const rec = new SpeechRec();
+  rec.lang = 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 3;
+  btn.classList.add('listening');
+  showToast('Listening…');
+  rec.start();
+  rec.onresult = e => {
+    const text = e.results[0][0].transcript.trim();
+    input.value = text;
+    btn.classList.remove('listening');
+    setTimeout(() => handleVoiceResult(text), 600);
+  };
+  rec.onerror = e => {
+    btn.classList.remove('listening');
+    showToast('Could not hear that — try again');
+  };
+  rec.onend = () => btn.classList.remove('listening');
+}
+
+function handleVoiceResult(text) {
+  const q = text.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').trim();
+
+  // 1. State match — check full label and common aliases
+  const stateAliases = {
+    'cali': 'ca', 'new york': 'ny', 'new jersey': 'nj', 'new mexico': 'nm',
+    'north carolina': 'nc', 'north dakota': 'nd', 'south carolina': 'sc',
+    'south dakota': 'sd', 'west virginia': 'wv', 'rhode island': 'ri',
+    'new hampshire': 'nh', 'san francisco': 'sf', 'bay area': 'sf',
+    'dc': 'dc', 'washington dc': 'dc', 'hawaii': 'hi', 'alaska': 'ak',
+  };
+  let matchedKey = stateAliases[q] || null;
+  if (!matchedKey) {
+    for (const [k, cfg] of Object.entries(STATE_CONFIGS)) {
+      if (q === cfg.label.toLowerCase() || q === k) { matchedKey = k; break; }
+    }
+  }
+  if (!matchedKey) {
+    // partial: "show me california" → find state name inside spoken text
+    for (const [k, cfg] of Object.entries(STATE_CONFIGS)) {
+      if (q.includes(cfg.label.toLowerCase())) { matchedKey = k; break; }
+    }
+    for (const [alias, k] of Object.entries(stateAliases)) {
+      if (q.includes(alias)) { matchedKey = k; break; }
+    }
+  }
+  if (matchedKey) {
+    showToast('Loading ' + (STATE_CONFIGS[matchedKey]?.label || matchedKey.toUpperCase()) + '…');
+    document.getElementById('search-input').value = '';
+    selectedStates.clear();
+    ALL_KEYS.forEach(k2 => document.getElementById('box-' + k2)?.classList.remove('checked'));
+    selectedStates.add(matchedKey);
+    document.getElementById('box-' + matchedKey)?.classList.add('checked');
+    renderChips();
+    document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+    document.getElementById('ftab-all')?.classList.add('active');
+    loadSelectedStates();
+    return;
+  }
+
+  // 2. City match — if cameras loaded, check county/city names
+  if (cameras.length) {
+    const cities = [...new Set(cameras.map(c => (c.county || '').trim()).filter(Boolean))];
+    const cityMatch = cities.find(c => q.includes(c.toLowerCase()) || c.toLowerCase().includes(q));
+    if (cityMatch) {
+      showToast('Filtering: ' + cityMatch);
+      document.getElementById('search-input').value = cityMatch;
+      filteredCameras = cameras.filter(c => (c.county || '').trim() === cityMatch);
+      displayedCount = BATCH_SIZE;
+      renderGrid(filteredCameras);
+      setStatus('ok', false, `${filteredCameras.length} CAMERAS · ${cityMatch.toUpperCase()}`);
+      return;
+    }
+  }
+
+  // 3. Road/location fallback — put text in search and filter
+  showToast('Searching: ' + text);
+  filterCameras();
+}
+
 </script>
 </body>
 </html>
