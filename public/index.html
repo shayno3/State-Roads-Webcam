@@ -65,6 +65,27 @@
       z-index: 0;
     }
 
+    /* ─── Desktop responsive layout ─────────────────────────────── */
+    @media (min-width: 768px) {
+      #app {
+        max-width: 100%;
+      }
+      #app::before {
+        max-width: 100%;
+      }
+      .sheet-overlay {
+        max-width: 100%;
+      }
+      .sheet {
+        max-width: 560px;
+        margin: 0 auto;
+        border-radius: 16px 16px 0 0;
+      }
+      #camera-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      }
+    }
+
     /* ─── Header ────────────────────────────────────────────────── */
     header {
       display: flex;
@@ -1999,8 +2020,7 @@ function normalizeCameras(state, data) {
           direction:a.dir || '—',
           lat:      geo.y || 0,
           lon:      geo.x || 0,
-          imageUrl: a.url ? a.url.replace('http://', 'https://') : '',
-          noProxy:  true,
+          imageUrl: a.url || '',
           county:   a.county || '',
           status:   'active',
           source:   'ga',
