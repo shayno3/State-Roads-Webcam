@@ -451,3 +451,46 @@ Server crashed on startup with `SyntaxError: Invalid or unexpected token` at the
 - ✅ **FL, IA, HI, CA, GA, MD** — public endpoints, no key needed
 - ⚠️  **GA images** — `noProxy: true`; browser loads directly from `navigator-c2c.dot.ga.gov` (IP-restricted from Railway)
 - ⚠️  **MD** — HLS streams via `/api/hls` proxy (CORS-restricted from browser)
+
+---
+
+## v1.4.0 — Colorado COTrip Integration (2026-09-07)
+
+### Commit: `6ffef3b`
+
+### Changes
+- **`server.js`**: Added `co` to `STATE_ENDPOINTS` → `https://manage-api.cotrip.org/api/v1/cameras`
+- **`server.js`**: Added `co` handler block — reads `process.env.COTRIP_KEY`, passes as `?apiKey=` query param
+- **`server.js`**: Added `co` bbox to `STATE_BBOX` for Windy webcams (`ne:[41,-102], sw:[37,-109.1]`)
+- **`public/index.html`**: Added `co: { label: 'Colorado', endpoint: '/api/cameras/co', noKey: true }` to STATE_CONFIGS
+- **`public/index.html`**: Added `co:'CO'` to STATE_ABBR
+- **`public/index.html`**: Added settings row "✓ SERVER-SIDE KEY — NO INPUT NEEDED" for CO
+- **`public/index.html`**: Added CO parser in `normalizeCameras` — handles `data.data[]` with `ipCameras[]` array per cam
+
+### COTrip API
+- **Endpoint**: `https://manage-api.cotrip.org/api/v1/cameras`
+- **Auth**: `?apiKey=<key>` query param
+- **Key stored**: Railway env var `COTRIP_KEY` (never sent to browser)
+- **Registration**: `manage-api.cotrip.org`
+- **Data shape (expected)**: `{ data: [ { id, roadway, direction, location: { lat, long }, ipCameras: [{ displayName, imageUrl }] } ] }`
+- **Debug logging**: First deploy logs top-level response keys to Railway console for shape verification
+
+### Railway env vars required
+| Var | Value |
+|-----|-------|
+| `COTRIP_KEY` | `<set in Railway dashboard>` |
+| `NV_KEY` | `<set in Railway dashboard>` |
+| `AK_KEY` | (previously set) |
+| `WSDOT_KEY` | (previously set) |
+| `OH_KEY` | (previously set) |
+| `WINDY_WEBCAMS_KEY` | (previously set) |
+
+### Status after this commit
+- ✅ **CO** — server-keyed (`COTRIP_KEY`) — `noKey: true` — **requires Railway env var to be set**
+- ✅ **NM** — public endpoint, no key needed
+- ✅ **AK** — server-keyed (`AK_KEY`)
+- ✅ **WA** — server-keyed (`WSDOT_KEY`)
+- ✅ **NV** — server-keyed (`NV_KEY`)
+- ✅ **OH** — server-keyed (`OH_KEY`)
+- ✅ **FL, IA, HI, CA, GA, MD, IL, VA** — public endpoints, no key needed
+- ⚠️  **WI** — pending 511WI.gov key approval (user-input field, pending approval)

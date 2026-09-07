@@ -54,7 +54,7 @@ const STATE_ENDPOINTS = {
   md: 'https://chartimap1.sha.maryland.gov/arcgis/rest/services/CHART/Cameras/MapServer/0/query', // CHART public ArcGIS – no key needed
   al: 'https://www.al511.com/api/v2/get/cameras',
   nm: 'https://servicev5.nmroads.com/RealMapWAR/GetCameraInfo', // NMRoads public – no key needed
-  co: 'https://data.cotrip.org/api/v1/cameras',                  // COTrip – COTRIP_KEY env var, apiKey param
+  co: 'https://manage-api.cotrip.org/api/v1/cameras',                  // COTrip – COTRIP_KEY env var, apiKey param
   mi: 'https://www.mi511.org/api/v2/get/cameras',
 };
 
