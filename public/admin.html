@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StateRoad Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ── Tokens ────────────────────────────────────────────────────────── */
+:root {
+  --bg:   #060d1f;
+  --s1:   #0d1b35;
+  --s2:   #162845;
+  --s3:   #1f3a5f;
+  --ac:   #22d3ee;
+  --adim: rgba(34,211,238,0.10);
+  --vi:   #a78bfa;
+  --vdim: rgba(167,139,250,0.12);
+  --ok:   #4ade80;
+  --er:   #f87171;
+  --am:   #fbbf24;
+  --tx:   #dbeafe;
+  --t2:   #7ba4c9;
+  --t3:   #3d5a7a;
+  --ff:   'Space Grotesk', system-ui, sans-serif;
+  --fm:   'JetBrains Mono', monospace;
+  --r:    8px;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f0f4f8;--s1:#ffffff;--s2:#e8f0f8;--s3:#c8d8ec;
+    --ac:#0891b2;--adim:rgba(8,145,178,0.10);
+    --vi:#7c3aed;--vdim:rgba(124,58,237,0.10);
+    --ok:#16a34a;--er:#dc2626;--am:#d97706;
+    --tx:#0f1c30;--t2:#3d5a7a;--t3:#8dacc8;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#f0f4f8;--s1:#ffffff;--s2:#e8f0f8;--s3:#c8d8ec;
+  --ac:#0891b2;--adim:rgba(8,145,178,0.10);
+  --vi:#7c3aed;--vdim:rgba(124,58,237,0.10);
+  --ok:#16a34a;--er:#dc2626;--am:#d97706;
+  --tx:#0f1c30;--t2:#3d5a7a;--t3:#8dacc8;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--ff);background:var(--bg);color:var(--tx);min-height:100vh;font-size:15px}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(34,211,238,0.08) 0%, transparent 70%);
+}
+.login-card{
+  width:100%;max-width:380px;background:var(--s1);border:1.5px solid var(--s3);
+  border-radius:16px;padding:40px 36px;
+}
+.login-card h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.login-card p{color:var(--t2);font-size:13px;margin-bottom:28px}
+
+#app{display:none;flex-direction:column;min-height:100vh}
+
+header{
+  background:var(--s1);border-bottom:1px solid var(--s3);
+  padding:0 28px;height:56px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:10;
+}
+.logo{font-weight:700;font-size:17px;color:var(--ac);letter-spacing:-.3px;flex:1}
+.badge-admin{
+  font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+  background:var(--vdim);color:var(--vi);border:1px solid rgba(167,139,250,0.3);
+  border-radius:20px;padding:3px 10px;
+}
+.hdr-user{font-size:13px;color:var(--t2)}
+.btn-logout{
+  font-size:13px;font-family:var(--ff);background:transparent;border:1px solid var(--s3);
+  color:var(--t2);border-radius:6px;padding:5px 12px;cursor:pointer;transition:all .15s;
+}
+.btn-logout:hover{border-color:var(--er);color:var(--er)}
+
+main{padding:28px;max-width:1100px;margin:0 auto;width:100%;flex:1}
+
+/* ── Stat tiles ────────────────────────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+.tile{
+  background:var(--s1);border:1.5px solid var(--s3);border-radius:var(--r);
+  padding:20px 22px;
+}
+.tile-label{font-size:12px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.tile-val{font-size:32px;font-weight:700;font-family:var(--fm);color:var(--ac)}
+.tile-val.green{color:var(--ok)}
+.tile-val.violet{color:var(--vi)}
+
+/* ── Section header ────────────────────────────────────────────────── */
+.section{margin-bottom:36px}
+.section-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.section-hdr h2{font-size:16px;font-weight:600}
+
+/* ── Search ────────────────────────────────────────────────────────── */
+.search-wrap{position:relative}
+.search-wrap input{
+  width:240px;background:var(--s2);border:1px solid var(--s3);
+  border-radius:6px;padding:7px 12px 7px 34px;color:var(--tx);
+  font-size:14px;font-family:var(--ff);outline:none;transition:border-color .15s;
+}
+.search-wrap input:focus{border-color:var(--ac)}
+.search-wrap::before{
+  content:'⌕';position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  color:var(--t3);font-size:16px;pointer-events:none;
+}
+
+/* ── Table ─────────────────────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--s3)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{
+  background:var(--s2);color:var(--t2);font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;
+  border-bottom:1px solid var(--s3);white-space:nowrap;
+}
+td{
+  padding:11px 14px;border-bottom:1px solid var(--s2);vertical-align:middle;
+  font-variant-numeric:tabular-nums;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--adim)}
+.mono{font-family:var(--fm);font-size:13px}
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;border-radius:20px;padding:2px 8px;
+}
+.pill-admin{background:var(--vdim);color:var(--vi);border:1px solid rgba(167,139,250,0.3)}
+.pill-user {background:var(--adim);color:var(--ac);border:1px solid rgba(34,211,238,0.2)}
+.states-list{
+  display:flex;flex-wrap:wrap;gap:4px;max-width:260px;
+}
+.state-chip{
+  font-size:10px;font-weight:600;font-family:var(--fm);
+  background:var(--s2);border:1px solid var(--s3);color:var(--t2);
+  border-radius:4px;padding:1px 5px;
+}
+.no-states{color:var(--t3);font-style:italic;font-size:12px}
+.btn-del{
+  font-family:var(--ff);font-size:12px;font-weight:600;
+  background:transparent;border:1px solid rgba(248,113,113,0.3);
+  color:var(--er);border-radius:6px;padding:4px 10px;cursor:pointer;transition:all .15s;
+}
+.btn-del:hover{background:rgba(248,113,113,0.12);border-color:var(--er)}
+
+/* ── Top states ─────────────────────────────────────────────────────── */
+.state-bars{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{font-family:var(--fm);font-size:13px;font-weight:600;width:32px;flex-shrink:0}
+.bar-track{flex:1;background:var(--s2);border-radius:4px;height:10px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--vi));border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bar-count{font-family:var(--fm);font-size:12px;color:var(--t2);width:28px;text-align:right;flex-shrink:0}
+
+/* ── Forms / inputs ─────────────────────────────────────────────────── */
+label{display:block;font-size:13px;color:var(--t2);margin-bottom:6px;font-weight:500}
+input.field{
+  width:100%;background:var(--s2);border:1.5px solid var(--s3);border-radius:8px;
+  padding:10px 14px;color:var(--tx);font-size:15px;font-family:var(--ff);
+  outline:none;transition:border-color .15s;margin-bottom:16px;
+}
+input.field:focus{border-color:var(--ac)}
+.btn-primary{
+  width:100%;background:var(--ac);color:#000;font-family:var(--ff);font-size:15px;
+  font-weight:700;border:none;border-radius:8px;padding:12px;cursor:pointer;
+  transition:opacity .15s;margin-top:4px;
+}
+.btn-primary:hover{opacity:.88}
+.err-msg{color:var(--er);font-size:13px;margin-top:-8px;margin-bottom:12px;display:none}
+.err-msg.show{display:block}
+
+/* ── Empty ─────────────────────────────────────────────────────────── */
+.empty{padding:48px;text-align:center;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<!-- ── Login screen ───────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>StateRoad Admin</h1>
+    <p>Sign in with your admin account to continue.</p>
+    <label>Email</label>
+    <input class="field" id="l-email" type="email" placeholder="shayno3@gmail.com" autocomplete="username">
+    <label>Password</label>
+    <input class="field" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <div class="err-msg" id="l-err"></div>
+    <button class="btn-primary" id="l-submit" onclick="doLogin()">Sign In</button>
+    <div id="pin-wrap" style="display:none;margin-top:20px;border-top:1px solid var(--s3);padding-top:20px">
+      <label>Enter your 6-digit PIN</label>
+      <input class="field" id="l-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••">
+      <button class="btn-primary" onclick="doPin()">Verify PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── App shell ──────────────────────────────────────────────────────── -->
+<div id="app">
+  <header>
+    <span class="logo">StateRoad.fyi</span>
+    <span class="badge-admin">Admin</span>
+    <span class="hdr-user" id="hdr-user"></span>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </header>
+  <main>
+    <!-- Stat tiles -->
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-label">Total Users</div>
+        <div class="tile-val" id="stat-users">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">States Tracked</div>
+        <div class="tile-val violet" id="stat-states">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Top State</div>
+        <div class="tile-val green" id="stat-top">—</div>
+      </div>
+    </div>
+
+    <!-- Top states chart -->
+    <div class="section">
+      <div class="section-hdr"><h2>State Popularity</h2></div>
+      <div class="state-bars" id="state-bars"></div>
+    </div>
+
+    <!-- Users table -->
+    <div class="section">
+      <div class="section-hdr">
+        <h2>Users</h2>
+        <div class="search-wrap">
+          <input id="search" type="search" placeholder="Search email or name…" oninput="filterUsers()">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Selected States</th>
+              <th>Joined</th>
+              <th>Last Login</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────
+const API = '/api'; // same origin
+let token    = localStorage.getItem('sr_admin_token') || '';
+let preToken = '';
+let allUsers = [];
+
+// Auto-restore session
+if (token) initApp();
+
+// ── Auth ───────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  setErr('l-err', '');
+  try {
+    const r = await apiFetch('/auth/login', 'POST', { email, password: pass });
+    preToken = r.preToken;
+    document.getElementById('pin-wrap').style.display = 'block';
+    document.getElementById('l-pin').focus();
+  } catch (e) {
+    setErr('l-err', e.message || 'Login failed');
+  }
+}
+
+async function doPin() {
+  const pin = document.getElementById('l-pin').value.trim();
+  setErr('l-err', '');
+  try {
+    const r = await apiFetch('/auth/verify-pin', 'POST', { preToken, pin });
+    if (!r.user.is_admin) { setErr('l-err', 'Not an admin account'); return; }
+    token = r.token;
+    localStorage.setItem('sr_admin_token', token);
+    initApp();
+  } catch (e) {
+    setErr('l-err', e.message || 'PIN incorrect');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('pin-wrap').style.display !== 'none') doPin();
+    else if (!preToken) doLogin();
+  }
+});
+
+function logout() {
+  token = ''; preToken = '';
+  localStorage.removeItem('sr_admin_token');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pin-wrap').style.display = 'none';
+  document.getElementById('l-pass').value = '';
+  document.getElementById('l-pin').value = '';
+}
+
+// ── App init ───────────────────────────────────────────────────────────
+async function initApp() {
+  try {
+    const me = await apiFetch('/auth/me', 'GET');
+    if (!me.user.is_admin) { logout(); return; }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('hdr-user').textContent = me.user.email;
+    loadData();
+  } catch {
+    logout();
+  }
+}
+
+async function loadData() {
+  const [users, stats] = await Promise.all([
+    apiFetch('/admin/users', 'GET'),
+    apiFetch('/admin/stats', 'GET')
+  ]);
+  allUsers = users;
+  renderStats(stats);
+  renderUsers(allUsers);
+}
+
+// ── Render stats ───────────────────────────────────────────────────────
+function renderStats(stats) {
+  document.getElementById('stat-users').textContent  = stats.totalUsers;
+  document.getElementById('stat-states').textContent = stats.topStates.length;
+  document.getElementById('stat-top').textContent    = stats.topStates[0]?.state || '—';
+
+  const max = stats.topStates[0]?.count || 1;
+  document.getElementById('state-bars').innerHTML = stats.topStates.length
+    ? stats.topStates.map(({state, count}) => `
+        <div class="bar-row">
+          <span class="bar-label">${esc(state)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/max*100)}%"></div></div>
+          <span class="bar-count">${count}</span>
+        </div>`).join('')
+    : '<div class="empty">No state preferences saved yet.</div>';
+}
+
+// ── Render users ───────────────────────────────────────────────────────
+function renderUsers(users) {
+  const tbody = document.getElementById('users-tbody');
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No users yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => `
+    <tr data-id="${u.id}">
+      <td class="mono">${u.id}</td>
+      <td>${esc(u.name)}</td>
+      <td class="mono">${esc(u.email)}</td>
+      <td>
+        <span class="pill ${u.is_admin ? 'pill-admin' : 'pill-user'}">
+          ${u.is_admin ? '★ admin' : 'user'}
+        </span>
+      </td>
+      <td>
+        ${u.selectedStates.length
+          ? `<div class="states-list">${u.selectedStates.map(s=>`<span class="state-chip">${esc(s)}</span>`).join('')}</div>`
+          : '<span class="no-states">none saved</span>'}
+      </td>
+      <td class="mono">${fmtDate(u.created_at)}</td>
+      <td class="mono">${u.last_login ? fmtDate(u.last_login) : '—'}</td>
+      <td>
+        ${u.is_admin ? '' : `<button class="btn-del" onclick="deleteUser(${u.id}, '${esc(u.email)}')">Delete</button>`}
+      </td>
+    </tr>`).join('');
+}
+
+function filterUsers() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    u.email.toLowerCase().includes(q) || u.name.toLowerCase().includes(q)
+  );
+  renderUsers(filtered);
+}
+
+async function deleteUser(id, email) {
+  if (!confirm(`Delete user "${email}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/admin/users/${id}`, 'DELETE');
+    allUsers = allUsers.filter(u => u.id !== id);
+    renderUsers(allUsers);
+    loadData(); // refresh stats
+  } catch (e) {
+    alert(e.message || 'Delete failed');
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+async function apiFetch(path, method, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function setErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+</script>
+</body>
+</html>

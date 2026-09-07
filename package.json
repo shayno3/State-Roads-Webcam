@@ -1,6 +1,6 @@
 {
   "name": "roadcams-glasses",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Meta Ray-Ban Display web app for viewing state road cameras via free 511 DOT APIs",
   "main": "server.js",
   "scripts": {
@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "axios": "^1.7.2",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "better-sqlite3": "^11.1.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
@@ -17,6 +20,12 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["meta-rayban", "traffic-cameras", "511", "dot-api", "wearables"],
+  "keywords": [
+    "meta-rayban",
+    "traffic-cameras",
+    "511",
+    "dot-api",
+    "wearables"
+  ],
   "license": "MIT"
 }

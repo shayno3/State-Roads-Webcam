@@ -502,3 +502,72 @@ Server crashed on startup with `SyntaxError: Invalid or unexpected token` at the
 - ✅ **OH** — server-keyed (`OH_KEY`)
 - ✅ **FL, IA, HI, CA, GA, MD, IL, VA** — public endpoints, no key needed
 - ⚠️  **WI** — pending 511WI.gov key approval (user-input field, pending approval)
+
+---
+
+## v2.0.0 — Auth System + Admin Panel (2026-09-07)
+
+### New Files
+| File | Purpose |
+|---|---|
+| `db.js` | SQLite schema + prepared statements (better-sqlite3) |
+| `auth.js` | Auth & admin Express routers |
+| `public/admin.html` | Admin dashboard SPA (gated to shayno3@gmail.com) |
+
+### New Dependencies
+| Package | Version | Role |
+|---|---|---|
+| `bcryptjs` | ^2.4.3 | Password & PIN hashing (12 salt rounds) |
+| `jsonwebtoken` | ^9.0.2 | JWT session tokens |
+| `better-sqlite3` | ^11.1.2 | Embedded SQLite (sync API) |
+
+### Railway Env Vars (added to Dashboard → Variables)
+| Var | Value |
+|---|---|
+| `JWT_SECRET` | 64-char hex string (already set) |
+| `JWT_EXPIRES_IN` | `7d` |
+| `ADMIN_EMAIL` | `shayno3@gmail.com` |
+| `DB_PATH` | `/data/stateroad.db` (set; add Railway Volume at /data to persist) |
+
+### Auth Flow
+- **Register**: POST `/api/auth/register` → `{ name, email, password, pin }`
+- **Login step 1**: POST `/api/auth/login` → email+password → `preToken` (5 min TTL)
+- **Login step 2**: POST `/api/auth/verify-pin` → preToken+PIN → full JWT + selectedStates
+- **Preferences**: PUT `/api/auth/preferences` → `{ selectedStates: ["CO", "WY"] }`
+- **Change PIN**: POST `/api/auth/change-pin` → `{ currentPin, newPin }`
+- **Reset PIN**: POST `/api/auth/reset-pin-request` → email (link logged to Railway console until email provider wired)
+
+### Admin Panel
+- URL: `stateroad.fyi/admin`
+- Requires admin JWT (email must match `ADMIN_EMAIL`)
+- Features: total users tile, top-states bar chart, searchable user table with state chips, delete user (admin account protected from deletion)
+
+### Database Schema
+```sql
+users(id, name, email, pass_hash, pin_hash, is_admin, created_at, last_login)
+user_preferences(user_id FK, selected_states JSON, updated_at)
+pin_reset_tokens(id, user_id FK, token, expires_at, used, created_at)
+```
+
+### Security Notes
+- Passwords: bcrypt 12 rounds
+- PINs: bcrypt 12 rounds (never stored plain)
+- Reset tokens: 32-byte random hex, 15-min expiry, single-use
+- API keys: still Railway env vars only — unchanged from v1.x directive
+
+### Volume Note
+- Railway Volume wizard had UI issues; volume not confirmed created
+- db.js now includes `fs.mkdirSync(DB_DIR, { recursive: true })` as safety net
+- **Manual step**: In Railway Dashboard → stateroad project → canvas → Add → Volume → attach to State-Roads-Webcam → mount path `/data`
+- Without the volume, SQLite DB resets on each Railway redeploy (data not persisted)
+
+### Railway Env Var Added (2026-09-07)
+| Var | Notes |
+|---|---|
+| `TX_KEY` | DriveTexas WZDX highway feed API key — feed URL: `https://api.drivetexas.org/api/conditions.wzdx.geojson?key=<TX_KEY>` |
+
+### Volume Status Update (2026-09-07)
+- Railway Volume `state-roads-webcam-volume` **CONFIRMED CREATED** — mounted at `/data`
+- Server startup logs verified: "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/..." — Active status, no errors
+- `DB_PATH=/data/stateroad.db` env var set; SQLite persists across deploys ✓
+- Manual step in previous note is **COMPLETE** — no action needed

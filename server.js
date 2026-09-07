@@ -7,8 +7,10 @@
 const express  = require('express');
 const axios    = require('axios');
 const path     = require('path');
+const { authRouter, adminRouter } = require('./auth');
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // ─── CORS headers for all responses ────────────────────────────────
@@ -20,6 +22,14 @@ app.use((req, res, next) => {
 
 // ─── Serve frontend ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── Auth & Admin routes ─────────────────────────────────────────────
+app.use('/api/auth',  authRouter);
+app.use('/api/admin', adminRouter);
+
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
 // ─── 511 State Camera Endpoints ─────────────────────────────────────
 
@@ -570,7 +580,7 @@ app.get('/api/hls', async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.3.10',
+    version: '2.0.0',
     states: Object.keys(STATE_ENDPOINTS),
     timestamp: new Date().toISOString(),
   });
