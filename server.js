@@ -168,13 +168,6 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'OH_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?api-key=${encodeURIComponent(ohKey)}`;
-  } else if (state === 'wi') {
-    // Wisconsin 511WI — key stored server-side as WI_KEY env var
-    const wiKey = process.env.WI_KEY;
-    if (!wiKey) {
-      return res.status(500).json({ error: 'WI_KEY environment variable not set on server' });
-    }
-    upstreamUrl = `${baseUrl}?key=${encodeURIComponent(wiKey)}`;
   } else if (state === 'nm') {
     // New Mexico — NMRoads public endpoint, no API key required
     console.log(`[cameras] NM → NMRoads GetCameraInfo (public)`);
