@@ -169,12 +169,10 @@ app.get('/api/cameras/:state', async (req, res) => {
     }
     upstreamUrl = `${baseUrl}?api-key=${encodeURIComponent(ohKey)}`;
   } else if (state === 'sf') {
-    // SF Bay Area — 511.org traffic cameras, key stored server-side as SF_KEY env var
-    const sfKey = process.env.SF_KEY;
-    if (!sfKey) {
-      return res.status(500).json({ error: 'SF_KEY environment variable not set on server' });
-    }
-    upstreamUrl = `${baseUrl}?api_key=${encodeURIComponent(sfKey)}`;
+    // SF Bay Area — 511.org only offers events/toll/WZDx; no cameras endpoint exists.
+    // Bay Area freeway cameras are covered by CA (Caltrans D4).
+    console.log('[cameras] SF → no camera feed; returning empty array');
+    return res.json([]);
   } else if (state === 'ca') {
     // Caltrans CWWP2 — 12 districts, no API key required
     const districts = [1,2,3,4,5,6,7,8,9,10,11,12];
@@ -196,8 +194,8 @@ app.get('/api/cameras/:state', async (req, res) => {
     if (!key) {
       return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
     }
-    // OHGo uses api-key, all other ibi511 states use key
-    const paramName = state === 'oh' ? 'api-key' : 'key';
+    // SF Bay uses api_key, OHGo uses api-key, all other ibi511 states use key
+    const paramName = state === 'sf' ? 'api_key' : state === 'oh' ? 'api-key' : 'key';
     upstreamUrl = `${baseUrl}?${paramName}=${encodeURIComponent(key)}`;
   }
 
