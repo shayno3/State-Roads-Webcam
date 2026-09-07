@@ -1486,7 +1486,7 @@
           <div class="settings-row"><label>MD</label><input type="text" id="key-md" placeholder="MD511 developer key" /></div>
           <div class="settings-row"><label>AL</label><input type="text" id="key-al" placeholder="AL511 developer key" /></div>
           <div class="settings-row"><label>NM</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
-          <div class="settings-row"><label>CO</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ SERVER-SIDE KEY — NO INPUT NEEDED</span></div>
+          <div class="settings-row"><label>CO</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
           <div class="settings-row"><label>MI</label><input type="text" id="key-mi" placeholder="MI511 developer key" /></div>
           <div class="settings-row"><label>SF</label><span style="font-size:11px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.5px;">NO CAMERA FEED — BAY AREA COVERED BY CA</span></div>
           <div class="settings-row"><label>HI</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
@@ -2011,38 +2011,43 @@ function normalizeCameras(state, data) {
       }));
   }
 
-  // Colorado — COTrip API (data.cotrip.org/api/v1/cameras)
-  // Response shape: { data: [ { id, roadway, direction,
-  //   location: { lat, long }, ipCameras: [{ displayName, imageUrl }] } ] }
+  // Colorado — COTrip public GeoJSON (api-511x-co.carsprogram.org/cameras/map-features)
+  // Response shape: { features: [ { type:"Feature", geometry:{ coordinates:[lon,lat] },
+  //   properties:{ id, name, route, location:{ cityReference }, cameraOwner,
+  //     views:[{ name, videoPreviewUrl, url, broken }] } } ] }
   if (state === 'co') {
-    const cams = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
-    return cams.flatMap((cam, i) => {
-      const imgs = cam.ipCameras || cam.cameras || [];
-      if (imgs.length === 0) {
-        // Camera with no image URLs — still show as a location marker
+    const features = (data && Array.isArray(data.features)) ? data.features : [];
+    return features.flatMap((feat, i) => {
+      const p    = feat.properties || {};
+      const lon  = feat.geometry?.coordinates?.[0] || 0;
+      const lat  = feat.geometry?.coordinates?.[1] || 0;
+      const views = Array.isArray(p.views) ? p.views : [];
+      if (views.length === 0) {
         return [{
-          id:       cam.id || i,
-          road:     cam.roadway || cam.highway || '—',
-          location: cam.location?.locationName || cam.name || '—',
-          direction:cam.direction || '—',
-          lat:      cam.location?.lat || 0,
-          lon:      cam.location?.long || cam.location?.lon || 0,
-          imageUrl: '',
-          status:   'active',
-          source:   'co',
+          id:        p.id || i,
+          road:      p.route || '—',
+          location:  p.location?.cityReference || p.name || '—',
+          direction: '—',
+          lat,
+          lon,
+          imageUrl:  '',
+          status:    'active',
+          source:    'co',
         }];
       }
-      return imgs.map((img, j) => ({
-        id:       `${cam.id || i}-${j}`,
-        road:     cam.roadway || cam.highway || '—',
-        location: img.displayName || cam.location?.locationName || cam.name || '—',
-        direction:cam.direction || '—',
-        lat:      cam.location?.lat || 0,
-        lon:      cam.location?.long || cam.location?.lon || 0,
-        imageUrl: img.imageUrl || img.url || '',
-        status:   'active',
-        source:   'co',
-      }));
+      return views
+        .filter(v => !v.broken)
+        .map((v, j) => ({
+          id:        `${p.id || i}-${j}`,
+          road:      p.route || '—',
+          location:  v.name || p.location?.cityReference || p.name || '—',
+          direction: '—',
+          lat,
+          lon,
+          imageUrl:  v.videoPreviewUrl || '',
+          status:    'active',
+          source:    'co',
+        }));
     });
   }
 
