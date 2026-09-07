@@ -2163,7 +2163,17 @@ function updateDetailImage(cam) {
 
     const hlsProxied = `/api/hls?url=${encodeURIComponent(cam.imageUrl)}`;
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-      const hls = new Hls({ lowLatencyMode: true });
+      const hls = new Hls({
+        lowLatencyMode: true,
+        startPosition: -1,          // jump straight to live edge
+        maxBufferLength: 10,        // buffer only 10 s (less wait before play)
+        maxMaxBufferLength: 20,
+        manifestLoadingTimeOut: 5000,
+        levelLoadingTimeOut: 5000,
+        fragLoadingTimeOut: 15000,
+        liveSyncDurationCount: 2,   // stay close to live (2 segments behind)
+        liveMaxLatencyDurationCount: 5,
+      });
       hls.loadSource(hlsProxied);
       hls.attachMedia(vid);
       vid._hls = hls;

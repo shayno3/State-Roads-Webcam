@@ -402,6 +402,13 @@ app.get('/api/camera/fl/:id', async (req, res) => {
 });
 
 // ─── Image Proxy ─────────────────────────────────────────────────────
+// ─── Image cache (server-side, 20 s TTL) ────────────────────────────
+// Keys on the upstream camera URL (without &t timestamp) so the same
+// camera served multiple times within 20 s is answered from memory.
+const imageCache = new Map();
+const IMAGE_CACHE_TTL = 20 * 1000;
+const IMAGE_CACHE_MAX = 300; // max entries before LRU eviction
+
 // GET /api/image?url=ENCODED_URL&t=TIMESTAMP
 // Fetches a camera JPEG snapshot and re-serves it with CORS headers.
 // The timestamp query param busts browser/CDN caching for live feeds.
@@ -420,6 +427,15 @@ app.get('/api/image', async (req, res) => {
     return res.status(400).send('Invalid URL scheme');
   }
 
+  // Serve from cache if fresh
+  const cached = imageCache.get(decoded);
+  if (cached && cached.expiresAt > Date.now()) {
+    res.set('Content-Type', cached.contentType);
+    res.set('Cache-Control', 'public, max-age=15');
+    res.set('X-Cache', 'HIT');
+    return res.send(cached.data);
+  }
+
   try {
     const response = await axios.get(decoded, {
       responseType: 'arraybuffer',
@@ -428,15 +444,24 @@ app.get('/api/image', async (req, res) => {
         'User-Agent': 'RoadCamsGlasses/1.0 (traffic camera viewer)',
         'Referer': decoded,           // some DOT servers check referer
       },
-      timeout: 10000,
+      timeout: 6000,
       maxRedirects: 5,
     });
 
     const contentType = response.headers['content-type'] || 'image/jpeg';
+    const data = Buffer.from(response.data);
+
+    // Evict oldest entry if cache is full
+    if (imageCache.size >= IMAGE_CACHE_MAX) {
+      imageCache.delete(imageCache.keys().next().value);
+    }
+    imageCache.set(decoded, { data, contentType, expiresAt: Date.now() + IMAGE_CACHE_TTL });
+
     res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'no-store');   // never cache live camera frames
+    res.set('Cache-Control', 'public, max-age=15');
+    res.set('X-Cache', 'MISS');
     res.set('X-Camera-Url', decoded);
-    res.send(Buffer.from(response.data));
+    res.send(data);
   } catch (err) {
     const status = err.response?.status || 502;
     console.error(`[image] proxy error ${status} for ${decoded}`);
