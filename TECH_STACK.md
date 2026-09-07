@@ -571,3 +571,35 @@ pin_reset_tokens(id, user_id FK, token, expires_at, used, created_at)
 - Server startup logs verified: "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/..." — Active status, no errors
 - `DB_PATH=/data/stateroad.db` env var set; SQLite persists across deploys ✓
 - Manual step in previous note is **COMPLETE** — no action needed
+
+---
+
+## v2.1.0 — Texas Integration (2026-09-07)
+
+### New State: Texas (tx)
+| What | Detail |
+|---|---|
+| Camera source | TxDOT ITS public API — no API key required |
+| Camera endpoint | `GET https://its.txdot.gov/its/DistrictIts/GetCctvStatusListByDistrict?districtCode={CODE}` |
+| Districts queried | 25 in parallel: ABL AMA ATL AUS BMT BWD BRY CDS CRP DAL ELP FTW HOU LRD LBB LFK ODA PAR PHR SJT SAT TYL WAC WFS YKM |
+| Snapshot URL pattern | `https://its.txdot.gov/ITS_WEB/FrontEnd/snapshots/{encodeURIComponent(name)}_{districtCode}.jpg` |
+| Conditions source | DriveTexas API (`TX_KEY` Railway env var) |
+| Conditions endpoint | `GET /api/conditions/tx` → proxies `https://api.drivetexas.org/api/conditions.geojson?key=TX_KEY` |
+| Conditions UI | `#tx-conditions-bar` banner strip shown when TX selected; hidden otherwise |
+
+### server.js Changes
+- Added `else if (state === 'tx')` handler (~line 219): parallel-fetches all 25 TxDOT districts, skips cameras without `hasSnapshot`, normalizes to standard camera object
+- Added `GET /api/conditions/tx` endpoint (~line 330): proxies DriveTexas GeoJSON conditions, uses `TX_KEY` env var
+
+### index.html Changes
+- `STATE_CONFIGS`: added `tx: { label: 'Texas', endpoint: '/api/cameras/tx', noKey: true }`
+- `ALL_KEYS`: added `'tx'`
+- `REGIONS`: added `{ label: 'South', keys: ['tx','la','al'] }` (new region before Special)
+- `STATE_ABBR`: added `tx:'TX'`
+- `normalizeCameras`: added `tx` pass-through (server pre-normalizes)
+- Added `#tx-conditions-bar` banner (amber strip, hidden until TX selected)
+- Added async conditions fetch in `loadSelectedStates` — fires when `tx` in loadable states
+
+### Security Notes
+- TX cameras: public TxDOT ITS API, no key needed, called server-side
+- TX conditions: `TX_KEY` stays server-side only, never sent to browser — per standing directive

@@ -216,6 +216,49 @@ app.get('/api/cameras/:state', async (req, res) => {
     // Bay Area freeway cameras are covered by CA (Caltrans D4).
     console.log('[cameras] SF → no camera feed; returning empty array');
     return res.json([]);
+  } else if (state === 'tx') {
+    // TxDOT ITS — public API, no API key required.
+    // TX_KEY in Railway env is for DriveTexas road conditions (WZDX feed), not cameras.
+    const TX_DISTRICTS = ['ABL','AMA','ATL','AUS','BMT','BWD','BRY','CDS','CRP','DAL',
+                          'ELP','FTW','HOU','LRD','LBB','LFK','ODA','PAR','PHR','SJT',
+                          'SAT','TYL','WAC','WFS','YKM'];
+    const TX_BASE = 'https://its.txdot.gov/its/DistrictIts/GetCctvStatusListByDistrict?districtCode=';
+    const txResults = await Promise.allSettled(
+      TX_DISTRICTS.map(async dist => {
+        const r = await fetch(TX_BASE + dist, {
+          signal: AbortSignal.timeout(10000),
+          headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' }
+        });
+        if (!r.ok) throw new Error(`${dist} HTTP ${r.status}`);
+        return { dist, data: await r.json() };
+      })
+    );
+    const txCameras = [];
+    for (const result of txResults) {
+      if (result.status !== 'fulfilled') continue;
+      const { dist, data } = result.value;
+      const roadways = data.roadwayCctvStatuses || {};
+      for (const [road, cams] of Object.entries(roadways)) {
+        for (const cam of cams) {
+          if (!cam.hasSnapshot) continue;
+          txCameras.push({
+            id:        `tx_${dist}_${cam.icd_Id || cam.name}`,
+            road:      (cam.equipLoc && cam.equipLoc.roadway) || road,
+            location:  cam.name,
+            direction: cam.dirDescription || '',
+            lat:       cam.latitude  || 0,
+            lon:       cam.longitude || 0,
+            imageUrl:  `https://its.txdot.gov/ITS_WEB/FrontEnd/snapshots/${encodeURIComponent(cam.name)}_${dist}.jpg`,
+            county:    dist,
+            status:    cam.statusDescription === 'Device Online' ? 'active' : 'inactive',
+            source:    'tx',
+          });
+        }
+      }
+    }
+    const txOk = txResults.filter(r => r.status === 'fulfilled').length;
+    console.log(`[cameras] TX → ${txCameras.length} cameras from ${txOk}/25 districts`);
+    return res.json(txCameras);
   } else if (state === 'ca') {
     // Caltrans CWWP2 — 12 districts, no API key required
     const districts = [1,2,3,4,5,6,7,8,9,10,11,12];
@@ -282,6 +325,41 @@ const STATE_WEATHER_ENDPOINTS = {
   ny: 'https://511ny.org/api/v2/get/weatherstations',
   pa: 'https://www.511pa.com/api/v2/get/weatherstations',
 };
+
+
+// ─── Texas Road Conditions (DriveTexas / TX_KEY) ────────────────────────────
+app.get('/api/conditions/tx', async (req, res) => {
+  const TX_KEY = process.env.TX_KEY;
+  if (!TX_KEY) return res.status(503).json({ error: 'TX_KEY not configured' });
+  try {
+    const r = await fetch(
+      `https://api.drivetexas.org/api/conditions.geojson?key=${TX_KEY}`,
+      { signal: AbortSignal.timeout(10000), headers: { 'Accept': 'application/json' } }
+    );
+    if (!r.ok) throw new Error(`DriveTexas HTTP ${r.status}`);
+    const data = await r.json();
+    // Pass through GeoJSON features; client filters/renders as overlay
+    const features = (data.features || []).map(f => ({
+      type:       f.type,
+      geometry:   f.geometry,
+      properties: {
+        id:          f.properties.id || f.properties.conditionID,
+        type:        f.properties.type || f.properties.conditionType,
+        description: f.properties.description || f.properties.shortDesc || '',
+        severity:    f.properties.severity || '',
+        roadway:     f.properties.roadway   || f.properties.roadName || '',
+        startTime:   f.properties.startTime || '',
+        endTime:     f.properties.endTime   || '',
+        county:      f.properties.county    || '',
+      }
+    }));
+    console.log(`[conditions] TX → ${features.length} conditions from DriveTexas`);
+    res.json({ type: 'FeatureCollection', features });
+  } catch (err) {
+    console.error('[conditions] TX error:', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
 
 app.get('/api/weather/:state', async (req, res) => {
   const { state } = req.params;
