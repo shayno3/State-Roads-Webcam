@@ -1487,7 +1487,7 @@
           <div class="settings-row"><label>AL</label><input type="text" id="key-al" placeholder="AL511 developer key" /></div>
           <div class="settings-row"><label>NM</label><input type="text" id="key-nm" placeholder="NMRoads developer key" /></div>
           <div class="settings-row"><label>MI</label><input type="text" id="key-mi" placeholder="MI511 developer key" /></div>
-          <div class="settings-row"><label>SF</label><input type="text" id="key-sf" placeholder="511 SF Bay api_key" /></div>
+          <div class="settings-row"><label>SF</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ SERVER-SIDE KEY — NO INPUT NEEDED</span></div>
           <div class="settings-row"><label>HI</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
           <div class="settings-row"><label>IL</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
         </div>
@@ -2189,7 +2189,7 @@ function renderGrid(cams) {
   if (!cams.length) {
     const sfOnly = selectedStates.size === 1 && selectedStates.has('sf');
     if (sfOnly) {
-      showEmptyState('🌉', 'SF Bay Area — No Camera Feed', 'The 511 SF Bay API has no cameras endpoint. Bay Area freeway cameras are included in the CA (California) state feed.');
+      showEmptyState('🌉', 'SF Bay Area', 'Loading SF Bay cameras…');
     } else {
       showEmptyState('📷', 'No Cameras Found', 'Try a different state or check your API key.');
     }
