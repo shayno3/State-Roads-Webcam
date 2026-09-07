@@ -161,6 +161,13 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'WSDOT_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?AccessCode=${encodeURIComponent(wsdotKey)}`;
+  } else if (state === 'oh') {
+    // OHGo — api-key stored server-side as OH_KEY env var
+    const ohKey = process.env.OH_KEY;
+    if (!ohKey) {
+      return res.status(500).json({ error: 'OH_KEY environment variable not set on server' });
+    }
+    upstreamUrl = `${baseUrl}?api-key=${encodeURIComponent(ohKey)}`;
   } else if (state === 'sf') {
     // SF Bay Area — 511.org traffic API has no cameras endpoint (only events/toll/WZDx).
     // Bay Area freeway cameras are already covered by CA (Caltrans D4).

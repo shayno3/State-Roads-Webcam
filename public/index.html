@@ -1469,7 +1469,7 @@
           <div class="settings-row"><label>IA</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
           <div class="settings-row"><label>WA</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ WSDOT — KEY STORED SERVER-SIDE</span></div>
           <div class="settings-row"><label>CA</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
-          <div class="settings-row"><label>OH</label><input type="text" id="key-oh" placeholder="OHGo developer key" /></div>
+          <div class="settings-row"><label>OH</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ SERVER-SIDE KEY — NO INPUT NEEDED</span></div>
           <div class="settings-row"><label>AZ</label><input type="text" id="key-az" placeholder="AZ511 developer key" /></div>
           <div class="settings-row"><label>NV</label><input type="text" id="key-nv" placeholder="NVRoads developer key" /></div>
           <div class="settings-row"><label>AK</label><input type="text" id="key-ak" placeholder="511 Alaska developer key" /></div>
@@ -1628,7 +1628,7 @@ const STATE_CONFIGS = {
   nv: { label: 'Nevada',        endpoint: '/api/cameras/nv', keyParam: 'key', noKey: true },
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key', noKey: true },
   sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key', noKey: true },
-  oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', keyParam: 'key' },
+  oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', noKey: true },
   wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key' },
   ut: { label: 'Utah',          endpoint: '/api/cameras/ut', keyParam: 'key' },
   la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
