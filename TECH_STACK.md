@@ -456,34 +456,42 @@ Server crashed on startup with `SyntaxError: Invalid or unexpected token` at the
 
 ## v1.4.0 — Colorado COTrip Integration (2026-09-07)
 
-### Commit: `6ffef3b`
+### Commits: `6ffef3b` (initial, wrong endpoint) → `8f19715` (fix attempt) → `813c7cf` (final fix)
 
 ### Changes
-- **`server.js`**: Added `co` to `STATE_ENDPOINTS` → `https://manage-api.cotrip.org/api/v1/cameras`
-- **`server.js`**: Added `co` handler block — reads `process.env.COTRIP_KEY`, passes as `?apiKey=` query param
+- **`server.js`**: `co` in `STATE_ENDPOINTS` → `https://api-511x-co.carsprogram.org/cameras/map-features` (public, no key)
+- **`server.js`**: CO handler — public endpoint, no `COTRIP_KEY` required, logs camera count
 - **`server.js`**: Added `co` bbox to `STATE_BBOX` for Windy webcams (`ne:[41,-102], sw:[37,-109.1]`)
-- **`public/index.html`**: Added `co: { label: 'Colorado', endpoint: '/api/cameras/co', noKey: true }` to STATE_CONFIGS
-- **`public/index.html`**: Added `co:'CO'` to STATE_ABBR
-- **`public/index.html`**: Added settings row "✓ SERVER-SIDE KEY — NO INPUT NEEDED" for CO
-- **`public/index.html`**: Added CO parser in `normalizeCameras` — handles `data.data[]` with `ipCameras[]` array per cam
+- **`public/index.html`**: `co: { label: 'Colorado', endpoint: '/api/cameras/co', noKey: true }` in STATE_CONFIGS
+- **`public/index.html`**: `co:'CO'` in STATE_ABBR
+- **`public/index.html`**: Settings row "✓ PUBLIC FEED — NO KEY NEEDED" for CO
+- **`public/index.html`**: CO parser in `normalizeCameras` — GeoJSON FeatureCollection format
 
-### COTrip API
-- **Endpoint**: `https://manage-api.cotrip.org/api/v1/cameras`
-- **Auth**: `?apiKey=<key>` query param
-- **Key stored**: Railway env var `COTRIP_KEY` (never sent to browser)
-- **Registration**: `manage-api.cotrip.org`
-- **Data shape (expected)**: `{ data: [ { id, roadway, direction, location: { lat, long }, ipCameras: [{ displayName, imageUrl }] } ] }`
-- **Debug logging**: First deploy logs top-level response keys to Railway console for shape verification
+### COTrip API (Confirmed Working)
+- **Real endpoint**: `https://api-511x-co.carsprogram.org/cameras/map-features`
+- **Auth**: None — publicly accessible
+- **Camera count**: ~1,008 cameras
+- **Discovery**: Inspected `511.cotrip.org` JS bundle; app reads layer api from config then appends `/map-features`
+- **Config source**: `https://511.cotrip.org/configs/main.json?v=1.7.2` → `layers[0].api`
+- **Data shape**: GeoJSON FeatureCollection
+  ```
+  { features: [ { type:"Feature", geometry:{ coordinates:[lon,lat] },
+    properties:{ id, name, route, cameraOwner,
+      location:{ cityReference },
+      views:[{ name, videoPreviewUrl, url(HLS), broken }] } } ] }
+  ```
+- **Normalizer**: `geometry.coordinates[0/1]` → lon/lat, `properties.route` → road, `properties.views[].videoPreviewUrl` → imageUrl, skips `broken:true` views
+- **Note**: `COTRIP_KEY` was registered at manage-api.cotrip.org but is not needed; actual data is on carsprogram.org
 
 ### Railway env vars required
 | Var | Value |
 |-----|-------|
-| `COTRIP_KEY` | `<set in Railway dashboard>` |
-| `NV_KEY` | `<set in Railway dashboard>` |
+| `NV_KEY` | set in Railway dashboard |
 | `AK_KEY` | (previously set) |
 | `WSDOT_KEY` | (previously set) |
 | `OH_KEY` | (previously set) |
 | `WINDY_WEBCAMS_KEY` | (previously set) |
+| `COTRIP_KEY` | no longer needed for CO cameras |
 
 ### Status after this commit
 - ✅ **CO** — server-keyed (`COTRIP_KEY`) — `noKey: true` — **requires Railway env var to be set**
