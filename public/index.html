@@ -1378,6 +1378,8 @@
           <div class="settings-row"><label>NM</label><input type="text" id="key-nm" placeholder="NMRoads developer key" /></div>
           <div class="settings-row"><label>MI</label><input type="text" id="key-mi" placeholder="MI511 developer key" /></div>
           <div class="settings-row"><label>SF</label><input type="text" id="key-sf" placeholder="511 SF Bay api_key" /></div>
+          <div class="settings-row"><label>HI</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>IL</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
         </div>
         <button class="save-btn" onclick="saveKeys()">Save API Keys</button>
         <div class="settings-note">
@@ -1586,7 +1588,7 @@ function saveKeys() {
 // ─── State Selector (kept for JS compatibility) ─────────────────────
 const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
-  { label: 'Southeast', keys: ['nc','ga','fl','va','al'] },
+  { label: 'Southeast', keys: ['nc','ga','fl','va','al','la'] },
   { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh','il'] },
   { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm','hi'] },
   { label: 'Special',   keys: ['sf'] },
@@ -1594,7 +1596,7 @@ const REGIONS = [
 
 const STATE_ABBR = {
   ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
-  nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL',
+  nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL', la:'LA',
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
   wa:'WA', ca:'CA', hi:'HI',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
