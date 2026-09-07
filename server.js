@@ -53,7 +53,7 @@ const STATE_ENDPOINTS = {
   nh: 'https://www.511nh.com/api/v2/get/cameras',
   md: 'https://chartimap1.sha.maryland.gov/arcgis/rest/services/CHART/Cameras/MapServer/0/query', // CHART public ArcGIS – no key needed
   al: 'https://www.al511.com/api/v2/get/cameras',
-  nm: 'https://nmroads.com/api/v2/get/cameras',
+  nm: 'https://servicev5.nmroads.com/RealMapWAR/GetCameraInfo', // NMRoads public – no key needed
   mi: 'https://www.mi511.org/api/v2/get/cameras',
 };
 
@@ -175,6 +175,20 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'WI_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?key=${encodeURIComponent(wiKey)}`;
+  } else if (state === 'nm') {
+    // New Mexico — NMRoads public endpoint, no API key required
+    console.log(`[cameras] NM → NMRoads GetCameraInfo (public)`);
+    try {
+      const response = await axios.get(baseUrl, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+        timeout: 12000,
+      });
+      return res.json(response.data);
+    } catch (err) {
+      const status = err.response?.status || 502;
+      console.error(`[cameras] NM error ${status}:`, err.message);
+      return res.status(status).json({ error: err.message });
+    }
   } else if (state === 'sf') {
     // SF Bay Area — 511.org only offers events/toll/WZDx; no cameras endpoint exists.
     // Bay Area freeway cameras are covered by CA (Caltrans D4).

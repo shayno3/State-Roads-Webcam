@@ -1485,7 +1485,7 @@
           <div class="settings-row"><label>NH</label><input type="text" id="key-nh" placeholder="511NH developer key" /></div>
           <div class="settings-row"><label>MD</label><input type="text" id="key-md" placeholder="MD511 developer key" /></div>
           <div class="settings-row"><label>AL</label><input type="text" id="key-al" placeholder="AL511 developer key" /></div>
-          <div class="settings-row"><label>NM</label><input type="text" id="key-nm" placeholder="NMRoads developer key" /></div>
+          <div class="settings-row"><label>NM</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
           <div class="settings-row"><label>MI</label><input type="text" id="key-mi" placeholder="MI511 developer key" /></div>
           <div class="settings-row"><label>SF</label><span style="font-size:11px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.5px;">NO CAMERA FEED — BAY AREA COVERED BY CA</span></div>
           <div class="settings-row"><label>HI</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
@@ -1641,7 +1641,7 @@ const STATE_CONFIGS = {
   nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', keyParam: 'key' },
   md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key', noKey: true },
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
-  nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', keyParam: 'key' },
+  nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', noKey: true },
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
   il: { label: 'Illinois',      endpoint: '/api/cameras/il', keyParam: 'key', noKey: true },
   hi: { label: 'Hawaii',        endpoint: '/api/cameras/hi', keyParam: 'key', noKey: true },
@@ -1990,6 +1990,23 @@ function normalizeCameras(state, data) {
           source:    'ca',
         };
       });
+  }
+
+  if (state === 'nm' && data && data.cameraInfo) {
+    return data.cameraInfo
+      .filter(cam => cam.enabled !== false && !cam.mobile)
+      .map((cam, i) => ({
+        id:       cam.name || i,
+        road:     (cam.title || cam.name || '—').replace(/_/g, ' '),
+        location: cam.grouping || '—',
+        direction:'—',
+        lat:      cam.lat || 0,
+        lon:      cam.lon || 0,
+        imageUrl: cam.snapshotFile || '',
+        county:   cam.grouping || '',
+        status:   'active',
+        source:   'nm',
+      }));
   }
 
   if (Array.isArray(data)) {
