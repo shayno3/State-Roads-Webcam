@@ -1124,6 +1124,52 @@
       color: var(--muted);
     }
 
+    /* ─── Region State Picker (2nd level) ───────────────────────── */
+    .region-state-picker { display:flex; flex-direction:column; gap:0; padding:0 0 12px; }
+    .region-back-btn {
+      align-self:flex-start; margin:4px 12px 8px; padding:6px 12px;
+      background:none; border:1px solid var(--border); border-radius:6px;
+      color:var(--muted); font-size:12px; font-family:var(--font-head); cursor:pointer; transition:all 0.15s;
+    }
+    .region-back-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .region-state-title {
+      font-family:var(--font-head); font-weight:700; font-size:14px;
+      letter-spacing:0.5px; color:var(--text); padding:0 16px 8px;
+    }
+    .region-state-list {
+      display:flex; flex-direction:column; gap:6px;
+      padding:0 12px; max-height:260px; overflow-y:auto;
+    }
+    .region-state-btn {
+      display:flex; align-items:center; gap:10px; padding:10px 14px;
+      border-radius:8px; border:1px solid var(--border); background:var(--surface2);
+      cursor:pointer; transition:all 0.15s; text-align:left; width:100%;
+    }
+    .region-state-btn:hover { border-color:var(--accent2); background:var(--accent2-dim); }
+    .region-state-btn.active { border-color:var(--accent); background:var(--accent-dim); }
+    .rst-check {
+      width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border);
+      flex-shrink:0; transition:all 0.15s; position:relative; display:inline-flex;
+      align-items:center; justify-content:center;
+    }
+    .region-state-btn.active .rst-check { background:var(--accent); border-color:var(--accent); }
+    .region-state-btn.active .rst-check::after { content:'✓'; font-size:10px; color:#fff; line-height:1; }
+    .rst-abbr { font-family:var(--font-mono); font-size:11px; font-weight:500; color:var(--accent3); min-width:30px; }
+    .rst-label { font-size:13px; color:var(--text); flex:1; text-align:left; }
+    .region-state-actions { display:flex; gap:8px; padding:12px 12px 0; }
+    .region-select-all-btn {
+      flex:1; padding:10px; border-radius:8px; border:1px solid var(--border);
+      background:var(--surface2); color:var(--muted); font-family:var(--font-head);
+      font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s;
+    }
+    .region-select-all-btn:hover { border-color:var(--accent2); color:var(--accent2); }
+    .region-load-btn {
+      flex:2; padding:10px; border-radius:8px; border:none;
+      background:var(--accent); color:#fff; font-family:var(--font-head);
+      font-size:13px; font-weight:700; cursor:pointer; transition:filter 0.15s; letter-spacing:0.3px;
+    }
+    .region-load-btn:hover { filter:brightness(1.15); }
+
     /* ─── City Bottom Sheet ─────────────────────────────────────── */
     .city-search-wrap {
       padding: 8px 16px;
@@ -2587,6 +2633,8 @@ function hideRegionSheet() {
 
 function buildRegionSheet() {
   const container = document.getElementById('region-tiles');
+  container.className = 'region-tiles-grid';
+  document.querySelector('#region-sheet .sheet-title').textContent = 'Select Region';
   const regionIcons = {
     'Northeast': '🏙',
     'Southeast': '🌴',
@@ -2607,6 +2655,47 @@ function buildRegionSheet() {
 }
 
 function selectRegion(regionLabel) {
+  const regionIcons = { 'Northeast': '🏙', 'Southeast': '🌴', 'Midwest': '🌾', 'West': '🏔', 'Special': '🌉' };
+  const region = REGIONS.find(r => r.label === regionLabel);
+  if (!region) return;
+
+  // Switch to state-picker (2nd level) — keep sheet open
+  const container = document.getElementById('region-tiles');
+  container.className = ''; // drop grid layout
+  document.querySelector('#region-sheet .sheet-title').textContent = 'Select States';
+  const keysJson = JSON.stringify(region.keys);
+
+  container.innerHTML = `
+    <div class="region-state-picker">
+      <button class="region-back-btn" onclick="buildRegionSheet()">‹ Back</button>
+      <div class="region-state-title">${regionIcons[regionLabel] || '📍'} ${regionLabel}</div>
+      <div class="region-state-list">
+        ${region.keys.map(k => `
+          <button class="region-state-btn" id="rst-${k}" onclick="toggleRst('${k}')">
+            <span class="rst-check"></span>
+            <span class="rst-abbr">${STATE_ABBR[k] || k.toUpperCase()}</span>
+            <span class="rst-label">${STATE_CONFIGS[k]?.label || k.toUpperCase()}</span>
+          </button>`).join('')}
+      </div>
+      <div class="region-state-actions">
+        <button class="region-select-all-btn" onclick="selectAllRst(${keysJson})">Select All</button>
+        <button class="region-load-btn" onclick="loadRegionSelection('${regionLabel}', ${keysJson})">Load Cameras</button>
+      </div>
+    </div>`;
+}
+
+function toggleRst(k) {
+  document.getElementById('rst-' + k)?.classList.toggle('active');
+}
+
+function selectAllRst(keys) {
+  keys.forEach(k => document.getElementById('rst-' + k)?.classList.add('active'));
+}
+
+function loadRegionSelection(regionLabel, regionKeys) {
+  const chosen = regionKeys.filter(k => document.getElementById('rst-' + k)?.classList.contains('active'));
+  if (chosen.length === 0) { showToast('Select at least one state'); return; }
+
   activeRegion = regionLabel;
   hideRegionSheet();
 
@@ -2614,22 +2703,17 @@ function selectRegion(regionLabel) {
   document.getElementById('ftab-region').classList.add('active');
   document.getElementById('ftab-region-label').textContent = regionLabel;
 
-  const region = REGIONS.find(r => r.label === regionLabel);
-  if (!region) return;
-
-  // Select all states in this region
   selectedStates.clear();
   ALL_KEYS.forEach(k => document.getElementById('box-' + k)?.classList.remove('checked'));
-  region.keys.forEach(k => {
+  chosen.forEach(k => {
     selectedStates.add(k);
     document.getElementById('box-' + k)?.classList.add('checked');
   });
   renderChips();
 
-  // Show state chips row for toggling individual states
   const chipsRow = document.getElementById('state-chips-row');
   chipsRow.classList.remove('hidden');
-  chipsRow.innerHTML = region.keys.map(k =>
+  chipsRow.innerHTML = chosen.map(k =>
     `<button class="state-chip active" onclick="toggleRegionStateChip('${k}')" id="state-chip-${k}">
       ${STATE_ABBR[k] || k.toUpperCase()}
     </button>`
