@@ -2766,7 +2766,7 @@ function buildCityList() {
   }
 
   listEl.innerHTML = sorted.map(([city, count]) =>
-    `<button class="city-item" onclick="selectCityFilter(${JSON.stringify(city)})">
+    `<button class="city-item" onclick="selectCityFilter('${city.replace(/'/g, "\\'")}')">
       <span class="city-item-name">${city}</span>
       <span class="city-item-count">${count}</span>
     </button>`
