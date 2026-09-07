@@ -2663,7 +2663,7 @@ function selectRegion(regionLabel) {
   const container = document.getElementById('region-tiles');
   container.className = ''; // drop grid layout
   document.querySelector('#region-sheet .sheet-title').textContent = 'Select States';
-  const keysJson = JSON.stringify(region.keys);
+
 
   container.innerHTML = `
     <div class="region-state-picker">
@@ -2678,8 +2678,8 @@ function selectRegion(regionLabel) {
           </button>`).join('')}
       </div>
       <div class="region-state-actions">
-        <button class="region-select-all-btn" onclick="selectAllRst(${keysJson})">Select All</button>
-        <button class="region-load-btn" onclick="loadRegionSelection('${regionLabel}', ${keysJson})">Load Cameras</button>
+        <button class="region-select-all-btn" onclick="selectAllRst('${regionLabel}')">Select All</button>
+        <button class="region-load-btn" onclick="loadRegionSelection('${regionLabel}')">Load Cameras</button>
       </div>
     </div>`;
 }
@@ -2688,11 +2688,15 @@ function toggleRst(k) {
   document.getElementById('rst-' + k)?.classList.toggle('active');
 }
 
-function selectAllRst(keys) {
-  keys.forEach(k => document.getElementById('rst-' + k)?.classList.add('active'));
+function selectAllRst(regionLabel) {
+  const region = REGIONS.find(r => r.label === regionLabel);
+  if (region) region.keys.forEach(k => document.getElementById('rst-' + k)?.classList.add('active'));
 }
 
-function loadRegionSelection(regionLabel, regionKeys) {
+function loadRegionSelection(regionLabel) {
+  const region = REGIONS.find(r => r.label === regionLabel);
+  if (!region) return;
+  const regionKeys = region.keys;
   const chosen = regionKeys.filter(k => document.getElementById('rst-' + k)?.classList.contains('active'));
   if (chosen.length === 0) { showToast('Select at least one state'); return; }
 
