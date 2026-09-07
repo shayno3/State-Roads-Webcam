@@ -1486,6 +1486,7 @@
           <div class="settings-row"><label>MD</label><input type="text" id="key-md" placeholder="MD511 developer key" /></div>
           <div class="settings-row"><label>AL</label><input type="text" id="key-al" placeholder="AL511 developer key" /></div>
           <div class="settings-row"><label>NM</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>CO</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ SERVER-SIDE KEY — NO INPUT NEEDED</span></div>
           <div class="settings-row"><label>MI</label><input type="text" id="key-mi" placeholder="MI511 developer key" /></div>
           <div class="settings-row"><label>SF</label><span style="font-size:11px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.5px;">NO CAMERA FEED — BAY AREA COVERED BY CA</span></div>
           <div class="settings-row"><label>HI</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
@@ -1642,6 +1643,7 @@ const STATE_CONFIGS = {
   md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key', noKey: true },
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
   nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', noKey: true },
+  co: { label: 'Colorado',      endpoint: '/api/cameras/co', noKey: true },
   mi: { label: 'Michigan',      endpoint: '/api/cameras/mi', keyParam: 'key' },
   il: { label: 'Illinois',      endpoint: '/api/cameras/il', keyParam: 'key', noKey: true },
   hi: { label: 'Hawaii',        endpoint: '/api/cameras/hi', keyParam: 'key', noKey: true },
@@ -1709,7 +1711,7 @@ const STATE_ABBR = {
   nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL', la:'LA',
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
   wa:'WA', ca:'CA', hi:'HI',
-  az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM',
+  az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM', co:'CO',
   ia:'IA', il:'IL',
   sf:'SF Bay',
 };
@@ -2009,7 +2011,42 @@ function normalizeCameras(state, data) {
       }));
   }
 
-  if (Array.isArray(data)) {
+  // Colorado — COTrip API (data.cotrip.org/api/v1/cameras)
+  // Response shape: { data: [ { id, roadway, direction,
+  //   location: { lat, long }, ipCameras: [{ displayName, imageUrl }] } ] }
+  if (state === 'co') {
+    const cams = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
+    return cams.flatMap((cam, i) => {
+      const imgs = cam.ipCameras || cam.cameras || [];
+      if (imgs.length === 0) {
+        // Camera with no image URLs — still show as a location marker
+        return [{
+          id:       cam.id || i,
+          road:     cam.roadway || cam.highway || '—',
+          location: cam.location?.locationName || cam.name || '—',
+          direction:cam.direction || '—',
+          lat:      cam.location?.lat || 0,
+          lon:      cam.location?.long || cam.location?.lon || 0,
+          imageUrl: '',
+          status:   'active',
+          source:   'co',
+        }];
+      }
+      return imgs.map((img, j) => ({
+        id:       `${cam.id || i}-${j}`,
+        road:     cam.roadway || cam.highway || '—',
+        location: img.displayName || cam.location?.locationName || cam.name || '—',
+        direction:cam.direction || '—',
+        lat:      cam.location?.lat || 0,
+        lon:      cam.location?.long || cam.location?.lon || 0,
+        imageUrl: img.imageUrl || img.url || '',
+        status:   'active',
+        source:   'co',
+      }));
+    });
+  }
+
+    if (Array.isArray(data)) {
     return data.map((cam, i) => {
       const view = (cam.Views || cam.views || [])[0] || {};
       const imgUrl = view.Url || view.url || view.VideoUrl || cam.VideoUrl || cam.url || '';

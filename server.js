@@ -54,6 +54,7 @@ const STATE_ENDPOINTS = {
   md: 'https://chartimap1.sha.maryland.gov/arcgis/rest/services/CHART/Cameras/MapServer/0/query', // CHART public ArcGIS – no key needed
   al: 'https://www.al511.com/api/v2/get/cameras',
   nm: 'https://servicev5.nmroads.com/RealMapWAR/GetCameraInfo', // NMRoads public – no key needed
+  co: 'https://data.cotrip.org/api/v1/cameras',                  // COTrip – COTRIP_KEY env var, apiKey param
   mi: 'https://www.mi511.org/api/v2/get/cameras',
 };
 
@@ -168,6 +169,29 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'OH_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?api-key=${encodeURIComponent(ohKey)}`;
+  } else if (state === 'co') {
+    // Colorado COTrip — COTRIP_KEY stored server-side as Railway env var
+    const cotripKey = process.env.COTRIP_KEY;
+    if (!cotripKey) {
+      return res.status(500).json({ error: 'COTRIP_KEY environment variable not set on server' });
+    }
+    console.log(`[cameras] CO → COTrip data.cotrip.org`);
+    try {
+      const response = await axios.get(baseUrl, {
+        params: { apiKey: cotripKey },
+        headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+        timeout: 15000,
+      });
+      // Log shape for debugging on first deploy
+      const body = response.data;
+      const sampleKeys = body && typeof body === 'object' ? Object.keys(body).slice(0, 5) : [];
+      console.log(`[cameras] CO → top-level keys: ${JSON.stringify(sampleKeys)}`);
+      return res.json(body);
+    } catch (err) {
+      const status = err.response?.status || 502;
+      console.error(`[cameras] CO error ${status}:`, err.message);
+      return res.status(status).json({ error: err.message });
+    }
   } else if (state === 'nm') {
     // New Mexico — NMRoads public endpoint, no API key required
     console.log(`[cameras] NM → NMRoads GetCameraInfo (public)`);
@@ -306,6 +330,7 @@ const STATE_BBOX = {
   nh: { ne: [45.3,-70.6], sw: [42.7,-72.6] },
   nj: { ne: [41.4,-73.9], sw: [38.9,-75.6] },
   nm: { ne: [37.0,-103.0], sw: [31.3,-109.1] },
+  co: { ne: [41.0,-102.0], sw: [37.0,-109.1] },
   nv: { ne: [42.0,-114.0], sw: [35.0,-120.0] },
   ny: { ne: [45.0,-71.9], sw: [40.5,-79.8] },
   oh: { ne: [41.9,-80.5], sw: [38.4,-84.8] },
