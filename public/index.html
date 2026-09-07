@@ -1468,6 +1468,8 @@ const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','l
 
 let cameras = [];
 let filteredCameras = [];
+const BATCH_SIZE = 100;
+let displayedCount = BATCH_SIZE;
 let selectedStates = new Set();
 let selectedFilter = { source: null, value: null }; // { source:'fl'|'ia', value:'COUNTY/REGION' }
 let currentCameraIndex = -1;
@@ -1717,6 +1719,7 @@ async function loadSelectedStates() {
 
   cameras = allCams;
   selectedFilter = { source: null, value: null }; // reset filter on each fresh load
+  displayedCount = BATCH_SIZE; // reset pagination on each fresh load
   buildFlFilterBar();
   filteredCameras = cameras;
   const filterQ = document.getElementById('search-input').value;
@@ -2042,7 +2045,10 @@ function renderGrid(cams) {
 
   badge.textContent = `${cams.length} camera${cams.length !== 1 ? 's' : ''}`;
 
-  grid.innerHTML = cams.map((cam, idx) => {
+  const visible = cams.slice(0, displayedCount);
+  const remaining = cams.length - visible.length;
+
+  grid.innerHTML = visible.map((cam, idx) => {
     const online = cam.status !== 'offline' && cam.status !== 'inactive';
     const camId = String(cam.id).slice(-4).toUpperCase().padStart(4, '0');
     return `
@@ -2051,11 +2057,11 @@ function renderGrid(cams) {
           ${cam.imageUrl && cam.imageUrl.endsWith('.m3u8')
             ? `<div class="camera-thumb-placeholder">📹</div>`
             : cam.imageUrl && cam.noProxy
-            ? `<img class="camera-thumb" src="${cam.imageUrl}" alt="${cam.location}"
+            ? `<img class="camera-thumb" src="${cam.imageUrl}" alt="${cam.location}" loading="lazy"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
                /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
             : cam.imageUrl
-            ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}"
+            ? `<img class="camera-thumb" src="${proxyImage(cam.imageUrl)}" alt="${cam.location}" loading="lazy"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
                /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
             : `<div class="camera-thumb-placeholder">📷</div>`}
@@ -2074,6 +2080,20 @@ function renderGrid(cams) {
         </div>
       </div>`;
   }).join('');
+
+  if (remaining > 0) {
+    grid.insertAdjacentHTML('beforeend', `
+      <div style="grid-column:1/-1;text-align:center;padding:20px 0 8px">
+        <button onclick="loadMoreCameras()" style="background:#F5C318;color:#111;border:none;border-radius:6px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em">
+          Load ${Math.min(BATCH_SIZE, remaining)} more &nbsp;&#8250;&nbsp; ${remaining} remaining
+        </button>
+      </div>`);
+  }
+}
+
+function loadMoreCameras() {
+  displayedCount += BATCH_SIZE;
+  renderGrid(filteredCameras);
 }
 
 function proxyImage(url) {
