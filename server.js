@@ -27,14 +27,28 @@ async function fetchNecSnapshots(network) {
     responseType: 'text',
   });
   const parsed = await parseStringPromise(r.data, { explicitArray: false });
-  const camList = parsed?.status?.cctvSnapshotData?.net?.cctvSnapshot || [];
-  const cams = Array.isArray(camList) ? camList : [camList];
+  // Try multiple XML paths — NEC structure may vary
+  const snapData = parsed?.status?.cctvSnapshotData;
+  const net = snapData?.net || snapData;
+  const camList = net?.cctvSnapshot || [];
+  const cams = Array.isArray(camList) ? camList : (camList && typeof camList === 'object' ? [camList] : []);
+  console.log(`[NEC snaps] ${network}: ${cams.length} snapshots returned`);
+  if (cams.length > 0) {
+    const sample = cams[0];
+    console.log(`[NEC snaps] sample keys: ${Object.keys(sample).join(', ')}`);
+    if (sample['$']) console.log(`[NEC snaps] sample $ keys: ${Object.keys(sample['$']).join(', ')}`);
+  }
   const snaps = {};
   for (const cam of cams) {
-    const id = cam?.$ ?.id;
-    const snippet = cam?.snippet || '';
+    // ID: try XML attribute ($), then child element, then deviceId
+    const id = cam?.['$']?.id || cam?.id || cam?.deviceId || cam?.cameraId;
+    // snippet: direct string, xml2js text node (_), or snapshotData
+    const snippet = (typeof cam?.snippet === 'string' ? cam.snippet : cam?.snippet?._ )
+                 || (typeof cam?.snapshotData === 'string' ? cam.snapshotData : cam?.snapshotData?._ )
+                 || '';
     if (id && snippet) snaps[id] = snippet;
   }
+  console.log(`[NEC snaps] ${network}: ${Object.keys(snaps).length} valid id+snippet pairs`);
   necSnapshotCache[network] = { ts: Date.now(), snaps };
   return snaps;
 }
