@@ -1484,8 +1484,9 @@
           <div class="settings-row"><label>VA</label><input type="text" id="key-va" placeholder="511 Virginia developer key" /></div>
           <div class="settings-row"><label>NE</label><input type="text" id="key-ne" placeholder="511 Nebraska developer key" /></div>
           <div class="settings-row"><label>KS</label><input type="text" id="key-ks" placeholder="KanDrive developer key" /></div>
-          <div class="settings-row"><label>VT</label><input type="text" id="key-vt" placeholder="511VT developer key" /></div>
-          <div class="settings-row"><label>NH</label><input type="text" id="key-nh" placeholder="511NH developer key" /></div>
+          <div class="settings-row"><label>VT</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>NH</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
+          <div class="settings-row"><label>ME</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
           <div class="settings-row"><label>MD</label><input type="text" id="key-md" placeholder="MD511 developer key" /></div>
           <div class="settings-row"><label>AL</label><input type="text" id="key-al" placeholder="AL511 developer key" /></div>
           <div class="settings-row"><label>NM</label><span style="font-size:11px;color:var(--live);font-family:var(--font-mono);letter-spacing:0.5px;">✓ PUBLIC FEED — NO KEY NEEDED</span></div>
@@ -1514,8 +1515,7 @@
           VA → <a href="https://511.vdot.virginia.gov/developers" target="_blank">511.vdot.virginia.gov</a><br>
           NE → <a href="https://511.nebraska.gov/developers" target="_blank">511.nebraska.gov</a> &nbsp;·&nbsp;
           KS → <a href="https://www.kandrive.gov/developers" target="_blank">kandrive.gov/developers</a><br>
-          VT → <a href="https://www.511vt.org/developers" target="_blank">511vt.org/developers</a> &nbsp;·&nbsp;
-          NH → <a href="https://www.511nh.com/developers" target="_blank">511nh.com/developers</a><br>
+          VT / NH / ME → NEC Compass public feed — no key needed<br>
           MD → <a href="https://md511.org/developers" target="_blank">md511.org/developers</a> &nbsp;·&nbsp;
           AL → <a href="https://www.al511.com/developers" target="_blank">al511.com/developers</a><br>
           NM → <a href="https://nmroads.com/developers" target="_blank">nmroads.com/developers</a> &nbsp;·&nbsp;
@@ -1562,7 +1562,7 @@
           <div class="empty-state">
             <div class="empty-icon">🌡</div>
             <div class="empty-title">No Data Yet</div>
-            <div class="empty-sub">Load cameras for NY, PA, AK, NV, UT, WI, ID, LA, VA, NE, NH, or VT to see road surface conditions.</div>
+            <div class="empty-sub">Load cameras for NY, PA, AK, NV, UT, WI, ID, LA, VA, NE, NH, VT, or ME to see road surface conditions.</div>
           </div>
         </div>
       </div>
@@ -1641,8 +1641,9 @@ const STATE_CONFIGS = {
   va: { label: 'Virginia',      endpoint: '/api/cameras/va', keyParam: 'key', noKey: true },
   ne: { label: 'Nebraska',      endpoint: '/api/cameras/ne', keyParam: 'key' },
   ks: { label: 'Kansas',        endpoint: '/api/cameras/ks', keyParam: 'key' },
-  vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', keyParam: 'key' },
-  nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', keyParam: 'key' },
+  vt: { label: 'Vermont',       endpoint: '/api/cameras/vt', noKey: true },
+  nh: { label: 'New Hampshire', endpoint: '/api/cameras/nh', noKey: true },
+  me: { label: 'Maine',         endpoint: '/api/cameras/me', noKey: true },
   md: { label: 'Maryland',      endpoint: '/api/cameras/md', keyParam: 'key', noKey: true },
   al: { label: 'Alabama',       endpoint: '/api/cameras/al', keyParam: 'key' },
   nm: { label: 'New Mexico',    endpoint: '/api/cameras/nm', noKey: true },
@@ -1653,7 +1654,7 @@ const STATE_CONFIGS = {
   tx: { label: 'Texas',         endpoint: '/api/cameras/tx', noKey: true },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','md','al','nm','mi','ia','oh','sf','hi','il','tx'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','me','md','al','nm','mi','ia','oh','sf','hi','il','tx'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1703,7 +1704,7 @@ function saveKeys() {
 
 // ─── State Selector (kept for JS compatibility) ─────────────────────
 const REGIONS = [
-  { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','md'] },
+  { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','me','md'] },
   { label: 'Southeast', keys: ['nc','ga','fl','va','al','la'] },
   { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh','il'] },
   { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm','hi'] },
@@ -1712,7 +1713,7 @@ const REGIONS = [
 ];
 
 const STATE_ABBR = {
-  ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', md:'MD',
+  ny:'NY', pa:'PA', nj:'NJ', vt:'VT', nh:'NH', me:'ME', md:'MD',
   nc:'NC', ga:'GA', fl:'FL', va:'VA', al:'AL', la:'LA',
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
   wa:'WA', ca:'CA', hi:'HI',
@@ -1958,8 +1959,9 @@ function loadCameras(state) { loadSelectedStates(); }
 
 // ─── Normalize 511 camera data ──────────────────────────────────────
 function normalizeCameras(state, data) {
-  // TX: server pre-normalizes; just pass through the array
-  if (state === 'tx') return Array.isArray(data) ? data : [];
+  // TX / NEC Compass (NH, VT, ME): server pre-normalizes; just pass through the array
+  if (state === 'tx' || state === 'nh' || state === 'vt' || state === 'me')
+    return Array.isArray(data) ? data : [];
 
   if (state === 'wa' && Array.isArray(data)) {
     return data
@@ -2628,7 +2630,7 @@ function showToast(msg) {
 }
 
 // ─── Weather Stations ────────────────────────────────────────────────
-const WEATHER_STATES = new Set(['ak','ut','nv','wi','id','la','va','ne','nh','vt','ny','pa']);
+const WEATHER_STATES = new Set(['ak','ut','nv','wi','id','la','va','ne','nh','vt','me','ny','pa']);
 let weatherData = {};
 
 function haversineKm(lat1, lon1, lat2, lon2) {
@@ -2991,7 +2993,8 @@ function handleVoiceResult(text) {
     'cali': 'ca', 'new york': 'ny', 'new jersey': 'nj', 'new mexico': 'nm',
     'north carolina': 'nc', 'north dakota': 'nd', 'south carolina': 'sc',
     'south dakota': 'sd', 'west virginia': 'wv', 'rhode island': 'ri',
-    'new hampshire': 'nh', 'san francisco': 'sf', 'bay area': 'sf',
+    'new hampshire': 'nh', 'maine': 'me', 'vermont': 'vt',
+    'san francisco': 'sf', 'bay area': 'sf',
     'dc': 'dc', 'washington dc': 'dc', 'hawaii': 'hi', 'alaska': 'ak',
   };
   let matchedKey = stateAliases[q] || null;

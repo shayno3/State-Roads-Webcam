@@ -603,3 +603,43 @@ pin_reset_tokens(id, user_id FK, token, expires_at, used, created_at)
 ### Security Notes
 - TX cameras: public TxDOT ITS API, no key needed, called server-side
 - TX conditions: `TX_KEY` stays server-side only, never sent to browser — per standing directive
+
+## v2.2.0 — NEC Compass C2C Integration (NH, VT, ME)
+
+### New States Added
+- **New Hampshire (NH)** — via NEC Compass C2C public API, no key required
+- **Vermont (VT)** — via NEC Compass C2C public API, no key required (previously 511VT keyParam)
+- **Maine (ME)** — via NEC Compass C2C public API, no key required (new state)
+
+### NEC Compass C2C API
+- Base URL: `https://nec-por.ne-compass.com/NEC.XmlDataPortal/api/c2c`
+- Network names: `NewHampshire`, `Vermont`, `Maine`
+- Camera list: `?networks={network}&dataTypes=cctvStatusData` — XML response
+- Camera images: `?networks={network}&dataTypes=cctvSnapshotData` — XML with base64 JPEG in `<snippet>`
+- Lat/lon returned in millionths of a degree → divide by 1,000,000
+- No API key required (public feed)
+
+### New Dependencies
+- `xml2js` — XML parsing via `parseStringPromise` (added to package.json)
+
+### server.js Changes
+- Added `const { parseStringPromise } = require('xml2js');`
+- Added `NEC_BASE`, `NEC_NETWORK`, `necSnapshotCache`, `NEC_CACHE_TTL = 60000` constants
+- Added `fetchNecSnapshots(network)` — fetches `cctvSnapshotData` XML, caches base64 blobs 60s per network
+- Added `nh`/`vt`/`me` handler in `/api/cameras/:state` — fetches `cctvStatusData`, parses XML, returns normalized camera array
+- Added `GET /api/image/ne/:network?id=` — decodes cached base64 JPEG and serves as `image/jpeg`
+
+### index.html Changes
+- `STATE_CONFIGS`: VT/NH changed from `keyParam:'key'` to `noKey:true`; ME added as `noKey:true`
+- `ALL_KEYS`: `'me'` added after `'nh'`
+- `REGIONS`: Northeast updated to include `'me'`
+- `STATE_ABBR`: `me:'ME'` added
+- `WEATHER_STATES`: `'me'` added
+- `normalizeCameras`: NH/VT/ME pass-through (server pre-normalizes, same as TX)
+- Settings panel: VT/NH key inputs replaced with "PUBLIC FEED" labels; ME row added
+- API links: VT/NH developer links replaced with NEC Compass note
+- Voice search aliases: `'maine'` and `'vermont'` added
+
+### Security Notes
+- NEC Compass: public feed, no key — no env var needed, called server-side
+- API keys NEVER sent to browser — stored as Railway env vars only (standing directive)

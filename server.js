@@ -6,8 +6,38 @@
 
 const express  = require('express');
 const axios    = require('axios');
+const { parseStringPromise } = require('xml2js');
 const path     = require('path');
 const { authRouter, adminRouter } = require('./auth');
+
+// ─── NEC Compass C2C cache (NH / VT / ME) ──────────────────────────────────
+const NEC_BASE = 'https://nec-por.ne-compass.com/NEC.XmlDataPortal/api/c2c';
+const NEC_NETWORK = { nh: 'NewHampshire', vt: 'Vermont', me: 'Maine' };
+// In-memory snapshot cache: { network: { ts, snapsByid } }
+const necSnapshotCache = {};
+const NEC_CACHE_TTL = 60000; // 60 seconds
+
+async function fetchNecSnapshots(network) {
+  const cached = necSnapshotCache[network];
+  if (cached && Date.now() - cached.ts < NEC_CACHE_TTL) return cached.snaps;
+  const r = await axios.get(NEC_BASE, {
+    params: { networks: network, dataTypes: 'cctvSnapshotData' },
+    headers: { 'Accept': 'application/xml', 'User-Agent': 'RoadCamsGlasses/1.0' },
+    timeout: 15000,
+    responseType: 'text',
+  });
+  const parsed = await parseStringPromise(r.data, { explicitArray: false });
+  const camList = parsed?.status?.cctvSnapshotData?.net?.cctvSnapshot || [];
+  const cams = Array.isArray(camList) ? camList : [camList];
+  const snaps = {};
+  for (const cam of cams) {
+    const id = cam?.$ ?.id;
+    const snippet = cam?.snippet || '';
+    if (id && snippet) snaps[id] = snippet;
+  }
+  necSnapshotCache[network] = { ts: Date.now(), snaps };
+  return snaps;
+}
 
 const app = express();
 app.use(express.json());
@@ -211,6 +241,45 @@ app.get('/api/cameras/:state', async (req, res) => {
       console.error(`[cameras] NM error ${status}:`, err.message);
       return res.status(status).json({ error: err.message });
     }
+  } else if (state === 'nh' || state === 'vt' || state === 'me') {
+    // NEC Compass C2C — public API, no key required (NH, VT, ME)
+    const necNet = NEC_NETWORK[state];
+    console.log(`[cameras] ${state.toUpperCase()} → NEC Compass C2C (${necNet})`);
+    try {
+      const r = await axios.get(NEC_BASE, {
+        params: { networks: necNet, dataTypes: 'cctvStatusData' },
+        headers: { 'Accept': 'application/xml', 'User-Agent': 'RoadCamsGlasses/1.0' },
+        timeout: 15000,
+        responseType: 'text',
+      });
+      const parsed = await parseStringPromise(r.data, { explicitArray: false });
+      const camList = parsed?.status?.cctvStatusData?.net?.cctvStatus || [];
+      const cams = Array.isArray(camList) ? camList : [camList];
+      const cameras = cams
+        .filter(cam => cam && cam['$'] && cam['$'].id)
+        .map(cam => {
+          const id  = cam['$'].id;
+          const lat = parseInt(cam.lat, 10) / 1e6 || 0;
+          const lon = parseInt(cam.lon, 10) / 1e6 || 0;
+          return {
+            id:        `${state}_${id}`,
+            road:      (cam.equipLoc && cam.equipLoc.roadway) || '—',
+            location:  cam.name || id,
+            direction: (cam.equipLoc && cam.equipLoc.direction) || '',
+            lat,
+            lon,
+            imageUrl:  `/api/image/ne/${necNet}?id=${encodeURIComponent(id)}`,
+            county:    '',
+            status:    cam.status === 'Device Online' ? 'active' : 'inactive',
+            source:    state,
+          };
+        });
+      console.log(`[cameras] ${state.toUpperCase()} → ${cameras.length} cameras`);
+      return res.json(cameras);
+    } catch (err) {
+      console.error(`[cameras] ${state.toUpperCase()} NEC error:`, err.message);
+      return res.status(502).json({ error: err.message });
+    }
   } else if (state === 'sf') {
     // SF Bay Area — 511.org only offers events/toll/WZDx; no cameras endpoint exists.
     // Bay Area freeway cameras are covered by CA (Caltrans D4).
@@ -325,6 +394,28 @@ const STATE_WEATHER_ENDPOINTS = {
   pa: 'https://www.511pa.com/api/v2/get/weatherstations',
 };
 
+
+
+// ─── NEC Compass image proxy (NH / VT / ME camera snapshots) ────────────────
+app.get('/api/image/ne/:network', async (req, res) => {
+  const { network } = req.params;
+  const { id } = req.query;
+  if (!id || !['NewHampshire','Vermont','Maine'].includes(network)) {
+    return res.status(400).json({ error: 'Invalid network or missing id' });
+  }
+  try {
+    const snaps = await fetchNecSnapshots(network);
+    const b64 = snaps[id];
+    if (!b64) return res.status(204).end(); // no snapshot available
+    const buf = Buffer.from(b64, 'base64');
+    res.set({ 'Content-Type': 'image/jpeg', 'Content-Length': buf.length,
+               'Cache-Control': 'public, max-age=60' });
+    return res.end(buf);
+  } catch (err) {
+    console.error(`[image/ne] ${network}/${id} error:`, err.message);
+    return res.status(502).json({ error: err.message });
+  }
+});
 
 // ─── Texas Road Conditions (DriveTexas / TX_KEY) ────────────────────────────
 app.get('/api/conditions/tx', async (req, res) => {
