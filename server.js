@@ -225,12 +225,11 @@ app.get('/api/cameras/:state', async (req, res) => {
     const TX_BASE = 'https://its.txdot.gov/its/DistrictIts/GetCctvStatusListByDistrict?districtCode=';
     const txResults = await Promise.allSettled(
       TX_DISTRICTS.map(async dist => {
-        const r = await fetch(TX_BASE + dist, {
-          signal: AbortSignal.timeout(10000),
-          headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' }
+        const response = await axios.get(TX_BASE + dist, {
+          headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' },
+          timeout: 10000,
         });
-        if (!r.ok) throw new Error(`${dist} HTTP ${r.status}`);
-        return { dist, data: await r.json() };
+        return { dist, data: response.data };
       })
     );
     const txCameras = [];
@@ -332,12 +331,11 @@ app.get('/api/conditions/tx', async (req, res) => {
   const TX_KEY = process.env.TX_KEY;
   if (!TX_KEY) return res.status(503).json({ error: 'TX_KEY not configured' });
   try {
-    const r = await fetch(
+    const response = await axios.get(
       `https://api.drivetexas.org/api/conditions.geojson?key=${TX_KEY}`,
-      { signal: AbortSignal.timeout(10000), headers: { 'Accept': 'application/json' } }
+      { headers: { 'Accept': 'application/json', 'User-Agent': 'RoadCamsGlasses/1.0' }, timeout: 10000 }
     );
-    if (!r.ok) throw new Error(`DriveTexas HTTP ${r.status}`);
-    const data = await r.json();
+    const data = response.data;
     // Pass through GeoJSON features; client filters/renders as overlay
     const features = (data.features || []).map(f => ({
       type:       f.type,
