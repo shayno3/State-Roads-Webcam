@@ -2157,7 +2157,7 @@ function normalizeCameras(state, data) {
           direction:a.dir || '—',
           lat:      geo.y || 0,
           lon:      geo.x || 0,
-          imageUrl: (a.url && !a.url.includes("navigator-c2c.dot.ga.gov")) ? a.url : '',  // GDOT snapshot server is internal-only; strip these URLs
+          imageUrl: a.url || '',
           county:   a.county || '',
           status:   'active',
           source:   'ga',
