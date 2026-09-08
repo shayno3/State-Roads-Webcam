@@ -105,6 +105,7 @@ const STATE_ENDPOINTS = {
   ks: 'https://www.kandrive.gov/api/v2/get/cameras',
   vt: 'https://www.511vt.org/api/v2/get/cameras',
   nh: 'https://www.511nh.com/api/v2/get/cameras',
+  me: 'https://nec-por.ne-compass.com/NEC.XmlDataPortal/api/c2c',   // NEC Compass C2C – public, no key; handler intercepts
   md: 'https://chartimap1.sha.maryland.gov/arcgis/rest/services/CHART/Cameras/MapServer/0/query', // CHART public ArcGIS – no key needed
   al: 'https://www.al511.com/api/v2/get/cameras',
   nm: 'https://servicev5.nmroads.com/RealMapWAR/GetCameraInfo', // NMRoads public – no key needed
