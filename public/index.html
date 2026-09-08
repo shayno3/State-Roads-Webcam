@@ -2184,7 +2184,7 @@ function normalizeCameras(state, data) {
       });
   }
 
-  if (state === 'nv' && Array.isArray(data)) {
+  if ((state === 'nv' || state === 'id') && Array.isArray(data)) {
     return data
       .filter(c => c.Views?.[0]?.Status === 'Enabled')
       .map((c, i) => ({
@@ -2197,7 +2197,7 @@ function normalizeCameras(state, data) {
         imageUrl: c.Views?.[0]?.Url || '',
         county:   '',
         status:   'active',
-        source:   'nv',
+        source:   state,
       }));
   }
 
