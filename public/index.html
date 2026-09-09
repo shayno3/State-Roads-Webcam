@@ -1633,7 +1633,7 @@ const STATE_CONFIGS = {
   ak: { label: 'Alaska',        endpoint: '/api/cameras/ak', keyParam: 'key', noKey: true },
   sf: { label: 'SF Bay Area',   endpoint: '/api/cameras/sf', keyParam: 'api_key', noKey: true },
   oh: { label: 'Ohio',          endpoint: '/api/cameras/oh', noKey: true },
-  wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key' },
+  wi: { label: 'Wisconsin',     endpoint: '/api/cameras/wi', keyParam: 'key', noKey: true },
   ut: { label: 'Utah',          endpoint: '/api/cameras/ut', keyParam: 'key' },
   la: { label: 'Louisiana',     endpoint: '/api/cameras/la', keyParam: 'key' },
   id: { label: 'Idaho',         endpoint: '/api/cameras/id', keyParam: 'key', noKey: true },
@@ -2184,7 +2184,7 @@ function normalizeCameras(state, data) {
       });
   }
 
-  if ((state === 'nv' || state === 'id') && Array.isArray(data)) {
+  if ((state === 'nv' || state === 'id' || state === 'wi') && Array.isArray(data)) {
     return data
       .filter(c => c.Views?.[0]?.Status === 'Enabled')
       .map((c, i) => ({
