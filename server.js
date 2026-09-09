@@ -172,6 +172,11 @@ app.get('/api/cameras/:state', async (req, res) => {
           const { lat, lon } = mercatorToWgs84(f.geometry.x, f.geometry.y);
           f.geometry = { x: lon, y: lat };
         }
+        // Rewrite navigator-c2c image URL through our proxy (avoids mixed-content + remote timeouts)
+        if (f.attributes?.url) {
+          const m = f.attributes.url.match(/snapshots\/([^?#]+)$/);
+          if (m) f.attributes.url = `/api/image/ga/${m[1]}`;
+        }
         return f;
       });
       console.log(`[cameras] GA → ${result.features.length} cameras`);
@@ -481,6 +486,32 @@ app.get('/api/image/ne/:network', async (req, res) => {
     return res.end(buf);
   } catch (err) {
     console.error(`[image/ne] ${network}/${id} error:`, err.message);
+    return res.status(502).json({ error: err.message });
+  }
+});
+
+// ─── GDOT GA camera image proxy ─────────────────────────────────────────────
+// Fetches from navigator-c2c.dot.ga.gov server-side (avoids mixed-content + CORS)
+app.get('/api/image/ga/:name', async (req, res) => {
+  const { name } = req.params;
+  if (!name || !/^[\w\-.]+\.jpg$/i.test(name)) {
+    return res.status(400).json({ error: 'Invalid image name' });
+  }
+  try {
+    const url = `http://navigator-c2c.dot.ga.gov/snapshots/${name}`;
+    const resp = await axios.get(url, {
+      responseType: 'arraybuffer',
+      timeout: 10000,
+      headers: { 'User-Agent': 'RoadCamsGlasses/1.0' },
+    });
+    res.set({
+      'Content-Type': resp.headers['content-type'] || 'image/jpeg',
+      'Content-Length': resp.data.byteLength,
+      'Cache-Control': 'public, max-age=60',
+    });
+    return res.end(Buffer.from(resp.data));
+  } catch (err) {
+    console.error(`[image/ga] ${name} error:`, err.message);
     return res.status(502).json({ error: err.message });
   }
 });
