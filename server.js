@@ -425,6 +425,43 @@ const STATE_WEATHER_ENDPOINTS = {
 
 
 
+// ─── NEC Compass debug endpoint (temporary — remove after diagnosis) ─────────
+app.get('/api/debug/nec/:network', async (req, res) => {
+  const { network } = req.params;
+  if (!['NewHampshire','Vermont','Maine'].includes(network)) {
+    return res.status(400).json({ error: 'Invalid network' });
+  }
+  try {
+    const r = await axios.get(NEC_BASE, {
+      params: { networks: network, dataTypes: 'cctvSnapshotData' },
+      headers: { 'Accept': 'application/xml', 'User-Agent': 'RoadCamsGlasses/1.0' },
+      timeout: 15000,
+      responseType: 'text',
+    });
+    const rawXml = r.data.substring(0, 2000);
+    const parsed = await parseStringPromise(r.data, { explicitArray: false });
+    const snapData = parsed?.status?.cctvSnapshotData;
+    const net = snapData?.net || snapData;
+    const camListRaw = net?.cctvSnapshot || [];
+    const camList = Array.isArray(camListRaw) ? camListRaw : (camListRaw && typeof camListRaw === 'object' ? [camListRaw] : []);
+    const firstCam = camList[0];
+    return res.json({
+      httpStatus: r.status,
+      topLevelKeys: Object.keys(parsed || {}),
+      statusKeys: Object.keys(parsed?.status || {}),
+      camCount: camList.length,
+      firstCamKeys: firstCam ? Object.keys(firstCam) : [],
+      firstCamAttrKeys: firstCam?.['$'] ? Object.keys(firstCam['$']) : [],
+      firstCamId: firstCam?.['$']?.id || firstCam?.id || '(none)',
+      firstCamSnippetType: firstCam?.snippet ? typeof firstCam.snippet : '(no snippet field)',
+      firstCamSnapshotDataType: firstCam?.snapshotData ? typeof firstCam.snapshotData : '(no snapshotData field)',
+      rawXmlPreview: rawXml,
+    });
+  } catch (err) {
+    return res.status(502).json({ error: err.message });
+  }
+});
+
 // ─── NEC Compass image proxy (NH / VT / ME camera snapshots) ────────────────
 app.get('/api/image/ne/:network', async (req, res) => {
   const { network } = req.params;
