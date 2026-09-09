@@ -47,6 +47,8 @@ async function fetchNecSnapshots(network) {
                  || (typeof cam?.snapshotData === 'string' ? cam.snapshotData : cam?.snapshotData?._ )
                  || '';
     if (id && snippet) snaps[id] = snippet;
+    // Also index by camera name so status-data IDs (name-style) can match
+    if (cam?.name && snippet && cam.name !== id) snaps[cam.name] = snippet;
   }
   console.log(`[NEC snaps] ${network}: ${Object.keys(snaps).length} valid id+snippet pairs`);
   necSnapshotCache[network] = { ts: Date.now(), snaps };
@@ -297,7 +299,7 @@ app.get('/api/cameras/:state', async (req, res) => {
             direction: (cam.equipLoc && cam.equipLoc.direction) || '',
             lat,
             lon,
-            imageUrl:  `/api/image/ne/${necNet}?id=${encodeURIComponent(id)}`,
+            imageUrl:  `/api/image/ne/${necNet}?id=${encodeURIComponent(cam.name || id)}`,
             county:    '',
             status:    cam.status === 'Device Online' ? 'active' : 'inactive',
             source:    state,
