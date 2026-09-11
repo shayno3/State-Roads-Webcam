@@ -231,6 +231,13 @@ app.get('/api/cameras/:state', async (req, res) => {
       return res.status(500).json({ error: 'WI_KEY environment variable not set on server' });
     }
     upstreamUrl = `${baseUrl}?key=${encodeURIComponent(wiKey)}`;
+  } else if (state === 'az') {
+    // Arizona AZ 511 (TravelIQ/ibi511) — key stored server-side as AZ_KEY env var
+    const azKey = process.env.AZ_KEY;
+    if (!azKey) {
+      return res.status(500).json({ error: 'AZ_KEY environment variable not set on server' });
+    }
+    upstreamUrl = `${baseUrl}?key=${encodeURIComponent(azKey)}`;
   } else if (state === 'wa') {
     // WSDOT — AccessCode stored server-side as WSDOT_KEY env var
     const wsdotKey = process.env.WSDOT_KEY;
