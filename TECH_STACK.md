@@ -57,7 +57,7 @@
 | Nevada | ibi511 — nvroads.com/api/v2/get/cameras | `?key=` | JSON array | ~660 | |
 | Alaska | ibi511 — 511.alaska.gov/api/v2/get/cameras | `?key=` | JSON array | ~1,074 | |
 | Wisconsin | ibi511 — 511wi.gov/api/v2/get/cameras | `?key=` | JSON array | ~491 | |
-| Utah | ibi511 — udottraffic.utah.gov/api/v2/get/cameras | `?key=` | JSON array | ~2,090 | |
+| Utah | ibi511 — udottraffic.utah.gov/api/v2/get/cameras | `?key=` | JSON array | ~2,090 | `UT_KEY` env var — server-side only |
 | Louisiana | ibi511 — 511la.org/api/v2/get/cameras | `?key=` | JSON array | — | |
 | Idaho | ibi511 — 511.idaho.gov/api/v2/get/cameras | `?key=` | JSON array | ~433 | |
 | New Jersey | ibi511 — 511nj.org/api/v2/get/cameras | `?key=` | JSON array | — | |
