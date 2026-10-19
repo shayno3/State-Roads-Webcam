@@ -1626,6 +1626,8 @@ const STATE_CONFIGS = {
   ga: { label: 'Georgia',       endpoint: '/api/cameras/ga', keyParam: 'key', noKey: true },
   fl: { label: 'Florida',       endpoint: '/api/cameras/fl', keyParam: 'key', noKey: true },
   ia: { label: 'Iowa',          endpoint: '/api/cameras/ia', keyParam: 'key', noKey: true },
+  ky: { label: 'Kentucky',      endpoint: '/api/cameras/ky', keyParam: 'key', noKey: true },
+  or: { label: 'Oregon',        endpoint: '/api/cameras/or', noKey: true },
   wa: { label: 'Washington',    endpoint: '/api/cameras/wa', keyParam: 'key', noKey: true },
   ca: { label: 'California',    endpoint: '/api/cameras/ca', keyParam: 'key', noKey: true },
   az: { label: 'Arizona',       endpoint: '/api/cameras/az', keyParam: 'key', noKey: true },
@@ -1654,7 +1656,7 @@ const STATE_CONFIGS = {
   tx: { label: 'Texas',         endpoint: '/api/cameras/tx', noKey: true },
 };
 
-const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','me','md','al','nm','mi','ia','oh','sf','hi','il','tx'];
+const ALL_KEYS = ['ny','nc','pa','ga','fl','wa','ca','az','nv','ak','wi','ut','la','id','nj','va','ne','ks','vt','nh','me','md','al','nm','mi','ia','oh','sf','hi','il','tx','ky','or'];
 
 let cameras = [];
 let filteredCameras = [];
@@ -1705,9 +1707,9 @@ function saveKeys() {
 // ─── State Selector (kept for JS compatibility) ─────────────────────
 const REGIONS = [
   { label: 'Northeast', keys: ['ny','pa','nj','vt','nh','me','md'] },
-  { label: 'Southeast', keys: ['nc','ga','fl','va','al','la'] },
+  { label: 'Southeast', keys: ['nc','ga','fl','va','al','la','ky'] },
   { label: 'Midwest',   keys: ['wi','mi','ne','ks','ia','oh','il'] },
-  { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm','hi'] },
+  { label: 'West',      keys: ['ca','wa','az','nv','ak','ut','id','nm','hi','or'] },
   { label: 'South',     keys: ['tx','la','al'] },
   { label: 'Special',   keys: ['sf'] },
 ];
@@ -1718,7 +1720,7 @@ const STATE_ABBR = {
   wi:'WI', mi:'MI', ne:'NE', ks:'KS', oh:'OH',
   wa:'WA', ca:'CA', hi:'HI',
   az:'AZ', nv:'NV', ak:'AK', ut:'UT', id:'ID', nm:'NM', co:'CO',
-  ia:'IA', il:'IL',
+  ia:'IA', il:'IL', ky:'KY', or:'OR',
   sf:'SF Bay',
   tx:'TX',
 };
@@ -1959,8 +1961,8 @@ function loadCameras(state) { loadSelectedStates(); }
 
 // ─── Normalize 511 camera data ──────────────────────────────────────
 function normalizeCameras(state, data) {
-  // TX / NEC Compass (NH, VT, ME): server pre-normalizes; just pass through the array
-  if (state === 'tx' || state === 'nh' || state === 'vt' || state === 'me')
+  // TX / NEC Compass (NH, VT, ME) / OR: server pre-normalizes; just pass through the array
+  if (state === 'tx' || state === 'nh' || state === 'vt' || state === 'me' || state === 'or')
     return Array.isArray(data) ? data : [];
 
   if (state === 'wa' && Array.isArray(data)) {
@@ -2220,6 +2222,30 @@ function normalizeCameras(state, data) {
           source:   'md',
         };
       });
+  }
+
+  if (state === 'ky' && data && data.features) {
+    // KYTC public ArcGIS — attributes carry lowercase lat/lon + snapshot URL directly;
+    // includes TRIMARC (Louisville) partner cameras. Some snapshot hosts are http —
+    // the viewer routes images through /api/image, so they still load.
+    return data.features
+      .map((f, i) => {
+        const a   = f.attributes || {};
+        const geo = f.geometry   || {};
+        return {
+          id:       a.id || a.OBJECTID || i,
+          road:     a.highway || '—',
+          location: a.name || a.description || '—',
+          direction:a.direction || '—',
+          lat:      a.latitude  || geo.y || 0,
+          lon:      a.longitude || geo.x || 0,
+          imageUrl: a.snapshot || '',
+          county:   a.county || '',
+          status:   'active',
+          source:   'ky',
+        };
+      })
+      .filter(c => c.imageUrl && c.lat && c.lon);
   }
 
   if (state === 'ia' && data && data.features) {
