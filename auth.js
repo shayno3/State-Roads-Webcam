@@ -14,7 +14,11 @@ const { q, ADMIN_EMAIL } = require('./db');
 
 const router = express.Router();
 
-const JWT_SECRET  = process.env.JWT_SECRET  || 'CHANGE_ME_IN_RAILWAY_ENV';
+const JWT_SECRET  = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  // Fail closed: never sign session tokens with a known/default secret.
+  throw new Error('JWT_SECRET environment variable is not set — refusing to start. Set JWT_SECRET in Railway → Variables (generate one with: openssl rand -hex 32).');
+}
 const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '7d';
 const SALT_ROUNDS = 12;
 
