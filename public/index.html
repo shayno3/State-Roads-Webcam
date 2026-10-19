@@ -1351,7 +1351,7 @@
     .camera-card:focus, .ftab:focus, .tab-btn:focus, .icon-btn:focus,
     .city-item:focus, .region-tile:focus, .ctrl-btn:focus, .detail-nav:focus,
     .sheet-close:focus, #voice-btn:focus, #search-submit-btn:focus, #city-go-btn:focus,
-    .region-state-btn:focus, .state-chip:focus, .region-back-btn:focus,
+    .region-state-btn:focus, .state-chip:focus, .region-back-btn:focus, #city-voice-btn:focus,
     .region-select-all-btn:focus, .region-load-btn:focus {
       outline:3px solid var(--accent) !important; outline-offset:2px;
     }
@@ -1369,6 +1369,11 @@
     /* City sheet: input + a real Go button */
     .city-search-wrap { display:flex !important; gap:8px; align-items:stretch; }
     #city-search { flex:1; font-size:16px !important; padding:13px 14px !important; border-radius:12px !important; }
+    #city-voice-btn {
+      background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:12px;
+      font-size:18px; padding:0 15px; cursor:pointer;
+    }
+    #city-voice-btn.listening { background:var(--accent); color:#000; }
     #city-go-btn {
       background:var(--accent); color:#000; border:none; border-radius:12px;
       font-size:16.5px; font-weight:800; padding:0 20px; cursor:pointer; font-family:inherit;
@@ -1690,6 +1695,7 @@
     </div>
     <div class="city-search-wrap">
       <input id="city-search" type="text" placeholder="🔍  Search city, county, area…" oninput="filterByCitySearch()" onkeydown="if(event.key==='Enter')cityGo()" autocomplete="off">
+      <button id="city-voice-btn" onclick="cityVoice()" title="Dictate city">🎙</button>
       <button id="city-go-btn" onclick="cityGo()">Go ›</button>
     </div>
     <div id="city-list" class="city-list"></div>
@@ -2721,7 +2727,11 @@ function toggleView() {
   gridView = !gridView;
   const grid = document.getElementById('camera-grid');
   grid.classList.toggle('single-col', !gridView);
-  document.getElementById('view-toggle-btn').textContent = gridView ? '⊞' : '☰';
+  const btn = document.getElementById('view-toggle-btn');
+  btn.textContent = gridView ? '⊞' : '☰';
+  // Keep the glasses highlight on this button — dropping it to <body>
+  // forces the user to swipe all the way back from the top.
+  if (document.activeElement === btn) btn.focus();
 }
 
 function openOnGlasses() {
@@ -3091,6 +3101,31 @@ function cityGo() {
   }
 }
 
+function cityVoice() {
+  // App-driven dictation for the City sheet: writes the words into the
+  // field itself, so it does not depend on the glasses' text-entry focus.
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) { showToast('Voice not supported in this browser'); return; }
+  const btn = document.getElementById('city-voice-btn');
+  const input = document.getElementById('city-search');
+  const rec = new SpeechRec();
+  rec.lang = 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 3;
+  btn.classList.add('listening');
+  showToast('Listening… say a city');
+  rec.start();
+  rec.onresult = e => {
+    const text = e.results[0][0].transcript.trim();
+    input.value = text;
+    btn.classList.remove('listening');
+    filterByCitySearch();
+    setTimeout(() => cityGo(), 500);
+  };
+  rec.onerror = () => { btn.classList.remove('listening'); showToast('Did not catch that — try again'); };
+  rec.onend = () => btn.classList.remove('listening');
+}
+
 function selectCityFilter(city) {
   hideCitySheet();
   document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
@@ -3221,6 +3256,65 @@ function handleVoiceResult(text) {
   });
   // Lens-size screens start in one-column view; the ⊞ button toggles from there.
   if (window.innerWidth <= 640 && window.innerHeight <= 700 && typeof toggleView === 'function' && gridView) toggleView();
+})();
+</script>
+
+<script>
+// Glasses First navigation: the glasses' swipe sends DIRECTIONAL input, and
+// this app originally only understood Tab — so swipes fell back to the
+// browser's flaky built-in highlight mover (skipped controls, dead pinches).
+// Arrow keys now move the amber ring to the nearest control in that
+// direction, fenced inside whichever sheet is open.
+(function () {
+  function navRoot() {
+    return document.querySelector('.sheet-overlay:not(.hidden)') || document;
+  }
+  function candidates() {
+    const els = navRoot().querySelectorAll('button, input, select, textarea, a[href], [tabindex="0"]');
+    return [...els].filter(el => {
+      if (el.disabled || el.hidden) return false;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      const st = getComputedStyle(el);
+      return st.display !== 'none' && st.visibility !== 'hidden';
+    });
+  }
+  document.addEventListener('keydown', e => {
+    if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) return;
+    const active = document.activeElement;
+    const inField = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+    if (inField && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return; // caret keys stay in the field
+    // In the camera detail view, Left/Right flip cameras (handled by the
+    // swipe script); Up/Down still move the ring to the detail controls.
+    const detailActive = document.getElementById('detail-view')?.classList.contains('active');
+    if (detailActive && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+    const els = candidates();
+    if (!els.length) return;
+    if (!active || active === document.body || !els.includes(active)) {
+      els[0].focus();
+      e.preventDefault();
+      return;
+    }
+    const r = active.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    let best = null, bestScore = Infinity;
+    for (const el of els) {
+      if (el === active) continue;
+      const b = el.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
+      const dx = x - cx, dy = y - cy;
+      let primary, cross;
+      if (e.key === 'ArrowRight') { if (dx <= 4) continue; primary = dx; cross = Math.abs(dy); }
+      else if (e.key === 'ArrowLeft') { if (dx >= -4) continue; primary = -dx; cross = Math.abs(dy); }
+      else if (e.key === 'ArrowDown') { if (dy <= 4) continue; primary = dy; cross = Math.abs(dx); }
+      else { if (dy >= -4) continue; primary = -dy; cross = Math.abs(dx); }
+      const score = primary + cross * 2.5;
+      if (score < bestScore) { bestScore = score; best = el; }
+    }
+    if (best) {
+      best.focus();
+      best.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      e.preventDefault();
+    }
+  });
 })();
 </script>
 </body>
