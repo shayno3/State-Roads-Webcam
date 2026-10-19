@@ -113,7 +113,18 @@ const STATE_ENDPOINTS = {
   nm: 'https://servicev5.nmroads.com/RealMapWAR/GetCameraInfo', // NMRoads public – no key needed
   co: 'https://api-511x-co.carsprogram.org/cameras/map-features',      // COTrip – public GeoJSON, no key needed
   mi: 'https://www.mi511.org/api/v2/get/cameras',
+  ky: 'https://services2.arcgis.com/CcI36Pduqd0OR4W9/arcgis/rest/services/trafficCamerasCur_Prd/FeatureServer/0/query', // KYTC public ArcGIS – no key needed
+  or: 'https://api.odot.state.or.us/tripcheck/cctv/inventory', // TripCheck API – ODOT_KEY env; handler intercepts (see ODOT_CCTV_URL)
 };
+
+// ─── Oregon TripCheck (ODOT developer portal, Azure APIM) ──────────
+// Free subscription key: sign up at apiportal.odot.state.or.us, subscribe to
+// "TripCheck Data", then set ODOT_KEY in the server environment. The key is
+// sent as the Ocp-Apim-Subscription-Key header (per ODOT's Getting Started
+// guide). If the gateway path ever differs from the default below, copy the
+// Request URL from the portal's "Try it" console into ODOT_CCTV_URL — no code
+// change needed.
+const ODOT_CCTV_URL = process.env.ODOT_CCTV_URL || STATE_ENDPOINTS.or;
 
 
 // ─── ArcGIS helpers ──────────────────────────────────────────────────
@@ -198,7 +209,7 @@ app.get('/api/cameras/:state', async (req, res) => {
       console.error(`[cameras] IL error ${status}:`, err.message);
       return res.status(status).json({ error: String(err.message) });
     }
-  } else if (state === 'fl' || state === 'ia' || state === 'hi') {
+  } else if (state === 'fl' || state === 'ia' || state === 'hi' || state === 'ky') {
     upstreamUrl = `${baseUrl}?where=1%3D1&outFields=*&f=json&resultRecordCount=2000`;
   } else if (state === 'md') {
     // Maryland CHART public ArcGIS — no key needed; outSR=4326 returns WGS84 coords directly
@@ -275,6 +286,79 @@ app.get('/api/cameras/:state', async (req, res) => {
     } catch (err) {
       const status = err.response?.status || 502;
       console.error(`[cameras] CO error ${status}:`, err.message);
+      return res.status(status).json({ error: err.message });
+    }
+  } else if (state === 'or') {
+    // Oregon TripCheck — ODOT developer portal subscription key, server-side only.
+    // Response may be JSON or XML depending on the gateway's content negotiation;
+    // both are normalized here to the app's camera shape (server pre-normalized,
+    // like TX / NEC), so the frontend passes the array straight through.
+    const odotKey = process.env.ODOT_KEY;
+    if (!odotKey) {
+      return res.status(500).json({ error: 'ODOT_KEY environment variable not set on server' });
+    }
+    console.log(`[cameras] OR → TripCheck CCTV inventory`);
+    try {
+      const response = await axios.get(ODOT_CCTV_URL, {
+        headers: {
+          'Accept': 'application/json',
+          'Ocp-Apim-Subscription-Key': odotKey,
+          'User-Agent': 'RoadCamsGlasses/1.0',
+        },
+        timeout: 20000,
+        responseType: 'text',
+      });
+      let data = response.data;
+      if (typeof data === 'string') {
+        const trimmed = data.trim();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          data = JSON.parse(trimmed);
+        } else {
+          data = await parseStringPromise(trimmed, { explicitArray: false });
+        }
+      }
+      // Find the camera array wherever the feed nests it
+      const findCamArray = (node, depth = 0) => {
+        if (!node || depth > 4) return null;
+        if (Array.isArray(node)) {
+          return node.some(el => el && typeof el === 'object' &&
+            ('latitude' in el || 'Latitude' in el || 'still-image-url' in el || 'imageUrl' in el)) ? node : null;
+        }
+        if (typeof node === 'object') {
+          for (const v of Object.values(node)) {
+            const found = findCamArray(v, depth + 1);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      const rawCams = findCamArray(data) || [];
+      const pick = (obj, names) => {
+        for (const n of names) if (obj[n] !== undefined && obj[n] !== '') return obj[n];
+        return undefined;
+      };
+      const cameras = rawCams
+        .map((cam, i) => {
+          const c = cam && typeof cam === 'object' ? cam : {};
+          return {
+            id:        String(pick(c, ['cctv-id', 'cctvId', 'cameraId', 'id', 'deviceId']) ?? `or_${i}`),
+            road:      pick(c, ['route', 'route-id', 'highway', 'roadway', 'road']) || '—',
+            location:  pick(c, ['camera-name', 'location-name', 'name', 'location', 'description']) || '—',
+            direction: pick(c, ['direction', 'camera-direction']) || '',
+            lat:       parseFloat(pick(c, ['latitude', 'lat', 'Latitude'])) || 0,
+            lon:       parseFloat(pick(c, ['longitude', 'lon', 'lng', 'Longitude'])) || 0,
+            imageUrl:  pick(c, ['still-image-url', 'stillImageUrl', 'image-url', 'imageUrl', 'imageURL', 'url']) || '',
+            county:    pick(c, ['county', 'region']) || '',
+            status:    'active',
+            source:    'or',
+          };
+        })
+        .filter(cam => cam.lat && cam.lon && cam.imageUrl);
+      console.log(`[cameras] OR → ${cameras.length} cameras`);
+      return res.json(cameras);
+    } catch (err) {
+      const status = err.response?.status || 502;
+      console.error(`[cameras] OR error ${status}:`, err.message);
       return res.status(status).json({ error: err.message });
     }
   } else if (state === 'nm') {
