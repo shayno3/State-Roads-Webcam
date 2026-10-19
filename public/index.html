@@ -2158,7 +2158,9 @@ function normalizeCameras(state, data) {
           direction:a.dir || '—',
           lat:      geo.y || 0,
           lon:      geo.x || 0,
-          imageUrl: a.url || '',
+          // Prefer the live HLS stream when GDOT publishes one (viewer plays it
+          // via /api/hls); fall back to the snapshot URL (via /api/image/ga).
+          imageUrl: (a.HLS && a.HLS !== 'None') ? a.HLS : (a.url || ''),
           county:   a.county || '',
           status:   'active',
           source:   'ga',
@@ -2329,7 +2331,7 @@ function renderGrid(cams) {
         <div class="camera-thumb-wrap">
           ${cam.imageUrl && cam.imageUrl.endsWith('.m3u8')
             ? `<div class="camera-thumb-placeholder">📹</div>`
-            : cam.imageUrl && cam.noProxy
+            : cam.imageUrl && (cam.noProxy || cam.imageUrl.startsWith('/api/'))
             ? `<img class="camera-thumb" src="${cam.imageUrl}" alt="${cam.location}" loading="lazy"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
                /><div class="camera-thumb-placeholder" style="display:none">📷</div>`
@@ -2371,6 +2373,8 @@ function loadMoreCameras() {
 
 function proxyImage(url) {
   if (!url) return '';
+  // Already a local proxy path (e.g. GA's /api/image/ga/…) — use as-is, never double-proxy
+  if (url.startsWith('/')) return `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
   return `/api/image?url=${encodeURIComponent(url)}&t=${Date.now()}`;
 }
 
@@ -2460,7 +2464,7 @@ function updateDetailImage(cam) {
   overlay.classList.add('visible');
   overlay.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
 
-  const src = cam.noProxy
+  const src = (cam.noProxy || (cam.imageUrl && cam.imageUrl.startsWith('/api/')))
     ? `${cam.imageUrl}${cam.imageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`
     : `/api/image?url=${encodeURIComponent(cam.imageUrl)}&t=${Date.now()}`;
   img.onload  = () => { overlay.classList.remove('visible'); updateMetaTime(); };
