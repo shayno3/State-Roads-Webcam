@@ -1344,9 +1344,38 @@
     .settings-row input, .settings-row select { font-size:15px !important; padding:11px 12px !important; border-radius:10px !important; }
     .chip { font-size:13.5px !important; padding:7px 11px !important; }
     .status-dot { box-shadow:0 0 8px var(--live); }
+    .camera-grid.single-col { grid-template-columns:1fr !important; }
+    /* Focus visibility — on the glasses you navigate by a highlighter;
+       if the ring is invisible it looks like controls are being skipped. */
+    .camera-card { cursor:pointer; }
+    .camera-card:focus, .ftab:focus, .tab-btn:focus, .icon-btn:focus,
+    .city-item:focus, .region-tile:focus, .ctrl-btn:focus, .detail-nav:focus,
+    .sheet-close:focus, #voice-btn:focus, #search-submit-btn:focus, #city-go-btn:focus,
+    .region-state-btn:focus, .state-chip:focus, .region-back-btn:focus,
+    .region-select-all-btn:focus, .region-load-btn:focus {
+      outline:3px solid var(--accent) !important; outline-offset:2px;
+    }
+    #search-input:focus, #city-search:focus {
+      outline:3px solid var(--accent) !important; outline-offset:1px;
+      border-color:var(--accent) !important; box-shadow:none !important;
+    }
+    /* Voice + Go in the main search pill: side by side, never stacked */
+    #voice-btn { right:64px !important; }
+    #search-submit-btn {
+      right:6px !important; width:auto !important; padding:0 15px !important;
+      font-size:16px !important; font-weight:800; color:var(--accent) !important;
+    }
+    #search-input { padding-right:128px !important; }
+    /* City sheet: input + a real Go button */
+    .city-search-wrap { display:flex !important; gap:8px; align-items:stretch; }
+    #city-search { flex:1; font-size:16px !important; padding:13px 14px !important; border-radius:12px !important; }
+    #city-go-btn {
+      background:var(--accent); color:#000; border:none; border-radius:12px;
+      font-size:16.5px; font-weight:800; padding:0 20px; cursor:pointer; font-family:inherit;
+    }
+    .city-item { font-size:16px !important; padding:15px 10px !important; }
     /* ── GLASSES (square lens ~600×600): one thing at a time, huge words ── */
     @media (max-width:640px) and (max-height:700px) {
-      .camera-grid { grid-template-columns:1fr !important; }
       .camera-thumb-wrap { aspect-ratio:16/8 !important; }
       .camera-road { font-size:20px !important; }
       .camera-location { font-size:15.5px !important; }
@@ -1452,7 +1481,7 @@
                 <line x1="9" y1="22" x2="15" y2="22"/>
               </svg>
             </button>
-            <button id="search-submit-btn" class="search-icon-btn" onclick="submitSearch()" title="Go">›</button>
+            <button id="search-submit-btn" class="search-icon-btn" onclick="submitSearch()" title="Go">Go</button>
           </div>
         </div>
         <div class="count-badge" id="count-badge"></div>
@@ -1660,7 +1689,8 @@
       <button class="sheet-close" onclick="hideCitySheet()">✕</button>
     </div>
     <div class="city-search-wrap">
-      <input id="city-search" type="text" placeholder="🔍  Search city, county, area…" oninput="filterByCitySearch()" autocomplete="off">
+      <input id="city-search" type="text" placeholder="🔍  Search city, county, area…" oninput="filterByCitySearch()" onkeydown="if(event.key==='Enter')cityGo()" autocomplete="off">
+      <button id="city-go-btn" onclick="cityGo()">Go ›</button>
     </div>
     <div id="city-list" class="city-list"></div>
   </div>
@@ -2393,7 +2423,7 @@ function renderGrid(cams) {
     const online = cam.status !== 'offline' && cam.status !== 'inactive';
     const camId = String(cam.id).slice(-4).toUpperCase().padStart(4, '0');
     return `
-      <div class="camera-card" onclick="openCamera(${idx})">
+      <div class="camera-card" tabindex="0" role="button" aria-label="${cam.road} — ${cam.location}" onclick="openCamera(${idx})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCamera(${idx});}">
         <div class="camera-thumb-wrap">
           ${cam.imageUrl && cam.imageUrl.endsWith('.m3u8')
             ? `<div class="camera-thumb-placeholder">📹</div>`
@@ -2690,7 +2720,7 @@ function showEmptyState(icon, title, sub, loading = false) {
 function toggleView() {
   gridView = !gridView;
   const grid = document.getElementById('camera-grid');
-  grid.style.gridTemplateColumns = gridView ? '1fr 1fr' : '1fr';
+  grid.classList.toggle('single-col', !gridView);
   document.getElementById('view-toggle-btn').textContent = gridView ? '⊞' : '☰';
 }
 
@@ -2881,9 +2911,14 @@ function showRegionSheet() {
 
 function hideRegionSheet() {
   document.getElementById('region-sheet').classList.add('hidden');
+  document.getElementById('ftab-region')?.focus();
 }
 
 function buildRegionSheet() {
+  setTimeout(() => {
+    if (!document.getElementById('region-sheet')?.classList.contains('hidden'))
+      document.querySelector('.region-tile')?.focus();
+  }, 60);
   const container = document.getElementById('region-tiles');
   container.className = 'region-tiles-grid';
   document.querySelector('#region-sheet .sheet-title').textContent = 'Select Region';
@@ -2907,6 +2942,7 @@ function buildRegionSheet() {
 }
 
 function selectRegion(regionLabel) {
+  setTimeout(focusFirstStateBtn, 0);
   const regionIcons = { 'Northeast': '🏙', 'Southeast': '🌴', 'Midwest': '🌾', 'West': '🏔', 'Special': '🌉' };
   const region = REGIONS.find(r => r.label === regionLabel);
   if (!region) return;
@@ -2934,6 +2970,11 @@ function selectRegion(regionLabel) {
         <button class="region-load-btn" onclick="loadRegionSelection('${regionLabel}')">Load Cameras</button>
       </div>
     </div>`;
+}
+
+// (focus helper) after the state list renders, move the highlight to its first state
+function focusFirstStateBtn() {
+  setTimeout(() => document.querySelector('.region-state-btn')?.focus(), 60);
 }
 
 function toggleRst(k) {
@@ -2995,6 +3036,7 @@ function showCitySheet() {
 
 function hideCitySheet() {
   document.getElementById('city-sheet').classList.add('hidden');
+  document.getElementById('ftab-city')?.focus();
 }
 
 function buildCityList() {
@@ -3031,6 +3073,22 @@ function filterByCitySearch() {
     const name = item.querySelector('.city-item-name')?.textContent.toLowerCase() || '';
     item.hidden = !!(q && !name.includes(q));
   });
+}
+
+function cityGo() {
+  // Read the field directly — glasses dictation can insert text without
+  // firing the input event, so never depend on the list being pre-filtered.
+  filterByCitySearch();
+  const first = [...document.querySelectorAll('.city-item')].find(i => !i.hidden);
+  if (first) { first.click(); return; }
+  const q = (document.getElementById('city-search').value || '').trim();
+  if (q) {
+    hideCitySheet();
+    document.getElementById('search-input').value = q;
+    submitSearch();
+  } else {
+    showToast('Type or say a city first');
+  }
 }
 
 function selectCityFilter(city) {
@@ -3161,6 +3219,8 @@ function handleVoiceResult(text) {
     if (e.key === 'ArrowRight') navigateCamera(1);
     if (e.key === 'ArrowLeft') navigateCamera(-1);
   });
+  // Lens-size screens start in one-column view; the ⊞ button toggles from there.
+  if (window.innerWidth <= 640 && window.innerHeight <= 700 && typeof toggleView === 'function' && gridView) toggleView();
 })();
 </script>
 </body>
