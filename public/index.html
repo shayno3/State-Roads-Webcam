@@ -2700,7 +2700,7 @@ function openOnGlasses() {
   if (!cam.imageUrl && cam.source !== 'fl' && cam.source !== 'hi') { showToast("No feed URL"); return; }
   const encoded = encodeURIComponent(cam.imageUrl);
   const title   = encodeURIComponent(cam.road + " - " + cam.location);
-  let url = "/view?url=" + encoded + "&title=" + title;
+  let url = "/view.html?url=" + encoded + "&title=" + title;
   if (cam.source === 'fl' && cam.id) {
     url += "&source=fl&id=" + encodeURIComponent(cam.id);
   }

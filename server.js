@@ -1003,6 +1003,8 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ─── Catch-all → frontend ────────────────────────────────────────────
+app.get('/view', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'view.html')));
+
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
