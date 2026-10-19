@@ -11,23 +11,23 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #060011;
-      --surface:     #0D0921;
-      --surface2:    #14103A;
-      --border:      #2A1F5A;
-      --text:        #E8E4FF;
-      --muted:       #6B5C9A;
-      --accent:      #FF006E;
-      --accent2:     #7B2FFF;
-      --accent3:     #00F5FF;
-      --accent-dim:  rgba(255,0,110,0.10);
-      --accent2-dim: rgba(123,47,255,0.12);
-      --live:        #00F5FF;
-      --live-dim:    rgba(0,245,255,0.12);
-      --offline:     #FF006E;
-      --font-ui:     'Inter', system-ui, sans-serif;
-      --font-head:   'Exo 2', sans-serif;
-      --font-mono:   'JetBrains Mono', monospace;
+      --bg:          #000000;
+      --surface:     #101010;
+      --surface2:    #1A1A1A;
+      --border:      #2B2B2B;
+      --text:        #F5F5F5;
+      --muted:       #A3A3A3;
+      --accent:      #F5B81D;
+      --accent2:     #F5B81D;
+      --accent3:     #4ADE80;
+      --accent-dim:  rgba(245,184,29,0.12);
+      --accent2-dim: rgba(245,184,29,0.12);
+      --live:        #4ADE80;
+      --live-dim:    rgba(74,222,128,0.12);
+      --offline:     #F87171;
+      --font-ui:     system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --font-head:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:   ui-monospace, 'SF Mono', Menlo, monospace;
       --tab-h:       54px;
     }
 
@@ -58,8 +58,8 @@
       max-width: 480px;
       margin: 0 auto;
       background-image:
-        linear-gradient(rgba(123,47,255,0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123,47,255,0.08) 1px, transparent 1px);
+        linear-gradient(rgba(245,184,29,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,184,29,0.045) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
       z-index: 0;
@@ -92,7 +92,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 10px 14px;
-      background: rgba(13,9,33,0.95);
+      background: rgba(0,0,0,0.96);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
       gap: 10px;
@@ -193,7 +193,7 @@
 
     /* ─── New Neon Drive Filter Bar ─────────────────────────────── */
     #filter-bar-wrap {
-      background: rgba(13,9,33,0.95);
+      background: rgba(0,0,0,0.96);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
       position: relative;
@@ -1306,6 +1306,58 @@
     .chip-x { font-size: 10px; opacity: 0.7; font-weight: 900; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+
+  <style id="gf-redesign">
+    /* ═══ GLASSES FIRST REDESIGN (v3) — black/amber, big type, lens-ready ═══ */
+    body { background:#000; }
+    header { padding:14px 16px; }
+    .logo-name { font-size:22px; letter-spacing:.2px; }
+    .logo-mark { background:var(--accent) !important; border-radius:9px; }
+    .live-badge { border-color:#14532d !important; }
+    .icon-btn { width:44px; height:44px; font-size:19px; border-radius:12px; }
+    /* Filter tabs: bigger, calmer */
+    .ftab { font-size:15px !important; padding:12px 16px !important; border-radius:99px !important; }
+    /* Search: one friendly pill, voice first-class */
+    #search-input { font-size:16.5px !important; padding:15px 18px !important; border-radius:99px !important; background:#141414 !important; }
+    .search-icon-btn { width:46px !important; height:46px !important; border-radius:50% !important; font-size:19px !important; }
+    #voice-btn { background:var(--accent) !important; color:#000 !important; }
+    /* Camera cards: larger, readable at a glance */
+    .camera-grid { gap:14px !important; padding:14px !important; }
+    .camera-card { background:#111 !important; border:1px solid #262626 !important; border-radius:16px !important; overflow:hidden; }
+    .camera-road { font-size:16.5px !important; font-weight:700 !important; color:#fff !important; }
+    .camera-location { font-size:13.5px !important; color:var(--muted) !important; margin-top:2px; }
+    .camera-info { padding:11px 12px 13px !important; }
+    /* Bottom tab bar: taller targets, amber active */
+    .tab-bar { height:66px !important; background:#0a0a0a !important; }
+    .tab-label { font-size:12.5px !important; }
+    .tab-btn.active { color:var(--accent) !important; }
+    /* Detail view */
+    .detail-road { font-size:25px !important; }
+    .detail-location { font-size:16.5px !important; color:var(--muted) !important; }
+    .detail-nav { width:62px !important; height:62px !important; font-size:34px !important; background:rgba(0,0,0,.72) !important; border:1.5px solid #3a3a3a !important; }
+    .ctrl-btn { font-size:15px !important; padding:13px 16px !important; border-radius:12px !important; min-height:48px; }
+    .ctrl-btn.primary { background:var(--accent) !important; color:#000 !important; font-weight:800 !important; }
+    .back-btn { width:46px !important; height:46px !important; font-size:24px !important; }
+    /* Sheets + settings: calmer surfaces, bigger rows */
+    .sheet { border-radius:22px 22px 0 0 !important; }
+    .settings-row label { font-size:15px !important; }
+    .settings-row input, .settings-row select { font-size:15px !important; padding:11px 12px !important; border-radius:10px !important; }
+    .chip { font-size:13.5px !important; padding:7px 11px !important; }
+    .status-dot { box-shadow:0 0 8px var(--live); }
+    /* ── GLASSES (square lens ~600×600): one thing at a time, huge words ── */
+    @media (max-width:640px) and (max-height:700px) {
+      .camera-grid { grid-template-columns:1fr !important; }
+      .camera-thumb-wrap { aspect-ratio:16/8 !important; }
+      .camera-road { font-size:20px !important; }
+      .camera-location { font-size:15.5px !important; }
+      .detail-road { font-size:31px !important; line-height:1.2 !important; }
+      .detail-location { font-size:19px !important; }
+      .detail-nav { width:84px !important; height:84px !important; font-size:46px !important; }
+      .meta-value { font-size:17px !important; }
+      .ctrl-btn { font-size:17px !important; min-height:56px; }
+      .ftab { font-size:16.5px !important; }
+    }
+  </style>
 </head>
 <body>
 <div id="app">
@@ -1377,7 +1429,7 @@
   <!-- Status bar -->
   <div id="status-bar">
     <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">SELECT STATES TO LOAD CAMERAS</span>
+    <span id="status-text">LOADING YOUR CAMERAS…</span>
   </div>
 
   <!-- Texas road conditions banner (hidden until TX selected) -->
@@ -1540,9 +1592,9 @@
         <div class="settings-title">About</div>
         <div class="settings-note">
           StateRoad.fyi — Meta Ray-Ban Display web app.<br>
-          Live traffic cameras from 25 state DOT APIs.<br>
-          Optimized for glasses display via Meta Wearables Toolkit.<br><br>
-          Version 2.0.0 · stateroad.fyi
+          Live traffic cameras from 26 state DOT feeds — built for Meta Ray-Ban Display glasses and your phone.<br>
+          Glasses view: open any camera, tap 🕶 Glasses — one camera, big words, swipe or use arrow keys to move.<br><br>
+          Version 3.0.0 — Glasses First · stateroad.fyi
         </div>
       </div>
     </div>
@@ -1674,6 +1726,19 @@ let gridView = true;
 window.addEventListener('DOMContentLoaded', () => {
   buildDropdown();
   loadSettings();
+  // Glasses First: remember the user's states between visits.
+  // First visit ever: start with North Carolina (home) instead of an empty wall.
+  try {
+    const savedStates = JSON.parse(localStorage.getItem('sr_states') || 'null');
+    const initial = (savedStates && savedStates.length) ? savedStates : ['nc'];
+    initial.forEach(k => {
+      if (STATE_CONFIGS[k]) {
+        selectedStates.add(k);
+        document.getElementById('box-' + k)?.classList.add('checked');
+      }
+    });
+    if (selectedStates.size) { renderChips(); loadSelectedStates(); }
+  } catch (e) { /* first load still works via manual selection */ }
   document.addEventListener('click', e => {
     if (ddOpen && !document.getElementById('state-selector-wrap').contains(e.target)) closeDropdown();
   });
@@ -1790,7 +1855,7 @@ function clearAll() {
   selectedFilter = { source: null, value: null };
   buildFlFilterBar();
   renderGrid([]);
-  setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
+  setStatus('ok', false, 'NO STATES SELECTED');
   updateLiveBadge(0);
 }
 
@@ -1817,6 +1882,7 @@ function renderChips() {
   wrap.innerHTML = [...selectedStates].map(k =>
     `<span class="chip" onclick="event.stopPropagation();toggleStateCheck('${k}')">${STATE_ABBR[k]}<span class="chip-x">✕</span></span>`
   ).join('');
+  try { localStorage.setItem('sr_states', JSON.stringify([...selectedStates])); } catch (e) {}
 }
 
 function filterDropdown() {
@@ -1852,8 +1918,8 @@ function showTab(name) {
 async function loadSelectedStates() {
   const states = [...selectedStates];
   if (states.length === 0) {
-    showEmptyState('🛣️', 'No States Selected', 'Tap REGION to browse by area, or ALL STATES to load everything.');
-    setStatus('ok', false, 'SELECT STATES TO LOAD CAMERAS');
+    showEmptyState('🛣️', 'No States Selected', 'Tap REGION or CITY above to add cameras — your states are remembered for next time.');
+    setStatus('ok', false, 'NO STATES SELECTED');
     updateLiveBadge(0);
     return;
   }
@@ -3075,6 +3141,27 @@ function handleVoiceResult(text) {
   filterCameras();
 }
 
+</script>
+
+<script>
+// Glasses First: swipe or arrow keys flip between cameras in the detail view.
+(function () {
+  let sx = null, sy = null;
+  document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+    if (!document.getElementById('detail-view')?.classList.contains('active')) return;
+    navigateCamera(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('detail-view')?.classList.contains('active')) return;
+    if (e.key === 'ArrowRight') navigateCamera(1);
+    if (e.key === 'ArrowLeft') navigateCamera(-1);
+  });
+})();
 </script>
 </body>
 </html>

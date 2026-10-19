@@ -4,46 +4,47 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
   <title>StateRoad.fyi — Camera View</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
   <style>
+    /* ═══ GLASSES FIRST (v3) — built for the Meta Ray-Ban Display lens:
+       pure black (transparent on the display), one camera, huge words. ═══ */
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:monospace}
-    #wrap{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
-    #cam{width:100%;height:100%;object-fit:contain;display:block}
-    #hud{
-      position:fixed;bottom:0;left:0;right:0;
-      display:flex;align-items:center;justify-content:space-between;
-      padding:6px 12px;
-      background:rgba(0,0,0,0.65);
-      font-size:11px;color:rgba(255,255,255,0.55);
-      letter-spacing:0.5px;gap:8px;
-    }
-    #back{color:rgba(255,255,255,0.4);text-decoration:none;flex-shrink:0;}
-    #back:hover{color:#fff}
-    #title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center;}
-    #hud-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-    #updated{color:rgba(255,255,255,0.35);font-size:10px;}
-    #timer{color:#F5C318;}
-    #overlay{
-      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-      background:#000;font-size:13px;color:rgba(255,255,255,0.4);
-    }
-    .spin{
-      width:24px;height:24px;border:2px solid rgba(255,255,255,0.15);
-      border-top-color:#F5C318;border-radius:50%;
-      animation:sp 0.7s linear infinite;margin-right:10px;
-    }
+    html,body{width:100%;height:100%;background:#000;overflow:hidden;
+      font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#f5f5f5}
+    #wrap{position:relative;width:100vw;height:100vh;display:flex;flex-direction:column}
+    #media{flex:1;position:relative;min-height:0;background:#000}
+    #cam,#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#000}
+    #live{position:absolute;top:14px;left:14px;background:#dc2626;color:#fff;font-weight:800;
+      font-size:16px;padding:7px 13px;border-radius:9px;letter-spacing:.5px;z-index:3}
+    #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      background:#000;font-size:19px;color:#a3a3a3;z-index:2;text-align:center;padding:20px}
+    .spin{width:30px;height:30px;border:3px solid rgba(255,255,255,0.15);
+      border-top-color:#F5B81D;border-radius:50%;animation:sp .7s linear infinite;margin-right:12px;flex:none}
     @keyframes sp{to{transform:rotate(360deg)}}
+    #info{padding:16px 20px 8px;background:#000}
+    #road{font-size:32px;font-weight:800;line-height:1.18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #loc{font-size:20px;color:#a3a3a3;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #bar{display:flex;align-items:center;gap:14px;padding:10px 20px 18px;background:#000}
+    #back{color:#000;background:#F5B81D;text-decoration:none;font-weight:800;font-size:19px;
+      padding:14px 22px;border-radius:13px;flex:none}
+    #updated{color:#a3a3a3;font-size:16.5px;flex:1;text-align:center}
+    #timer{color:#F5B81D;font-size:16.5px;font-weight:700;flex:none}
   </style>
 </head>
 <body>
 <div id="wrap">
-  <img id="cam" alt="Camera feed"/>
-  <div id="overlay"><div class="spin"></div>Loading…</div>
-</div>
-<div id="hud">
-  <a id="back" href="/">← Back</a>
-  <span id="title">—</span>
-  <div id="hud-right">
+  <div id="media">
+    <img id="cam" alt="Camera feed"/>
+    <video id="vid" muted playsinline autoplay style="display:none"></video>
+    <div id="live">● LIVE</div>
+    <div id="overlay"><div class="spin"></div>Loading camera…</div>
+  </div>
+  <div id="info">
+    <div id="road">Camera</div>
+    <div id="loc"></div>
+  </div>
+  <div id="bar">
+    <a id="back" href="/">‹ Back</a>
     <span id="updated"></span>
     <span id="timer">⟳ 30s</span>
   </div>
@@ -57,14 +58,20 @@
   const camId      = params.get('id') || '';
   const isFL       = source === 'fl' && camId;
 
-  document.getElementById('title').textContent = title;
+  // Title arrives as "ROAD - Location" — road gets the big line.
+  const dash = title.indexOf(' - ');
+  document.getElementById('road').textContent = dash > 0 ? title.slice(0, dash) : title;
+  document.getElementById('loc').textContent  = dash > 0 ? title.slice(dash + 3) : '';
+  document.title = title;
 
-  let countdown    = RATE;
+  let countdown     = RATE;
   let currentImgUrl = encodedUrl;          // may be updated by FL lookup
+  let hls           = null;
   const timerEl   = document.getElementById('timer');
   const updatedEl = document.getElementById('updated');
   const overlay   = document.getElementById('overlay');
   const img       = document.getElementById('cam');
+  const vid       = document.getElementById('vid');
 
   // Show "Updated Xs ago" from ArcGIS TIMESTAMP (epoch ms)
   function showUpdated(tsMs) {
@@ -75,12 +82,52 @@
     else                 updatedEl.textContent = `cam ${Math.round(age/3600)}h ago`;
   }
 
-  function loadImage(imgUrl) {
+  function fail(msg) {
     overlay.style.display = 'flex';
-    img.onload  = () => { overlay.style.display = 'none'; };
-    img.onerror = () => { overlay.innerHTML = '⚠️ Feed unavailable'; };
-    img.src = '/api/image?url=' + encodeURIComponent(decodeURIComponent(imgUrl)) + '&t=' + Date.now();
+    overlay.innerHTML = msg;
+  }
+
+  // Already-proxied app paths (e.g. GA's /api/image/ga/…) pass through as-is;
+  // everything else goes through the image proxy. Never double-proxy.
+  function proxied(u) {
+    if (u.startsWith('/api/')) return `${u}${u.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    return '/api/image?url=' + encodeURIComponent(u) + '&t=' + Date.now();
+  }
+
+  function loadFeed(rawUrl) {
+    let u;
+    try { u = decodeURIComponent(rawUrl); } catch (e) { u = rawUrl; }
     countdown = RATE;
+    if (hls) { hls.destroy(); hls = null; }
+
+    if (u.endsWith('.m3u8')) {
+      // Live stream (e.g. GDOT HLS) — play video, not a snapshot.
+      img.style.display = 'none';
+      vid.style.display = 'block';
+      const src = u.startsWith('/api/') ? u : `/api/hls?url=${encodeURIComponent(u)}`;
+      overlay.style.display = 'flex';
+      overlay.innerHTML = '<div class="spin"></div>Loading live stream…';
+      vid.onplaying = () => { overlay.style.display = 'none'; };
+      vid.onerror   = () => fail('⚠️ Stream unavailable');
+      if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+        hls = new Hls();
+        hls.on(Hls.Events.ERROR, () => fail('⚠️ Stream unavailable'));
+        hls.loadSource(src);
+        hls.attachMedia(vid);
+      } else {
+        vid.src = src;   // Safari native HLS
+      }
+      vid.play().catch(() => {});
+      return;
+    }
+
+    vid.style.display = 'none';
+    img.style.display = 'block';
+    overlay.style.display = 'flex';
+    overlay.innerHTML = '<div class="spin"></div>Loading camera…';
+    img.onload  = () => { overlay.style.display = 'none'; };
+    img.onerror = () => fail('⚠️ Feed unavailable');
+    img.src = proxied(u);
   }
 
   // For FL cameras: fetch fresh IMAGE url + timestamp from ArcGIS via server proxy
@@ -94,24 +141,28 @@
     } catch (e) {
       console.warn('FL refresh failed:', e.message);
     }
-    loadImage(currentImgUrl);
+    loadFeed(currentImgUrl);
   }
 
-  // Main tick: decrement countdown, reload when it hits 0
+  // Main tick: decrement countdown, reload snapshots when it hits 0
+  // (live HLS streams play continuously — no reload).
   function tick() {
+    let u = '';
+    try { u = decodeURIComponent(currentImgUrl); } catch (e) { u = currentImgUrl; }
+    if (u.endsWith('.m3u8')) { timerEl.textContent = '● LIVE'; return; }
     countdown--;
     timerEl.textContent = '⟳ ' + countdown + 's';
     if (countdown <= 0) {
-      if (isFL) refreshFL(); else loadImage(currentImgUrl);
+      if (isFL) refreshFL(); else loadFeed(currentImgUrl);
     }
   }
 
   // Kick off
   if (encodedUrl || isFL) {
-    if (isFL) refreshFL(); else loadImage(currentImgUrl);
+    if (isFL) refreshFL(); else loadFeed(currentImgUrl);
     setInterval(tick, 1000);
   } else {
-    overlay.innerHTML = '⚠️ No camera URL';
+    fail('⚠️ No camera URL');
   }
 </script>
 </body>
