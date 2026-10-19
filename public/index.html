@@ -2201,6 +2201,7 @@ function normalizeCameras(state, data) {
         lat: cam.Latitude || cam.latitude || 0,
         lon: cam.Longitude || cam.longitude || 0,
         imageUrl: imgUrl,
+        county: cam.County || cam.county || '',
         status: view.Status || view.status || 'active',
         source: state,
       };
@@ -2300,7 +2301,7 @@ function normalizeCameras(state, data) {
         lat:      c.Latitude  || 0,
         lon:      c.Longitude || 0,
         imageUrl: c.Views?.[0]?.Url || '',
-        county:   '',
+        county:   c.County || '',
         status:   'active',
         source:   state,
       }));
