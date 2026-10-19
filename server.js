@@ -6,6 +6,7 @@
 
 const express  = require('express');
 const axios    = require('axios');
+const dns      = require('dns').promises;
 const { parseStringPromise } = require('xml2js');
 const path     = require('path');
 const { authRouter, adminRouter } = require('./auth');
@@ -113,6 +114,7 @@ const STATE_ENDPOINTS = {
   nm: 'https://servicev5.nmroads.com/RealMapWAR/GetCameraInfo', // NMRoads public – no key needed
   co: 'https://api-511x-co.carsprogram.org/cameras/map-features',      // COTrip – public GeoJSON, no key needed
   mi: 'https://www.mi511.org/api/v2/get/cameras',
+  tx: 'https://its.txdot.gov/its/DistrictIts/GetCctvStatusListByDistrict', // TxDOT ITS – public, no key; handler builds per-district URLs (entry exists so the route guard passes)
   ky: 'https://services2.arcgis.com/CcI36Pduqd0OR4W9/arcgis/rest/services/trafficCamerasCur_Prd/FeatureServer/0/query', // KYTC public ArcGIS – no key needed
   or: 'https://api.odot.state.or.us/tripcheck/cctv/inventory', // TripCheck API – ODOT_KEY env; handler intercepts (see ODOT_CCTV_URL)
 };
@@ -479,12 +481,15 @@ app.get('/api/cameras/:state', async (req, res) => {
     console.log(`[cameras] CA → ${allCctv.length} cameras from ${ok}/12 districts`);
     return res.json({ data: allCctv });
   } else {
-    if (!key) {
+    // Key migration: prefer the server-side <STATE>_KEY env var (set in Railway);
+    // fall back to a user-supplied ?key= so existing saved keys keep working.
+    const effectiveKey = process.env[`${state.toUpperCase()}_KEY`] || key;
+    if (!effectiveKey) {
       return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
     }
     // SF Bay uses api_key, OHGo uses api-key, all other ibi511 states use key
     const paramName = state === 'sf' ? 'api_key' : state === 'oh' ? 'api-key' : 'key';
-    upstreamUrl = `${baseUrl}?${paramName}=${encodeURIComponent(key)}`;
+    upstreamUrl = `${baseUrl}?${paramName}=${encodeURIComponent(effectiveKey)}`;
   }
 
   console.log(`[cameras] ${state.toUpperCase()} → ${baseUrl}`);
@@ -618,11 +623,14 @@ app.get('/api/weather/:state', async (req, res) => {
   if (!baseUrl) {
     return res.status(400).json({ error: `No weather stations for state: ${state}` });
   }
-  if (!key) {
+  // Same key migration as cameras: server-side <STATE>_KEY env wins,
+  // user-supplied ?key= is the fallback.
+  const effectiveKey = process.env[`${state.toUpperCase()}_KEY`] || key;
+  if (!effectiveKey) {
     return res.status(400).json({ error: 'Missing API key (pass ?key=YOUR_KEY)' });
   }
 
-  const upstreamUrl = `${baseUrl}?key=${encodeURIComponent(key)}`;
+  const upstreamUrl = `${baseUrl}?key=${encodeURIComponent(effectiveKey)}`;
   console.log(`[weather] ${state.toUpperCase()} → ${baseUrl}`);
 
   try {
@@ -779,6 +787,69 @@ app.get('/api/camera/fl/:id', async (req, res) => {
   }
 });
 
+// ─── Proxy host guard (open-relay / SSRF protection) ────────────────
+// /api/image and /api/hls only fetch from DOT / 511 / known camera hosts.
+// Built from the hosts the live state feeds actually returned (Oct 2026).
+// Suffix match: an entry covers the host itself and all its subdomains.
+// Extend without a code change via PROXY_EXTRA_HOSTS (comma-separated).
+const PROXY_ALLOWED_SUFFIXES = [
+  // State DOT / 511 camera + stream hosts observed in the live feeds
+  'dot.ca.gov', 'iowadot.gov', 'dot.state.oh.us', 'ohgo.com', 'wsdot.wa.gov',
+  'udottraffic.utah.gov', '511.idaho.gov', 'az511.com', 'nvroads.com', 'its.nv.gov',
+  '511.alaska.gov', '511wi.gov', 'dot.wi.gov', 'maryland.gov', 'dot.ga.gov',
+  'cotrip.org', 'carsprogram.org', 'nmroads.com', 'goakamai.org', 'trimarc.org',
+  'trafficwise.org', 'travelmidwest.com', 'lakecountypassage.com', 'divas.cloud',
+  'tripcheck.com', 'arcgis.com', 'txdot.gov',
+  // 511 platform hosts for keyed states (their camera Views live here)
+  '511ny.org', 'drivenc.gov', '511pa.com', '511la.org', '511nj.org',
+  '511.nebraska.gov', 'kandrive.gov', 'al511.com', 'mi511.org',
+  '511.vdot.virginia.gov', 'ne-compass.com', '511nh.com', '511vt.org',
+  // Partner / public-safety webcams carried inside state feeds (mostly WA)
+  'nps.gov', 'seattle.gov', 'whidbeytel.com', 'webcam.io', 'coloradosprings.gov',
+  'windows.net', 'govdelivery.com', 'pangbornairport.com', 'flyykm.com',
+  'sunmountainlodge.com', 'lewiscounty.com', 'aacb.com',
+];
+const PROXY_SUFFIXES = [
+  ...PROXY_ALLOWED_SUFFIXES,
+  ...(process.env.PROXY_EXTRA_HOSTS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+];
+
+function isPrivateIp(ip) {
+  if (!ip) return true;
+  if (ip.includes(':')) {
+    const v = ip.toLowerCase();
+    return v === '::1' || v.startsWith('fc') || v.startsWith('fd') || v.startsWith('fe8') || v.startsWith('fe9') || v.startsWith('fea') || v.startsWith('feb');
+  }
+  const p = ip.split('.').map(Number);
+  if (p.length !== 4 || p.some(isNaN)) return true;
+  return p[0] === 0 || p[0] === 10 || p[0] === 127 ||
+    (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+    (p[0] === 192 && p[1] === 168) ||
+    (p[0] === 169 && p[1] === 254) ||
+    (p[0] === 100 && p[1] >= 64 && p[1] <= 127);
+}
+
+async function assertProxyHostAllowed(rawUrl) {
+  const host = new URL(rawUrl).hostname.toLowerCase();
+  const allowed = PROXY_SUFFIXES.some(s => host === s || host.endsWith(`.${s}`));
+  if (!allowed) {
+    console.warn(`[proxy] blocked non-allowlisted host: ${host}`);
+    const err = new Error(`Host not allowed: ${host}`);
+    err.statusCode = 403;
+    throw err;
+  }
+  // Even an allowlisted name must not resolve into private space (SSRF guard)
+  const addrs = await dns.lookup(host, { all: true }).catch(() => []);
+  for (const a of addrs) {
+    if (isPrivateIp(a.address)) {
+      console.warn(`[proxy] blocked private-resolving host: ${host} → ${a.address}`);
+      const err = new Error('Host resolves to a private address');
+      err.statusCode = 403;
+      throw err;
+    }
+  }
+}
+
 // ─── Image Proxy ─────────────────────────────────────────────────────
 // ─── Image cache (server-side, 20 s TTL) ────────────────────────────
 // Keys on the upstream camera URL (without &t timestamp) so the same
@@ -805,6 +876,13 @@ app.get('/api/image', async (req, res) => {
     return res.status(400).send('Invalid URL scheme');
   }
 
+  // Host allowlist + private-IP guard (open-relay / SSRF protection)
+  try {
+    await assertProxyHostAllowed(decoded);
+  } catch (e) {
+    return res.status(e.statusCode || 403).send(e.message);
+  }
+
   // Serve from cache if fresh
   const cached = imageCache.get(decoded);
   if (cached && cached.expiresAt > Date.now()) {
@@ -827,6 +905,10 @@ app.get('/api/image', async (req, res) => {
     });
 
     const contentType = response.headers['content-type'] || 'image/jpeg';
+    if (/^(text\/html|application\/json)/i.test(contentType)) {
+      console.warn(`[image] upstream returned non-image content-type ${contentType} for ${decoded}`);
+      return res.status(415).send('Upstream did not return an image');
+    }
     const data = Buffer.from(response.data);
 
     // Evict oldest entry if cache is full
@@ -860,6 +942,13 @@ app.get('/api/hls', async (req, res) => {
 
   const decoded = decodeURIComponent(url);
   if (!/^https?:\/\//i.test(decoded)) return res.status(400).send('Invalid URL');
+
+  // Host allowlist + private-IP guard (same rules as /api/image)
+  try {
+    await assertProxyHostAllowed(decoded);
+  } catch (e) {
+    return res.status(e.statusCode || 403).send(e.message);
+  }
 
   const isPlaylist = /\.m3u8/i.test(decoded);
 
